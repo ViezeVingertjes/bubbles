@@ -1,6 +1,7 @@
 //! [`Runner`] — the public entry point for executing a compiled [`Program`].
 
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
+use std::sync::{Arc, RwLock};
 
 use crate::compiler::ast::Stmt;
 use crate::compiler::expr::parse_expr;
@@ -57,12 +58,42 @@ pub struct Runner<S: VariableStorage> {
     option_bodies: OptionBodies,
     /// Function registry; defaults to built-ins.
     library: FunctionLibrary,
+    /// Visit counts keyed by node title (shared with visit-tracking closures).
+    visits: Arc<RwLock<HashMap<String, usize>>>,
 }
 
 impl<S: VariableStorage> Runner<S> {
     /// Creates a new runner for the given program and variable storage.
     #[must_use]
     pub fn new(program: Program, storage: S) -> Self {
+        let visits: Arc<RwLock<HashMap<String, usize>>> = Arc::default();
+        let mut library = FunctionLibrary::new();
+
+        // Register visit-tracking functions; they close over `visits`.
+        let v1 = Arc::clone(&visits);
+        library.register("visited", move |args| {
+            let title = match args.as_slice() {
+                [Value::Text(t)] => t.clone(),
+                _ => return Err(DialogueError::Function {
+                    name: "visited".into(),
+                    message: "expected one string argument".into(),
+                }),
+            };
+            Ok(Value::Bool(*v1.read().unwrap().get(&title).unwrap_or(&0) > 0))
+        });
+        let v2 = Arc::clone(&visits);
+        library.register("visited_count", move |args| {
+            let title = match args.as_slice() {
+                [Value::Text(t)] => t.clone(),
+                _ => return Err(DialogueError::Function {
+                    name: "visited_count".into(),
+                    message: "expected one string argument".into(),
+                }),
+            };
+            let count = *v2.read().unwrap().get(&title).unwrap_or(&0);
+            Ok(Value::Number(count as f64))
+        });
+
         Self {
             program,
             storage,
@@ -70,7 +101,8 @@ impl<S: VariableStorage> Runner<S> {
             stack: Vec::new(),
             pending: VecDeque::new(),
             option_bodies: Vec::new(),
-            library: FunctionLibrary::new(),
+            library,
+            visits,
         }
     }
 
@@ -86,6 +118,7 @@ impl<S: VariableStorage> Runner<S> {
         self.stack.clear();
         self.stack.push(Frame::new(node.to_owned(), body));
         self.state = State::Running;
+        *self.visits.write().unwrap().entry(node.to_owned()).or_insert(0) += 1;
         self.pending.push_back(DialogueEvent::NodeStarted(node.to_owned()));
         Ok(())
     }
@@ -275,9 +308,9 @@ impl<S: VariableStorage> Runner<S> {
                     return Err(DialogueError::UnknownNode(target));
                 }
                 let body = self.node_body(&target)?;
-                // replace the entire stack — jump is unconditional
                 self.stack.clear();
                 self.stack.push(Frame::new(target.clone(), body));
+                *self.visits.write().unwrap().entry(target.clone()).or_insert(0) += 1;
                 self.pending.push_front(DialogueEvent::NodeStarted(target));
                 Ok(None)
             }

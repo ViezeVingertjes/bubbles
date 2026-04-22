@@ -43,10 +43,10 @@ todos:
     status: completed
   - id: functions
     content: "TDD: FunctionLibrary — built-in random/dice + host-registered custom functions callable in any expression"
-    status: in_progress
+    status: completed
   - id: visited
     content: "TDD: visited-node tracking + visited()/visited_count() built-ins"
-    status: pending
+    status: in_progress
   - id: once
     content: "TDD: <<once>>/<<once if>>/<<endonce>> with optional <<else>>; option once-variants. Piggybacks on per-block counter tracked in Runner"
     status: pending
