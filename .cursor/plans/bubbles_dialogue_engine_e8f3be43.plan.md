@@ -46,10 +46,10 @@ todos:
     status: completed
   - id: visited
     content: "TDD: visited-node tracking + visited()/visited_count() built-ins"
-    status: in_progress
+    status: completed
   - id: once
     content: "TDD: <<once>>/<<once if>>/<<endonce>> with optional <<else>>; option once-variants. Piggybacks on per-block counter tracked in Runner"
-    status: pending
+    status: in_progress
   - id: detour
     content: "TDD: <<detour Node>> and <<return>>. Runner maintains a return-address stack; detour pushes, return/node-end pops"
     status: pending

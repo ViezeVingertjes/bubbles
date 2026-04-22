@@ -1,6 +1,6 @@
 //! [`Runner`] — the public entry point for executing a compiled [`Program`].
 
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::{Arc, RwLock};
 
 use crate::compiler::ast::Stmt;
@@ -60,6 +60,8 @@ pub struct Runner<S: VariableStorage> {
     library: FunctionLibrary,
     /// Visit counts keyed by node title (shared with visit-tracking closures).
     visits: Arc<RwLock<HashMap<String, usize>>>,
+    /// Seen `<<once>>` block IDs.
+    once_seen: HashSet<String>,
 }
 
 impl<S: VariableStorage> Runner<S> {
@@ -103,6 +105,7 @@ impl<S: VariableStorage> Runner<S> {
             option_bodies: Vec::new(),
             library,
             visits,
+            once_seen: HashSet::new(),
         }
     }
 
@@ -300,6 +303,24 @@ impl<S: VariableStorage> Runner<S> {
                         .map(|f| f.node.clone())
                         .unwrap_or_default();
                     self.stack.push(Frame::new(title, body));
+                }
+                Ok(None)
+            }
+            Stmt::Once { block_id, cond_src, body, else_body } => {
+                // Check optional condition
+                let cond_ok = match cond_src {
+                    Some(src) => self.eval_expr_src(&src)?.is_truthy(),
+                    None => true,
+                };
+                let first_time = !self.once_seen.contains(&block_id);
+                let run_body = cond_ok && first_time;
+                if run_body {
+                    self.once_seen.insert(block_id);
+                }
+                let chosen = if run_body { body } else { else_body };
+                if !chosen.is_empty() {
+                    let title = self.stack.last().map(|f| f.node.clone()).unwrap_or_default();
+                    self.stack.push(Frame::new(title, chosen));
                 }
                 Ok(None)
             }
