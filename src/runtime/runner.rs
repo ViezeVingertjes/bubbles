@@ -35,6 +35,9 @@ impl Frame {
     }
 }
 
+/// Option bodies held during `AwaitingOption` state.
+type OptionBodies = Vec<Vec<Stmt>>;
+
 /// Drives execution of a compiled [`Program`], yielding [`DialogueEvent`]s one at a time.
 ///
 /// # Pull model
@@ -49,6 +52,8 @@ pub struct Runner<S: VariableStorage> {
     stack: Vec<Frame>,
     /// Pending events ready to be returned.
     pending: VecDeque<DialogueEvent>,
+    /// Bodies for each option while awaiting selection.
+    option_bodies: OptionBodies,
 }
 
 impl<S: VariableStorage> Runner<S> {
@@ -61,6 +66,7 @@ impl<S: VariableStorage> Runner<S> {
             state: State::Idle,
             stack: Vec::new(),
             pending: VecDeque::new(),
+            option_bodies: Vec::new(),
         }
     }
 
@@ -113,14 +119,26 @@ impl<S: VariableStorage> Runner<S> {
     /// Selects an option by index after receiving [`DialogueEvent::Options`].
     ///
     /// # Errors
-    /// Returns [`DialogueError::Runtime`] if called when not awaiting an option.
-    pub fn select_option(&mut self, _index: usize) -> Result<()> {
+    /// Returns [`DialogueError::Runtime`] if called when not awaiting an option or index is out of
+    /// range.
+    pub fn select_option(&mut self, index: usize) -> Result<()> {
         if self.state != State::AwaitingOption {
             return Err(DialogueError::Runtime(
                 "select_option() called when not awaiting an option".into(),
             ));
         }
+        let body = self.option_bodies.get(index).cloned().ok_or_else(|| {
+            DialogueError::Runtime(format!(
+                "option index {index} out of range ({})",
+                self.option_bodies.len()
+            ))
+        })?;
+        self.option_bodies.clear();
         self.state = State::Running;
+        if !body.is_empty() {
+            let title = self.stack.last().map(|f| f.node.clone()).unwrap_or_default();
+            self.stack.push(Frame::new(title, body));
+        }
         Ok(())
     }
 
@@ -198,6 +216,26 @@ impl<S: VariableStorage> Runner<S> {
                 let value = self.eval_expr_src(&expr_src)?;
                 self.storage.set(&name, value);
                 Ok(None)
+            }
+            Stmt::Options(items) => {
+                let mut options = Vec::with_capacity(items.len());
+                let mut bodies = Vec::with_capacity(items.len());
+                for item in items {
+                    let available = match &item.cond_src {
+                        Some(src) => self.eval_expr_src(src)?.is_truthy(),
+                        None => true,
+                    };
+                    let text = self.interpolate_text(&item.text)?;
+                    options.push(crate::runtime::event::DialogueOption {
+                        text,
+                        available,
+                        tags: item.tags.clone(),
+                    });
+                    bodies.push(item.body);
+                }
+                self.option_bodies = bodies;
+                self.state = State::AwaitingOption;
+                Ok(Some(DialogueEvent::Options(options)))
             }
             Stmt::If { branches, else_body } => {
                 let mut chosen = None;

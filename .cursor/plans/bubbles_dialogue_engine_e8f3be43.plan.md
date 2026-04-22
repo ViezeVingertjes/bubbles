@@ -31,10 +31,10 @@ todos:
     status: completed
   - id: interpolation
     content: "TDD: {expr} inline substitution inside line/option/command text (reuses expression evaluator — DRY)"
-    status: in_progress
+    status: completed
   - id: options
     content: "TDD: shortcut options (->) emitted as DialogueEvent::Options; select_option round-trip; guards; indented bodies"
-    status: pending
+    status: in_progress
   - id: jumps
     content: "TDD: <<jump Node>> transitions correctly emitting NodeComplete/NodeStarted"
     status: pending
