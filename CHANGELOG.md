@@ -6,6 +6,10 @@ All notable changes are documented here (keep-a-changelog format).
 
 ### Added
 
+- CI and `scripts/check-wasm.sh`: `wasm32-unknown-unknown` clippy for `--no-default-features` and
+  `--no-default-features --features serde` (library only; keeps the crate wasm-compatible).
+- `autoexamples = false` with explicit `[[example]]` entries so ad-hoc files under `examples/` are
+  not picked up by Cargo (local scratch examples stay out of `cargo clippy --all-targets`).
 - `line_id_from_tags()` helper and `line_id: Option<String>` on `DialogueEvent::Line` and
   `DialogueOption` when the source has a `#line:<id>` tag (stable key for VO / loc without re-parsing `tags`).
 

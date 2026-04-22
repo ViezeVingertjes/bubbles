@@ -27,6 +27,9 @@ jobs:
       - name: Test (no default features)
         run: cargo test --no-default-features
 
+      - name: WebAssembly (library)
+        run: bash scripts/check-wasm.sh
+
       - name: Docs
         run: RUSTDOCFLAGS="-D warnings" cargo doc --all-features --no-deps
 
