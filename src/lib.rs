@@ -1,6 +1,45 @@
-//! Lightweight engine-agnostic dialogue runtime for Rust games.
+//! Lightweight, engine-agnostic dialogue runtime for Rust games.
 //!
-//! See the [README](https://github.com/example/bubbles) for a quick-start guide.
+//! Write branching dialogue in `.bub` scripts, compile them once, then drive
+//! the dialogue from any game loop via a pull-based event API.
+//!
+//! # Quick start
+//!
+//! ```rust
+//! use bubbles::{compile, DialogueEvent, HashMapStorage, Runner};
+//!
+//! let source = "title: Greet\n---\nHello!\n===\n";
+//! let prog = compile(source).unwrap();
+//! let mut runner = Runner::new(prog, HashMapStorage::new());
+//! runner.start("Greet").unwrap();
+//!
+//! assert!(matches!(
+//!     runner.next_event().unwrap(),
+//!     Some(DialogueEvent::NodeStarted(_))
+//! ));
+//! assert!(matches!(
+//!     runner.next_event().unwrap(),
+//!     Some(DialogueEvent::Line { .. })
+//! ));
+//! assert!(matches!(
+//!     runner.next_event().unwrap(),
+//!     Some(DialogueEvent::NodeComplete(_))
+//! ));
+//! assert!(matches!(
+//!     runner.next_event().unwrap(),
+//!     Some(DialogueEvent::DialogueComplete)
+//! ));
+//! ```
+//!
+//! # Modules
+//!
+//! | Module | Contents |
+//! |--------|----------|
+//! | [`value`] | [`Value`], [`VariableStorage`], [`HashMapStorage`] |
+//! | [`compiler`] | [`compile`], [`compile_many`], [`validate`], [`Program`] |
+//! | [`runtime`] | [`Runner`], [`DialogueEvent`], [`LineProvider`] |
+//! | [`library`] | [`FunctionLibrary`] and built-in functions |
+//! | [`saliency`] | [`SaliencyStrategy`], [`FirstAvailable`] |
 
 #![deny(missing_docs, unsafe_code)]
 #![warn(clippy::pedantic, clippy::nursery, clippy::cargo)]

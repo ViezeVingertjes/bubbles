@@ -5,7 +5,7 @@ pub mod expr;
 pub mod lexer;
 pub(crate) mod parser;
 pub mod program;
-pub mod validate;
+pub(crate) mod validate;
 
 pub use ast::{Node, Stmt};
 pub use lexer::{Spanned, Token, tokenise};

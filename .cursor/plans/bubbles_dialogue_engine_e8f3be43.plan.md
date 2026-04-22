@@ -88,10 +88,10 @@ todos:
     status: completed
   - id: example
     content: Write examples/cli_runner.rs terminal driver consuming DialogueEvent
-    status: in_progress
+    status: completed
   - id: docs
     content: Crate-level rustdoc with usage walkthrough, doc tests on every public item, README quick-start, finalize CHANGELOG 0.1.0
-    status: pending
+    status: in_progress
   - id: ci_polish
     content: "Green-light CI: fmt, clippy pedantic+nursery, test (all-features and no-default-features), doc --no-deps -D warnings, cargo-deny"
     status: pending
