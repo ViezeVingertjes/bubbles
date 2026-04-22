@@ -63,6 +63,53 @@ fn two_options_second_selected() {
 }
 
 #[test]
+fn option_with_no_body_just_selectable() {
+    let src = "\
+title: Start
+---
+What do you say?
+-> Hello
+-> Goodbye
+===
+";
+    let prog = compile(src).unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("Start").unwrap();
+    let mut got_options = false;
+    while let Some(ev) = runner.next_event().unwrap() {
+        if let DialogueEvent::Options(opts) = ev {
+            got_options = true;
+            assert_eq!(opts.len(), 2);
+            assert_eq!(opts[0].text, "Hello");
+            assert_eq!(opts[1].text, "Goodbye");
+            runner.select_option(0).unwrap();
+        }
+    }
+    assert!(got_options);
+}
+
+#[test]
+fn option_metadata_exposed() {
+    let src = "\
+title: Start
+---
+-> Buy #expensive
+-> Sell
+===
+";
+    let prog = compile(src).unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("Start").unwrap();
+    while let Some(ev) = runner.next_event().unwrap() {
+        if let DialogueEvent::Options(opts) = ev {
+            assert!(opts[0].tags.contains(&"expensive".to_string()));
+            runner.select_option(1).unwrap();
+            break;
+        }
+    }
+}
+
+#[test]
 fn option_guard_marks_unavailable() {
     let src = "\
 title: Start

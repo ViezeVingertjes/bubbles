@@ -1,6 +1,6 @@
 //! Integration tests for runner flow: node start, completion, and dialogue end.
 
-use bubbles::{DialogueEvent, HashMapStorage, Runner, compile};
+use bubbles::{DialogueEvent, HashMapStorage, Runner, Value, VariableStorage, compile};
 
 fn drain(runner: &mut Runner<HashMapStorage>) -> Vec<DialogueEvent> {
     let mut events = Vec::new();
@@ -41,4 +41,83 @@ fn start_unknown_node_errors() {
     let prog = compile("title: Real\n---\n===\n").unwrap();
     let mut runner = Runner::new(prog, HashMapStorage::new());
     assert!(runner.start("Fake").is_err());
+}
+
+#[test]
+fn next_event_before_start_returns_none() {
+    let prog = compile("title: A\n---\n===\n").unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    // No start() called; runner is Idle → should return Ok(None)
+    assert_eq!(runner.next_event().unwrap(), None);
+}
+
+#[test]
+fn select_option_when_not_awaiting_errors() {
+    let prog = compile("title: A\n---\n===\n").unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("A").unwrap();
+    assert!(runner.select_option(0).is_err());
+}
+
+#[test]
+fn select_option_out_of_range_errors() {
+    let src = "\
+title: A
+---
+-> Yes
+-> No
+===
+";
+    let prog = compile(src).unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("A").unwrap();
+    while let Some(ev) = runner.next_event().unwrap() {
+        if let DialogueEvent::Options(_) = ev {
+            break;
+        }
+    }
+    assert!(runner.select_option(99).is_err());
+}
+
+#[test]
+fn multiple_jumps_chain() {
+    let src = "\
+title: A
+---
+<<jump B>>
+===
+title: B
+---
+<<jump C>>
+===
+title: C
+---
+End.
+===
+";
+    let prog = compile(src).unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("A").unwrap();
+    let events = drain(&mut runner);
+    let line_text: Vec<_> = events
+        .iter()
+        .filter_map(|e| {
+            if let DialogueEvent::Line { text, .. } = e {
+                Some(text.as_str())
+            } else {
+                None
+            }
+        })
+        .collect();
+    assert_eq!(line_text, ["End."]);
+}
+
+#[test]
+fn storage_getter_works() {
+    use bubbles::{Value, VariableStorage};
+    let mut storage = HashMapStorage::new();
+    storage.set("$x", Value::Number(42.0));
+    let prog = compile("title: A\n---\n===\n").unwrap();
+    let runner = Runner::new(prog, storage);
+    assert_eq!(runner.storage().get("$x"), Some(Value::Number(42.0)));
 }

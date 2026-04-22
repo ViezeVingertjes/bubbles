@@ -64,3 +64,69 @@ fn declare_initialises_once() {
     // second declare is a no-op since $x was already set
     assert_eq!(runner.storage().get("$x"), Some(Value::Number(5.0)));
 }
+
+#[test]
+fn declare_read_in_line_interpolation() {
+    let src = "\
+title: Start
+---
+<<declare $hp = 100>>
+You have {$hp} health.
+===
+";
+    let prog = compile(src).unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("Start").unwrap();
+    let mut line_text = String::new();
+    while let Some(ev) = runner.next_event().unwrap() {
+        if let DialogueEvent::Line { text, .. } = ev {
+            line_text = text;
+        }
+    }
+    assert_eq!(line_text, "You have 100 health.");
+}
+
+#[test]
+fn set_string_variable() {
+    let src = "title: S\n---\n<<set $name = \"Alice\">>\n===\n";
+    let prog = compile(src).unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("S").unwrap();
+    while runner.next_event().unwrap().is_some() {}
+    assert_eq!(
+        runner.storage().get("$name"),
+        Some(Value::Text("Alice".into()))
+    );
+}
+
+#[test]
+fn set_overrides_existing_value() {
+    let src = "\
+title: S
+---
+<<set $x = 1>>
+<<set $x = 2>>
+===
+";
+    let prog = compile(src).unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("S").unwrap();
+    while runner.next_event().unwrap().is_some() {}
+    assert_eq!(runner.storage().get("$x"), Some(Value::Number(2.0)));
+}
+
+#[test]
+fn storage_mut_allows_external_set() {
+    let src = "title: S\n---\n{$x}\n===\n";
+    let prog = compile(src).unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.storage_mut().set("$x", Value::Number(77.0));
+    runner.start("S").unwrap();
+    let mut texts = Vec::new();
+    while let Some(ev) = runner.next_event().unwrap() {
+        if let DialogueEvent::Line { text, .. } = ev {
+            texts.push(text);
+        }
+    }
+    assert_eq!(texts, ["77"]);
+}
