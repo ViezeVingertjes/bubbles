@@ -4,7 +4,7 @@ overview: A minimal, engine-agnostic Rust crate (~3-4k LOC) providing the high-v
 todos:
   - id: scaffold
     content: "Scaffold project: Cargo.toml (edition 2024, lint table, dual license, feature flags), rust-toolchain.toml, README, CHANGELOG, LICENSE-MIT, LICENSE-APACHE, deny.toml, CI workflow, scripts/install-hooks.sh, scripts/check-naming.sh, scripts/check-file-sizes.sh, src/lib.rs with crate-wide deny/warn attributes and the empty module folder skeleton (value/, compiler/, runtime/, saliency/, library/)"
-    status: in_progress
+    status: completed
   - id: value_storage
     content: "TDD: Value enum + VariableStorage trait + HashMapStorage default impl (+ serde feature-gated derives)"
     status: completed
@@ -13,10 +13,10 @@ todos:
     status: completed
   - id: parser_skeleton
     content: "TDD: hand-written recursive-descent parser — empty node, title/tags header, body delimiters, DialogueError with spans"
-    status: in_progress
+    status: completed
   - id: runner_skeleton
     content: "TDD: Runner state machine emitting NodeStarted / DialogueComplete; define DialogueEvent enum (#[non_exhaustive])"
-    status: pending
+    status: in_progress
   - id: lines
     content: "TDD: parse and emit Line events (plain + Speaker: attribution + metadata vec)"
     status: pending
