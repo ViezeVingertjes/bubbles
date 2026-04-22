@@ -1,5 +1,6 @@
 //! [`Runner`] — the public entry point for executing a compiled [`Program`].
 
+use crate::compiler::ast::Stmt;
 use crate::compiler::Program;
 use crate::error::{DialogueError, Result};
 use crate::runtime::event::DialogueEvent;
@@ -109,6 +110,13 @@ impl<S: VariableStorage> Runner<S> {
 
     // ── execution engine (grows with each todo step) ──────────────────────────
 
+    fn execute_stmt(&mut self, stmt: Stmt) -> Result<Option<DialogueEvent>> {
+        match stmt {
+            Stmt::Line { speaker, text, tags } => Ok(Some(DialogueEvent::Line { speaker, text, tags })),
+            _ => Err(DialogueError::Runtime("unimplemented statement type".into())),
+        }
+    }
+
     fn step(&mut self) -> Result<Option<DialogueEvent>> {
         let node_title = match &self.current_node {
             Some(t) => t.clone(),
@@ -132,7 +140,15 @@ impl<S: VariableStorage> Runner<S> {
             return Ok(Some(DialogueEvent::NodeComplete(node_title)));
         }
 
-        // placeholder: more statement types added in subsequent commits
-        Err(DialogueError::Runtime("unimplemented statement type".into()))
+        // Clone what we need before borrowing mutably.
+        let stmt = self
+            .program
+            .node_group(&node_title)
+            .and_then(|g| g.first())
+            .map(|n| n.body[self.cursor].clone())
+            .ok_or_else(|| DialogueError::Runtime("cursor out of range".into()))?;
+        self.cursor += 1;
+
+        self.execute_stmt(stmt)
     }
 }

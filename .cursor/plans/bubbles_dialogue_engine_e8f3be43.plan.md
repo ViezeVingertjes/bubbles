@@ -16,10 +16,10 @@ todos:
     status: completed
   - id: runner_skeleton
     content: "TDD: Runner state machine emitting NodeStarted / DialogueComplete; define DialogueEvent enum (#[non_exhaustive])"
-    status: in_progress
+    status: completed
   - id: lines
     content: "TDD: parse and emit Line events (plain + Speaker: attribution + metadata vec)"
-    status: pending
+    status: in_progress
   - id: expressions
     content: "TDD: expression AST + evaluator — arithmetic precedence, comparison, boolean, unary, parens; proptest coverage"
     status: pending
