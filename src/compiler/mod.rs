@@ -9,7 +9,7 @@ pub(crate) mod validate;
 
 pub use ast::{BinOp, Expr, Node, Stmt, UnOp};
 pub use lexer::{Spanned, Token, tokenise};
-pub use program::Program;
+pub use program::{Program, VariableDecl};
 pub use validate::validate;
 
 use crate::error::Result;
