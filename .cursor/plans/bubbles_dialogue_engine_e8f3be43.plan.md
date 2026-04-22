@@ -61,10 +61,10 @@ todos:
     status: completed
   - id: line_groups
     content: "TDD: line groups (=> prefix) with optional <<if>> guards selected via the active SaliencyStrategy"
-    status: in_progress
+    status: completed
   - id: node_groups
     content: "TDD: multiple nodes sharing a title with `when:` header clauses; start() on a group title picks via SaliencyStrategy"
-    status: pending
+    status: in_progress
   - id: line_metadata
     content: "TDD: parse #line:xxxx (and other #tag) into Line.metadata on lines, options, and commands"
     status: pending

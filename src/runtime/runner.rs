@@ -121,7 +121,7 @@ impl<S: VariableStorage> Runner<S> {
         if !self.program.node_exists(node) {
             return Err(DialogueError::UnknownNode(node.to_owned()));
         }
-        let body = self.node_body(node)?;
+        let body = self.pick_node_body(node)?;
         self.stack.clear();
         self.stack.push(Frame::new(node.to_owned(), body));
         self.state = State::Running;
@@ -215,6 +215,36 @@ impl<S: VariableStorage> Runner<S> {
             .and_then(|g| g.first())
             .map(|n| n.body.clone())
             .ok_or_else(|| DialogueError::UnknownNode(title.to_owned()))
+    }
+
+    /// Like `node_body` but applies saliency selection for node groups with `when:` headers.
+    fn pick_node_body(&self, title: &str) -> Result<Vec<Stmt>> {
+        let group = self.program
+            .node_group(title)
+            .ok_or_else(|| DialogueError::UnknownNode(title.to_owned()))?;
+
+        // If none of the variants have a `when:` header, use the first (singleton node).
+        let has_when = group.iter().any(|n| n.when_src.is_some());
+        if !has_when {
+            return Ok(group[0].body.clone());
+        }
+
+        // Evaluate each `when:` condition, build candidates, apply saliency.
+        let candidates: Vec<Candidate<'_>> = group
+            .iter()
+            .map(|n| {
+                let available = n.when_src.as_deref()
+                    .map(|src| self.eval_expr_src(src).map(|v| v.is_truthy()).unwrap_or(false))
+                    .unwrap_or(true);
+                Candidate { id: &n.title, available }
+            })
+            .collect();
+
+        let idx = self.saliency.select(&candidates)
+            .ok_or_else(|| DialogueError::Runtime(format!(
+                "node group '{title}' has no available candidate"
+            )))?;
+        Ok(group[idx].body.clone())
     }
 
     fn eval_expr_src(&self, src: &str) -> Result<Value> {
