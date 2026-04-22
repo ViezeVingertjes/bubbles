@@ -80,6 +80,30 @@ impl FunctionLibrary {
             let n = require_one_number("abs", &args)?;
             Ok(Value::Number(n.abs()))
         });
+        self.register("clamp", |args| {
+            match args.as_slice() {
+                [Value::Number(v), Value::Number(lo), Value::Number(hi)] => {
+                    Ok(Value::Number(v.clamp(*lo, *hi)))
+                }
+                _ => Err(DialogueError::Function {
+                    name: "clamp".into(),
+                    message: format!("expected 3 number arguments, got {:?}", args),
+                }),
+            }
+        });
+        self.register("string", |args| {
+            match args.into_iter().next() {
+                Some(v) => Ok(Value::Text(v.to_string())),
+                None => Err(DialogueError::Function {
+                    name: "string".into(),
+                    message: "expected 1 argument".into(),
+                }),
+            }
+        });
+        self.register("int", |args| {
+            let n = require_one_number("int", &args)?;
+            Ok(Value::Number(n.trunc()))
+        });
     }
 
     #[cfg(feature = "rand")]

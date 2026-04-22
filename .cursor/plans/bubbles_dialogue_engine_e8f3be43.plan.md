@@ -70,10 +70,10 @@ todos:
     status: completed
   - id: line_provider
     content: "TDD: LineProvider trait with default identity impl; Runner consults it when a Line carries a #line: tag before emitting"
-    status: in_progress
+    status: completed
   - id: stdlib_fns
     content: "TDD: expanded built-in function stdlib - random_range, round, floor, ceil, min, max in addition to random/dice/visited/visited_count"
-    status: pending
+    status: in_progress
   - id: multi_file
     content: "TDD: compile_many(&[(name, source)]) merges multiple sources into one Program, erroring on duplicate node titles"
     status: pending
