@@ -67,10 +67,10 @@ todos:
     status: completed
   - id: line_metadata
     content: "TDD: parse #line:xxxx (and other #tag) into Line.metadata on lines, options, and commands"
-    status: in_progress
+    status: completed
   - id: line_provider
     content: "TDD: LineProvider trait with default identity impl; Runner consults it when a Line carries a #line: tag before emitting"
-    status: pending
+    status: in_progress
   - id: stdlib_fns
     content: "TDD: expanded built-in function stdlib - random_range, round, floor, ceil, min, max in addition to random/dice/visited/visited_count"
     status: pending

@@ -11,6 +11,7 @@ use crate::library::FunctionLibrary;
 use crate::runtime::eval::eval;
 use crate::runtime::event::DialogueEvent;
 use crate::runtime::interpolate::interpolate;
+use crate::runtime::provider::{LineProvider, PassthroughProvider};
 use crate::saliency::{Candidate, FirstAvailable, SaliencyStrategy};
 use crate::value::{Value, VariableStorage};
 
@@ -65,6 +66,8 @@ pub struct Runner<S: VariableStorage> {
     once_seen: HashSet<String>,
     /// Strategy used for line-group and node-group selection.
     saliency: Box<dyn SaliencyStrategy>,
+    /// Optional localisation provider.
+    provider: Box<dyn LineProvider>,
 }
 
 impl<S: VariableStorage> Runner<S> {
@@ -110,6 +113,7 @@ impl<S: VariableStorage> Runner<S> {
             visits,
             once_seen: HashSet::new(),
             saliency: Box::new(FirstAvailable),
+            provider: Box::new(PassthroughProvider),
         }
     }
 
@@ -207,6 +211,11 @@ impl<S: VariableStorage> Runner<S> {
         self.saliency = Box::new(strategy);
     }
 
+    /// Sets the line provider used for localisation lookup.
+    pub fn set_provider(&mut self, provider: impl LineProvider) {
+        self.provider = Box::new(provider);
+    }
+
     // ── internals ─────────────────────────────────────────────────────────────
 
     fn node_body(&self, title: &str) -> Result<Vec<Stmt>> {
@@ -298,6 +307,11 @@ impl<S: VariableStorage> Runner<S> {
         match stmt {
             Stmt::Line { speaker, text, tags } => {
                 let text = self.interpolate_text(&text)?;
+                // Check for a #line:<id> tag and ask the provider for a translation.
+                let text = tags.iter()
+                    .find_map(|t| t.strip_prefix("line:"))
+                    .and_then(|id| self.provider.get(id))
+                    .unwrap_or(text);
                 Ok(Some(DialogueEvent::Line { speaker, text, tags }))
             }
             Stmt::Set { name, expr_src } => {
