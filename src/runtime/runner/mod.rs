@@ -1,6 +1,7 @@
 //! [`Runner`] — the public entry point for executing a compiled [`Program`].
 
 pub(super) mod execute;
+pub(super) mod helpers;
 
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::{Arc, RwLock};
@@ -9,11 +10,9 @@ use crate::compiler::Program;
 use crate::compiler::ast::Stmt;
 use crate::error::{DialogueError, Result};
 use crate::library::FunctionLibrary;
-use crate::runtime::eval::eval;
 use crate::runtime::event::DialogueEvent;
-use crate::runtime::interpolate::interpolate;
 use crate::runtime::provider::{LineProvider, PassthroughProvider};
-use crate::saliency::{Candidate, FirstAvailable, SaliencyStrategy};
+use crate::saliency::{FirstAvailable, SaliencyStrategy};
 use crate::value::{Value, VariableStorage};
 
 /// Execution state of the runner.
@@ -229,66 +228,58 @@ impl<S: VariableStorage> Runner<S> {
         self.provider = Box::new(provider);
     }
 
-    // ── internals ─────────────────────────────────────────────────────────────
+    // ── save / load ───────────────────────────────────────────────────────────
 
-    pub(super) fn node_body(&self, title: &str) -> Result<Vec<Stmt>> {
-        self.program
-            .node_group(title)
-            .and_then(|g| g.first())
-            .map(|n| n.body.clone())
-            .ok_or_else(|| DialogueError::UnknownNode(title.to_owned()))
-    }
-
-    pub(super) fn pick_node_body(&self, title: &str) -> Result<Vec<Stmt>> {
-        let group = self
-            .program
-            .node_group(title)
-            .ok_or_else(|| DialogueError::UnknownNode(title.to_owned()))?;
-
-        let has_when = group.iter().any(|n| n.when_src.is_some());
-        if !has_when {
-            return Ok(group[0].body.clone());
+    /// Captures the current session state into a serialisable `RunnerSnapshot`.
+    ///
+    /// The snapshot records the active node title, visit counts, and the set of
+    /// exhausted `<<once>>` blocks.  Variable storage is **not** included; serialise
+    /// it via [`Runner::storage`] alongside the snapshot.
+    ///
+    /// Restoring with [`Runner::restore`] will restart execution from the beginning
+    /// of the snapshotted node.
+    ///
+    /// Only available with the `serde` feature.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the internal visits lock is poisoned (only possible if a previous
+    /// thread panicked while holding it, which is not expected in normal use).
+    #[cfg(feature = "serde")]
+    #[must_use]
+    pub fn snapshot(&self) -> crate::runtime::RunnerSnapshot {
+        crate::runtime::RunnerSnapshot {
+            current_node: self.stack.last().map(|f| f.node.clone()),
+            visits: self.visits.read().unwrap().clone(),
+            once_seen: self.once_seen.clone(),
         }
-
-        let candidates: Vec<Candidate<'_>> = group
-            .iter()
-            .map(|n| {
-                let available = n.when_src.as_deref().is_none_or(|src| {
-                    self.eval_expr_src(src)
-                        .map(|v| v.is_truthy())
-                        .unwrap_or(false)
-                });
-                Candidate {
-                    id: &n.title,
-                    available,
-                }
-            })
-            .collect();
-
-        let idx = self.saliency.select(&candidates).ok_or_else(|| {
-            DialogueError::Runtime(format!("node group '{title}' has no available candidate"))
-        })?;
-        Ok(group[idx].body.clone())
     }
 
-    pub(super) fn eval_expr_src(&self, src: &str) -> Result<Value> {
-        let expr = crate::compiler::expr::parse_expr(src)?;
-        eval(&expr, &self.storage, &|name, args| {
-            self.library.call(name, args)
-        })
-    }
-
-    pub(super) fn interpolate_text(&self, text: &str) -> Result<String> {
-        interpolate(text, &self.storage, &|name, args| {
-            self.library.call(name, args)
-        })
-    }
-
-    pub(super) fn parse_command_args(&self, args_src: &str) -> Result<Vec<String>> {
-        if args_src.trim().is_empty() {
-            return Ok(Vec::new());
+    /// Applies a previously captured `RunnerSnapshot`, restoring visit counts
+    /// and the `<<once>>` exhaustion set, then re-enters the snapshotted node
+    /// from its beginning.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`DialogueError::UnknownNode`] if the snapshotted node no longer
+    /// exists in the program (e.g. after a script update).
+    ///
+    /// # Panics
+    ///
+    /// Panics if the internal visits lock is poisoned (not expected in normal use).
+    ///
+    /// Only available with the `serde` feature.
+    #[cfg(feature = "serde")]
+    pub fn restore(&mut self, snapshot: crate::runtime::RunnerSnapshot) -> Result<()> {
+        *self.visits.write().unwrap() = snapshot.visits;
+        self.once_seen = snapshot.once_seen;
+        self.stack.clear();
+        self.pending.clear();
+        self.option_bodies.clear();
+        self.state = State::Idle;
+        if let Some(node) = snapshot.current_node {
+            self.start(&node)?;
         }
-        let interpolated = self.interpolate_text(args_src)?;
-        Ok(interpolated.split_whitespace().map(str::to_owned).collect())
+        Ok(())
     }
 }

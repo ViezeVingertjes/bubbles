@@ -5,8 +5,12 @@ mod event;
 pub(crate) mod interpolate;
 mod provider;
 mod runner;
+#[cfg(feature = "serde")]
+mod snapshot;
 
 pub use eval::eval;
 pub use event::{DialogueEvent, DialogueOption};
 pub use provider::{HashMapProvider, LineProvider, PassthroughProvider};
 pub use runner::Runner;
+#[cfg(feature = "serde")]
+pub use snapshot::RunnerSnapshot;

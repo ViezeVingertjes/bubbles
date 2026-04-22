@@ -101,19 +101,24 @@ impl<S: VariableStorage> Runner<S> {
         &mut self,
         variants: &[crate::compiler::ast::LineVariant],
     ) -> Result<Option<DialogueEvent>> {
-        let candidates: Vec<Candidate<'_>> = variants
+        // Collect availability into a local Vec so `self.saliency` can be mutably
+        // borrowed during `select` without conflicting with the prior immutable reads.
+        let availability: Vec<bool> = variants
             .iter()
             .map(|v| {
-                let available = v.cond_src.as_ref().is_none_or(|src| {
+                v.cond_src.as_ref().is_none_or(|src| {
                     self.eval_expr_src(src)
                         .map(|val| val.is_truthy())
                         .unwrap_or(false)
-                }) && !(v.once && self.once_seen.contains(&v.id));
-                Candidate {
-                    id: &v.id,
-                    available,
-                }
+                }) && !(v.once && self.once_seen.contains(&v.id))
             })
+            .collect();
+
+        let candidate_ids: Vec<&str> = variants.iter().map(|v| v.id.as_str()).collect();
+        let candidates: Vec<Candidate<'_>> = candidate_ids
+            .iter()
+            .zip(availability.iter())
+            .map(|(&id, &available)| Candidate { id, available })
             .collect();
 
         if let Some(idx) = self.saliency.select(&candidates) {
@@ -212,7 +217,7 @@ impl<S: VariableStorage> Runner<S> {
         if !self.program.node_exists(&target) {
             return Err(DialogueError::UnknownNode(target));
         }
-        let body = self.node_body(&target)?;
+        let body = self.pick_node_body(&target)?;
         self.stack.clear();
         self.stack.push(Frame::new(target.clone(), body));
         *self
@@ -229,7 +234,7 @@ impl<S: VariableStorage> Runner<S> {
         if !self.program.node_exists(&target) {
             return Err(DialogueError::UnknownNode(target));
         }
-        let body = self.node_body(&target)?;
+        let body = self.pick_node_body(&target)?;
         *self
             .visits
             .write()
