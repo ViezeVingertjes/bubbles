@@ -2,8 +2,8 @@
 
 **A minimal, engine-agnostic dialogue runtime for Rust games.**
 
-[![Crates.io](https://img.shields.io/crates/v/bubbles.svg)](https://crates.io/crates/bubbles)
-[![docs.rs](https://docs.rs/bubbles/badge.svg)](https://docs.rs/bubbles)
+[![Crates.io](https://img.shields.io/crates/v/bubbles-dialogue.svg)](https://crates.io/crates/bubbles-dialogue)
+[![docs.rs](https://docs.rs/bubbles-dialogue/badge.svg)](https://docs.rs/bubbles-dialogue)
 [![CI](https://github.com/ViezeVingertjes/bubbles/actions/workflows/ci.yml/badge.svg)](https://github.com/ViezeVingertjes/bubbles/actions)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
 
@@ -53,7 +53,7 @@ Add to `Cargo.toml`:
 
 ```toml
 [dependencies]
-bubbles = "0.1"
+bubbles-dialogue = "0.1"
 ```
 
 ```rust

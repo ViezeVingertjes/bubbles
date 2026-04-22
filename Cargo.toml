@@ -1,17 +1,20 @@
 [package]
-name        = "bubbles"
+name        = "bubbles-dialogue"
 version     = "0.1.0"
 edition     = "2024"
 license     = "MIT OR Apache-2.0"
 description = "Lightweight engine-agnostic dialogue runtime for Rust games."
 repository  = "https://github.com/ViezeVingertjes/bubbles"
 homepage    = "https://github.com/ViezeVingertjes/bubbles"
-documentation = "https://docs.rs/bubbles"
+documentation = "https://docs.rs/bubbles-dialogue"
 readme      = "README.md"
 keywords    = ["dialogue", "game", "narrative", "interactive-fiction"]
 categories  = ["game-development", "parser-implementations"]
 rust-version = "1.95"
 exclude     = [".github", "scripts"]
+
+[lib]
+name = "bubbles"
 
 [features]
 default = ["rand"]
