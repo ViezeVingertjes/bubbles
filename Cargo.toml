@@ -10,7 +10,7 @@ documentation = "https://docs.rs/bubbles"
 readme      = "README.md"
 keywords    = ["dialogue", "game", "narrative", "interactive-fiction"]
 categories  = ["game-development", "parser-implementations"]
-rust-version = "1.85"
+rust-version = "1.95"
 exclude     = [".github", "scripts"]
 
 [features]

@@ -52,10 +52,11 @@ fn main() {
                         .next()
                         .and_then(Result::ok)
                         .unwrap_or_default();
-                    if let Ok(n) = line.trim().parse::<usize>() {
-                        if n < opts.len() && opts[n].available {
-                            break n;
-                        }
+                    if let Ok(n) = line.trim().parse::<usize>()
+                        && n < opts.len()
+                        && opts[n].available
+                    {
+                        break n;
                     }
                     println!("invalid choice");
                 };

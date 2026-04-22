@@ -71,10 +71,10 @@ impl Parser<'_> {
                 _ => break,
             }
         }
-        if let Some((_, l)) = self.peek() {
-            if l.trim() == "<<endif>>" {
-                self.advance();
-            }
+        if let Some((_, l)) = self.peek()
+            && l.trim() == "<<endif>>"
+        {
+            self.advance();
         }
         Ok(Stmt::If {
             branches,
@@ -93,17 +93,18 @@ impl Parser<'_> {
             None
         };
         let body = self.parse_body(cur_indent + 1)?;
-        let mut else_body = Vec::new();
-        if let Some((_, l)) = self.peek() {
-            if l.trim() == "<<else>>" {
-                self.advance();
-                else_body = self.parse_body(cur_indent + 1)?;
-            }
-        }
-        if let Some((_, l)) = self.peek() {
-            if l.trim() == "<<endonce>>" {
-                self.advance();
-            }
+        let else_body = if let Some((_, l)) = self.peek()
+            && l.trim() == "<<else>>"
+        {
+            self.advance();
+            self.parse_body(cur_indent + 1)?
+        } else {
+            Vec::new()
+        };
+        if let Some((_, l)) = self.peek()
+            && l.trim() == "<<endonce>>"
+        {
+            self.advance();
         }
         Ok(Stmt::Once {
             block_id,

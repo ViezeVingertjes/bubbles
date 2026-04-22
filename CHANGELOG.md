@@ -43,6 +43,8 @@ All notable changes are documented here (keep-a-changelog format).
 
 ### Changed
 
+- **MSRV** is **1.95** (was 1.85); CI uses `actions/checkout@v6` and read-only
+  `permissions: contents: read` for the default `GITHUB_TOKEN`.
 - `helpers.rs` files in `src/compiler/parser/` and `src/runtime/runner/` split
   into concept-focused modules (`text`, `command`, `assignments`, `body` /
   `evaluation`, `node_body`) to satisfy the one-concept-per-file rule.

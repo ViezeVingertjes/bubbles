@@ -1,3 +1,4 @@
+# `stable` tracks the newest stable; `rust-version` in Cargo.toml is the floor we support.
 [toolchain]
 channel    = "stable"
 components = ["rustfmt", "clippy"]

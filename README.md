@@ -14,6 +14,8 @@ dialogue from any game loop with a simple pull-based event API.  Designed to
 integrate cleanly into Bevy, Godot, or any custom Rust engine — zero async
 primitives, zero allocations in the hot path beyond the events themselves.
 
+**Requirements:** Rust **1.95** or later (see `rust-version` in `Cargo.toml`).
+
 ---
 
 ## Features

@@ -9,6 +9,9 @@ Thank you for your interest! Contributions of all kinds are welcome — bug repo
 
 ## Development setup
 
+Use **Rust 1.95+** (matches `rust-version` in `Cargo.toml`). The repository pins `stable` in
+`rust-toolchain.toml` so `rustup` can install a matching toolchain automatically.
+
 ```bash
 git clone https://github.com/ViezeVingertjes/bubbles
 cd bubbles

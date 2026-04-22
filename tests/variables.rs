@@ -29,10 +29,10 @@ fn set_using_to_keyword() {
     runner.start("A").unwrap();
     let mut saw = false;
     while let Some(ev) = runner.next_event().unwrap() {
-        if let DialogueEvent::Line { text, .. } = ev {
-            if text == "5" {
-                saw = true;
-            }
+        if let DialogueEvent::Line { text, .. } = ev
+            && text == "5"
+        {
+            saw = true;
         }
     }
     assert!(saw);
