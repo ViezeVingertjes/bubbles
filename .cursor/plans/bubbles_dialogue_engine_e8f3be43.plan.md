@@ -37,13 +37,13 @@ todos:
     status: completed
   - id: jumps
     content: "TDD: <<jump Node>> transitions correctly emitting NodeComplete/NodeStarted"
-    status: in_progress
+    status: completed
   - id: commands
     content: "TDD: generic <<command args>> surfaced as DialogueEvent::Command with parsed args and inline substitution applied"
-    status: pending
+    status: completed
   - id: functions
     content: "TDD: FunctionLibrary — built-in random/dice + host-registered custom functions callable in any expression"
-    status: pending
+    status: in_progress
   - id: visited
     content: "TDD: visited-node tracking + visited()/visited_count() built-ins"
     status: pending

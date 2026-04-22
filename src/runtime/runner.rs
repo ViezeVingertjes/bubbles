@@ -6,6 +6,7 @@ use crate::compiler::ast::Stmt;
 use crate::compiler::expr::parse_expr;
 use crate::compiler::Program;
 use crate::error::{DialogueError, Result};
+use crate::library::FunctionLibrary;
 use crate::runtime::eval::eval;
 use crate::runtime::event::DialogueEvent;
 use crate::runtime::interpolate::interpolate;
@@ -54,6 +55,8 @@ pub struct Runner<S: VariableStorage> {
     pending: VecDeque<DialogueEvent>,
     /// Bodies for each option while awaiting selection.
     option_bodies: OptionBodies,
+    /// Function registry; defaults to built-ins.
+    library: FunctionLibrary,
 }
 
 impl<S: VariableStorage> Runner<S> {
@@ -67,6 +70,7 @@ impl<S: VariableStorage> Runner<S> {
             stack: Vec::new(),
             pending: VecDeque::new(),
             option_bodies: Vec::new(),
+            library: FunctionLibrary::new(),
         }
     }
 
@@ -153,6 +157,11 @@ impl<S: VariableStorage> Runner<S> {
         &mut self.storage
     }
 
+    /// Returns a mutable reference to the function library (for registering host functions).
+    pub fn library_mut(&mut self) -> &mut FunctionLibrary {
+        &mut self.library
+    }
+
     // ── internals ─────────────────────────────────────────────────────────────
 
     fn node_body(&self, title: &str) -> Result<Vec<Stmt>> {
@@ -163,20 +172,13 @@ impl<S: VariableStorage> Runner<S> {
             .ok_or_else(|| DialogueError::UnknownNode(title.to_owned()))
     }
 
-    fn no_fns(name: &str, _args: Vec<Value>) -> Result<Value> {
-        Err(DialogueError::Function {
-            name: name.to_owned(),
-            message: "function library not yet attached".into(),
-        })
-    }
-
     fn eval_expr_src(&self, src: &str) -> Result<Value> {
         let expr = parse_expr(src)?;
-        eval(&expr, &self.storage, &Self::no_fns)
+        eval(&expr, &self.storage, &|name, args| self.library.call(name, args))
     }
 
     fn interpolate_text(&self, text: &str) -> Result<String> {
-        interpolate(text, &self.storage, &Self::no_fns)
+        interpolate(text, &self.storage, &|name, args| self.library.call(name, args))
     }
 
     fn parse_command_args(&self, args_src: &str) -> Result<Vec<String>> {
