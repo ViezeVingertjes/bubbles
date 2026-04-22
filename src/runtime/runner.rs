@@ -179,6 +179,17 @@ impl<S: VariableStorage> Runner<S> {
         interpolate(text, &self.storage, &Self::no_fns)
     }
 
+    fn parse_command_args(&self, args_src: &str) -> Result<Vec<String>> {
+        if args_src.trim().is_empty() {
+            return Ok(Vec::new());
+        }
+        let interpolated = self.interpolate_text(args_src)?;
+        Ok(interpolated
+            .split_whitespace()
+            .map(str::to_owned)
+            .collect())
+    }
+
     fn step(&mut self) -> Result<Option<DialogueEvent>> {
         // pop current frame's next statement
         let stmt = loop {
@@ -247,7 +258,6 @@ impl<S: VariableStorage> Runner<S> {
                     }
                 }
                 let body = chosen.unwrap_or(else_body);
-                // push a synthetic inline frame to execute the chosen body
                 if !body.is_empty() {
                     let title = self
                         .stack
@@ -257,6 +267,21 @@ impl<S: VariableStorage> Runner<S> {
                     self.stack.push(Frame::new(title, body));
                 }
                 Ok(None)
+            }
+            Stmt::Jump(target) => {
+                if !self.program.node_exists(&target) {
+                    return Err(DialogueError::UnknownNode(target));
+                }
+                let body = self.node_body(&target)?;
+                // replace the entire stack — jump is unconditional
+                self.stack.clear();
+                self.stack.push(Frame::new(target.clone(), body));
+                self.pending.push_front(DialogueEvent::NodeStarted(target));
+                Ok(None)
+            }
+            Stmt::Command { name, args_src, tags } => {
+                let args = self.parse_command_args(&args_src)?;
+                Ok(Some(DialogueEvent::Command { name, args, tags }))
             }
             _ => Err(DialogueError::Runtime("unimplemented statement type".into())),
         }

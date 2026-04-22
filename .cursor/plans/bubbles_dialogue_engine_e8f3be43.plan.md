@@ -34,10 +34,10 @@ todos:
     status: completed
   - id: options
     content: "TDD: shortcut options (->) emitted as DialogueEvent::Options; select_option round-trip; guards; indented bodies"
-    status: in_progress
+    status: completed
   - id: jumps
     content: "TDD: <<jump Node>> transitions correctly emitting NodeComplete/NodeStarted"
-    status: pending
+    status: in_progress
   - id: commands
     content: "TDD: generic <<command args>> surfaced as DialogueEvent::Command with parsed args and inline substitution applied"
     status: pending

@@ -1,0 +1,9 @@
+title: Start
+---
+Before jump.
+<<jump Middle>>
+===
+title: Middle
+---
+After jump.
+===
