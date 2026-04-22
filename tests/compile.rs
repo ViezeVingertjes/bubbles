@@ -191,3 +191,57 @@ fn error_dangling_endif_gives_hint() {
         .to_string();
     assert!(err.contains("<<endif>>"), "got: {err}");
 }
+
+#[test]
+fn error_invalid_expression_in_elseif() {
+    let err = compile("title: A\n---\n<<if true>>\n    a\n<<elseif 1+>>\n    b\n<<endif>>\n===\n")
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("<<elseif>>"), "got: {err}");
+}
+
+#[test]
+fn error_invalid_expression_in_once_if() {
+    let err = compile("title: A\n---\n<<once if 1+>>\n    x\n<<endonce>>\n===\n")
+        .unwrap_err()
+        .to_string();
+    assert!(
+        err.contains("<<once if>>") || err.contains("once if"),
+        "got: {err}"
+    );
+}
+
+#[test]
+fn error_unexpected_eof_before_body_delimiter() {
+    let err = compile("title: A\n").unwrap_err().to_string();
+    assert!(
+        err.contains("---") || err.contains("end of file"),
+        "got: {err}"
+    );
+}
+
+#[test]
+fn error_malformed_command_missing_close() {
+    let err = compile("title: A\n---\n<<jump Nowhere\n===\n")
+        .unwrap_err()
+        .to_string();
+    assert!(
+        err.contains(">>") || err.contains("malformed"),
+        "got: {err}"
+    );
+}
+
+#[test]
+fn error_declare_without_equals() {
+    assert!(compile("title: A\n---\n<<declare $x>>\n===\n").is_err());
+}
+
+#[test]
+fn error_set_to_without_expression() {
+    assert!(compile("title: A\n---\n<<set $x to>>\n===\n").is_err());
+}
+
+#[test]
+fn error_set_missing_equals_and_to() {
+    assert!(compile("title: A\n---\n<<set $x 5>>\n===\n").is_err());
+}

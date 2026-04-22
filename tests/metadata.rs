@@ -2,7 +2,7 @@
 
 mod common;
 
-use bubbles::DialogueEvent;
+use bubbles::{DialogueEvent, HashMapProvider, HashMapStorage, Runner, compile};
 
 #[test]
 fn line_tags_emitted() {
@@ -19,6 +19,40 @@ fn line_tags_emitted() {
         tags.as_deref(),
         Some(["greeting".to_owned(), "important".to_owned()].as_slice())
     );
+}
+
+#[test]
+fn line_prefix_tag_uses_provider_for_text() {
+    let prog = compile("title: A\n---\nHi. #line:abc\n===\n").unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    let mut provider = HashMapProvider::new();
+    provider.insert("abc", "Hola");
+    runner.set_provider(provider);
+    runner.start("A").unwrap();
+    let mut line = None;
+    while let Some(ev) = runner.next_event().unwrap() {
+        if let DialogueEvent::Line { text, .. } = ev {
+            line = Some(text);
+            break;
+        }
+    }
+    assert_eq!(line.as_deref(), Some("Hola"));
+}
+
+#[test]
+fn line_prefix_not_in_provider_keeps_interpolated_source() {
+    let prog = compile("title: A\n---\nHello. #line:missing\n===\n").unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.set_provider(HashMapProvider::new());
+    runner.start("A").unwrap();
+    let mut line = None;
+    while let Some(ev) = runner.next_event().unwrap() {
+        if let DialogueEvent::Line { text, .. } = ev {
+            line = Some(text);
+            break;
+        }
+    }
+    assert_eq!(line.as_deref(), Some("Hello."));
 }
 
 #[test]

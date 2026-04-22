@@ -81,4 +81,17 @@ mod tests {
             "2 * 3 = 6"
         );
     }
+
+    #[test]
+    fn unclosed_brace_errors() {
+        let s = HashMapStorage::new();
+        let err = interpolate("Hello {name", &s, &no_fns).unwrap_err();
+        assert!(err.to_string().contains("unclosed"));
+    }
+
+    #[test]
+    fn invalid_expr_inside_braces_errors() {
+        let s = HashMapStorage::new();
+        assert!(interpolate("{1 +}", &s, &no_fns).is_err());
+    }
 }

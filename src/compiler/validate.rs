@@ -69,4 +69,42 @@ mod tests {
         let prog = compile("title: A\n---\n<<jump Nonexistent>>\n===\n").unwrap();
         assert!(validate(&prog).is_err());
     }
+
+    #[test]
+    fn unknown_jump_inside_if_branch_fails() {
+        let prog =
+            compile("title: A\n---\n<<if true>>\n    <<jump Ghost>>\n<<endif>>\n===\n").unwrap();
+        assert!(validate(&prog).is_err());
+    }
+
+    #[test]
+    fn unknown_detour_in_else_fails() {
+        let prog = compile(
+            "title: A\n---\n<<if false>>\n    idle\n<<else>>\n    <<detour Missing>>\n<<endif>>\n===\n",
+        )
+        .unwrap();
+        assert!(validate(&prog).is_err());
+    }
+
+    #[test]
+    fn unknown_jump_inside_once_fails() {
+        let prog =
+            compile("title: A\n---\n<<once>>\n    <<jump Nope>>\n<<endonce>>\n===\n").unwrap();
+        assert!(validate(&prog).is_err());
+    }
+
+    #[test]
+    fn unknown_jump_inside_option_body_fails() {
+        let prog = compile("title: A\n---\n-> Go\n    <<jump Bad>>\n===\n").unwrap();
+        assert!(validate(&prog).is_err());
+    }
+
+    #[test]
+    fn unknown_jump_inside_once_else_fails() {
+        let prog = compile(
+            "title: A\n---\n<<once>>\n    ok\n<<else>>\n    <<jump Nope>>\n<<endonce>>\n===\n",
+        )
+        .unwrap();
+        assert!(validate(&prog).is_err());
+    }
 }

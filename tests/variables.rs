@@ -23,6 +23,22 @@ fn set_stores_value_in_storage() {
 }
 
 #[test]
+fn set_using_to_keyword() {
+    let prog = compile("title: A\n---\n<<set $x to 2 + 3>>\n{$x}\n===\n").unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("A").unwrap();
+    let mut saw = false;
+    while let Some(ev) = runner.next_event().unwrap() {
+        if let DialogueEvent::Line { text, .. } = ev {
+            if text == "5" {
+                saw = true;
+            }
+        }
+    }
+    assert!(saw);
+}
+
+#[test]
 fn set_evaluated_expression() {
     let src = "title: Start\n---\n<<set $x = 3 * 4>>\n===\n";
     let prog = compile(src).unwrap();

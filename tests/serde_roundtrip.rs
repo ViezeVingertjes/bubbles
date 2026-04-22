@@ -2,6 +2,8 @@
 
 #[cfg(feature = "serde")]
 mod serde_tests {
+    use std::collections::{HashMap, HashSet};
+
     use bubbles::{
         DialogueEvent, HashMapStorage, Runner, RunnerSnapshot, Value, VariableStorage, compile,
     };
@@ -172,5 +174,17 @@ Goodbye.
         // After restoring, the runner knows A was visited at least once before.
         let snap3 = runner2.snapshot();
         assert!(snap3.visits.get("A").copied().unwrap_or(0) >= 1);
+    }
+
+    #[test]
+    fn restore_unknown_current_node_errors() {
+        let prog = compile("title: OK\n---\n===\n").unwrap();
+        let mut runner = Runner::new(prog, HashMapStorage::new());
+        let snap = RunnerSnapshot {
+            current_node: Some("Missing".into()),
+            visits: HashMap::new(),
+            once_seen: HashSet::new(),
+        };
+        assert!(runner.restore(snap).is_err());
     }
 }

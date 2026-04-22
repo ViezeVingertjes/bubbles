@@ -1,6 +1,6 @@
 //! Integration tests for runner flow: node start, completion, and dialogue end.
 
-use bubbles::{DialogueEvent, HashMapStorage, Runner, Value, VariableStorage, compile};
+use bubbles::{DialogueEvent, HashMapStorage, Runner, compile};
 
 fn drain(runner: &mut Runner<HashMapStorage>) -> Vec<DialogueEvent> {
     let mut events = Vec::new();
@@ -150,4 +150,71 @@ fn undefined_variable_returns_error() {
         }
     };
     assert!(err.contains("$notset"), "got: {err}");
+}
+
+#[test]
+fn next_event_while_awaiting_option_errors() {
+    let prog = compile("title: A\n---\n-> Only\n===\n").unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("A").unwrap();
+    assert!(matches!(
+        runner.next_event().unwrap(),
+        Some(DialogueEvent::NodeStarted(_))
+    ));
+    assert!(matches!(
+        runner.next_event().unwrap(),
+        Some(DialogueEvent::Options(_))
+    ));
+    let err = runner.next_event().unwrap_err().to_string();
+    assert!(
+        err.contains("select_option") || err.contains("AwaitingOption"),
+        "got: {err}"
+    );
+}
+
+#[test]
+fn runtime_jump_to_unknown_node_errors_even_without_validate() {
+    let prog = compile("title: A\n---\n<<jump Nope>>\n===\n").unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("A").unwrap();
+    runner.next_event().unwrap(); // NodeStarted
+    let err = runner.next_event().unwrap_err().to_string();
+    assert!(
+        err.contains("Nope") || err.contains("unknown"),
+        "got: {err}"
+    );
+}
+
+#[test]
+fn visited_builtin_wrong_arity_errors() {
+    let prog = compile("title: A\n---\n<<set $x = visited()>>\n===\n").unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("A").unwrap();
+    runner.next_event().unwrap();
+    let err = runner.next_event().unwrap_err().to_string();
+    assert!(err.contains("visited"), "got: {err}");
+}
+
+#[test]
+fn visited_count_builtin_wrong_arity_errors() {
+    let prog = compile("title: A\n---\n<<set $x = visited_count(1, 2)>>\n===\n").unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("A").unwrap();
+    runner.next_event().unwrap();
+    let err = runner.next_event().unwrap_err().to_string();
+    assert!(err.contains("visited_count"), "got: {err}");
+}
+
+#[test]
+fn return_from_entry_node_ends_dialogue() {
+    let prog = compile("title: A\n---\n<<return>>\n===\n").unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("A").unwrap();
+    let mut saw_complete = false;
+    while let Some(ev) = runner.next_event().unwrap() {
+        if matches!(ev, DialogueEvent::DialogueComplete) {
+            saw_complete = true;
+        }
+    }
+    assert!(saw_complete);
 }

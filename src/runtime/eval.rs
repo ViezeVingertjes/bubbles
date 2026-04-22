@@ -185,4 +185,85 @@ mod tests {
     fn eval_unary_not() {
         assert_eq!(ev("!false"), Value::Bool(true));
     }
+
+    #[test]
+    fn negate_non_number_errors() {
+        let storage = HashMapStorage::new();
+        let expr = parse_expr(r#"-"hello""#).unwrap();
+        let err = eval(&expr, &storage, &no_fns).unwrap_err();
+        assert!(err.to_string().contains("negate"), "got {err}");
+    }
+
+    #[test]
+    fn subtract_non_numbers_errors() {
+        let storage = HashMapStorage::new();
+        let expr = parse_expr(r#""a" - 1"#).unwrap();
+        let err = eval(&expr, &storage, &no_fns).unwrap_err();
+        assert!(err.to_string().contains('-'), "got {err}");
+    }
+
+    #[test]
+    fn compare_non_numbers_errors() {
+        let storage = HashMapStorage::new();
+        let expr = parse_expr(r#""a" < 1"#).unwrap();
+        let err = eval(&expr, &storage, &no_fns).unwrap_err();
+        assert!(err.to_string().contains('<'), "got {err}");
+    }
+
+    #[test]
+    fn modulo_by_zero_errors() {
+        let storage = HashMapStorage::new();
+        let expr = parse_expr("5 % 0").unwrap();
+        let err = eval(&expr, &storage, &no_fns).unwrap_err();
+        assert!(err.to_string().contains("modulo"), "got {err}");
+    }
+
+    #[test]
+    fn multiply_non_numbers_errors() {
+        let storage = HashMapStorage::new();
+        let expr = parse_expr(r#""x" * 2"#).unwrap();
+        assert!(eval(&expr, &storage, &no_fns).is_err());
+    }
+
+    #[test]
+    fn comparison_operators_on_numbers() {
+        assert_eq!(ev("1 != 2"), Value::Bool(true));
+        assert_eq!(ev("2 != 2"), Value::Bool(false));
+        assert_eq!(ev("1 < 2"), Value::Bool(true));
+        assert_eq!(ev("2 <= 2"), Value::Bool(true));
+        assert_eq!(ev("3 > 2"), Value::Bool(true));
+        assert_eq!(ev("3 >= 4"), Value::Bool(false));
+    }
+
+    #[test]
+    fn div_and_rem_on_numbers() {
+        assert_eq!(ev("9 / 2"), Value::Number(4.5));
+        assert_eq!(ev("7 % 3"), Value::Number(1.0));
+    }
+
+    #[test]
+    fn add_number_and_bool_is_type_error() {
+        let storage = HashMapStorage::new();
+        let expr = parse_expr("1 + true").unwrap();
+        assert!(eval(&expr, &storage, &no_fns).is_err());
+    }
+
+    #[test]
+    fn bool_equality() {
+        assert_eq!(ev("true == true"), Value::Bool(true));
+        assert_eq!(ev("true == false"), Value::Bool(false));
+    }
+
+    #[test]
+    fn text_equality_and_inequality() {
+        assert_eq!(ev(r#""a" == "a""#), Value::Bool(true));
+        assert_eq!(ev(r#""a" != "b""#), Value::Bool(true));
+    }
+
+    #[test]
+    fn rem_requires_numbers() {
+        let storage = HashMapStorage::new();
+        let expr = parse_expr(r#""x" % 2"#).unwrap();
+        assert!(eval(&expr, &storage, &no_fns).is_err());
+    }
 }
