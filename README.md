@@ -199,6 +199,7 @@ runner.library_mut().register("double", |args| {
 |---|---|---|
 | `rand` | **on** | Enables `random()`, `random_range()`, `dice()` builtins and `RandomAvailable` saliency |
 | `serde` | off | Derives `Serialize` / `Deserialize` on `Value`, `HashMapStorage`, and `RunnerSnapshot` |
+| `full` | off | Shorthand for `rand` and `serde` together (`features = ["full"]`) |
 
 ---
 

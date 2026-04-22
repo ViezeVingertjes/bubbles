@@ -6,6 +6,7 @@ All notable changes are documented here (keep-a-changelog format).
 
 ### Added
 
+- `full` Cargo feature: shorthand for `rand` and `serde` together.
 - `compile` / `compile_many` and `Program` with node map and merge-time duplicate detection
 - `Runner` with pull-based `next_event()` / `select_option()` and call stack for detours
 - `DialogueEvent`: `NodeStarted`, `Line`, `Options`, `Command`, `NodeComplete`, `DialogueComplete`
