@@ -40,6 +40,34 @@ fn line_prefix_tag_uses_provider_for_text() {
 }
 
 #[test]
+fn line_id_field_set_from_line_tag() {
+    let prog = compile("title: A\n---\nHi. #line:my_key #foo\n===\n").unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("A").unwrap();
+    let id = loop {
+        let ev = runner.next_event().unwrap();
+        if let Some(DialogueEvent::Line { line_id, .. }) = ev {
+            break line_id;
+        }
+    };
+    assert_eq!(id.as_deref(), Some("my_key"));
+}
+
+#[test]
+fn option_line_id_field_set_from_tag() {
+    let src = "title: A\n---\n-> Pick this #line:opt1\n  ok\n===\n";
+    let mut runner = Runner::new(compile(src).unwrap(), HashMapStorage::new());
+    runner.start("A").unwrap();
+    let id = loop {
+        let ev = runner.next_event().unwrap();
+        if let Some(DialogueEvent::Options(opts)) = ev {
+            break opts[0].line_id.clone();
+        }
+    };
+    assert_eq!(id.as_deref(), Some("opt1"));
+}
+
+#[test]
 fn line_prefix_not_in_provider_keeps_interpolated_source() {
     let prog = compile("title: A\n---\nHello. #line:missing\n===\n").unwrap();
     let mut runner = Runner::new(prog, HashMapStorage::new());

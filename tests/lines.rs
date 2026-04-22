@@ -14,11 +14,13 @@ fn plain_lines_emitted_in_order() {
             DialogueEvent::Line {
                 speaker: None,
                 text: "Hello there.".into(),
+                line_id: None,
                 tags: vec![],
             },
             DialogueEvent::Line {
                 speaker: Some("Alice".into()),
                 text: "Hi, how are you?".into(),
+                line_id: None,
                 tags: vec![],
             },
             DialogueEvent::NodeComplete("Start".into()),

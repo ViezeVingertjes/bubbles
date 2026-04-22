@@ -3,6 +3,7 @@
 /// Supplies localised (or otherwise substituted) text for a line.
 ///
 /// When a line carries a `#line:<id>` tag, the runner queries the provider with that id.
+/// The same id is also exposed on [`crate::DialogueEvent::Line`] as `line_id` (see [`line_id_from_tags`](crate::line_id_from_tags)).
 /// If the provider returns `Some(text)`, that replaces the original line text in the event.
 /// If it returns `None`, the original source text is used as-is.
 pub trait LineProvider: Send + Sync + 'static {

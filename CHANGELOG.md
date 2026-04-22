@@ -2,6 +2,18 @@
 
 All notable changes are documented here (keep-a-changelog format).
 
+## [Unreleased]
+
+### Added
+
+- `line_id_from_tags()` helper and `line_id: Option<String>` on `DialogueEvent::Line` and
+  `DialogueOption` when the source has a `#line:<id>` tag (stable key for VO / loc without re-parsing `tags`).
+
+### Changed
+
+- **Breaking:** `DialogueEvent::Line` and `DialogueOption` have a new `line_id` field. Update struct
+  literals and exhaustive matches, or use `..` in patterns.
+
 ## [0.1.0] — 2026-04-22
 
 ### Added

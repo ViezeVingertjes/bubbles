@@ -43,6 +43,7 @@ primitives, zero allocations in the hot path beyond the events themselves.
 | Reference validation | Catches typo'd jump/detour targets at compile time |
 | Program introspection | `node_titles()`, `node_tags()`, `node_exists()`, `variable_declarations()` |
 | Localisation seam | `LineProvider` trait consulted for `#line:id`-tagged lines |
+| Stable line ids | `#line:<id>` also sets `line_id` on `DialogueEvent::Line` / `DialogueOption` (for VO, analytics); see [`line_id_from_tags`](https://docs.rs/bubbles-dialogue/latest/bubbles/fn.line_id_from_tags.html) |
 | Save / load | `RunnerSnapshot` (serde feature) captures visits, once-seen, active node |
 
 ---
@@ -155,6 +156,7 @@ The count is {$count}.         # inline expression substitution
 | `VariableStorage` | Pluggable variable store (default: `HashMapStorage`) |
 | `SaliencyStrategy` | Line / node group selection policy |
 | `LineProvider` | Localisation lookup for `#line:id`-tagged lines |
+| `line_id_from_tags` | Same id rule as events: parse `#line:` from a tag slice (e.g. custom UI) |
 | `FunctionLibrary` | Register host functions callable inside expressions |
 
 ### Custom saliency

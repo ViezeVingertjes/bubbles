@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::compiler::ast::{Expr, IfBranch, Stmt, TextSegment};
 use crate::error::{DialogueError, Result};
-use crate::runtime::event::{DialogueEvent, DialogueOption};
+use crate::runtime::event::{DialogueEvent, DialogueOption, line_id_from_tags};
 use crate::saliency::Candidate;
 use crate::value::VariableStorage;
 
@@ -88,9 +88,11 @@ impl<S: VariableStorage> Runner<S> {
             .find_map(|t| t.strip_prefix("line:"))
             .and_then(|id| self.provider.get(id))
             .unwrap_or(text);
+        let line_id = line_id_from_tags(&tags);
         Ok(Some(DialogueEvent::Line {
             speaker,
             text,
+            line_id,
             tags,
         }))
     }
@@ -124,9 +126,11 @@ impl<S: VariableStorage> Runner<S> {
                 self.once_seen.insert(chosen.id.clone());
             }
             let text = self.eval_segments(&chosen.text)?;
+            let line_id = line_id_from_tags(&chosen.tags);
             return Ok(Some(DialogueEvent::Line {
                 speaker: chosen.speaker.clone(),
                 text,
+                line_id,
                 tags: chosen.tags.clone(),
             }));
         }
@@ -145,9 +149,11 @@ impl<S: VariableStorage> Runner<S> {
                 None => true,
             };
             let text = self.eval_segments(&item.text)?;
+            let line_id = line_id_from_tags(&item.tags);
             options.push(DialogueOption {
                 text,
                 available,
+                line_id,
                 tags: item.tags.clone(),
             });
             bodies.push(item.body);

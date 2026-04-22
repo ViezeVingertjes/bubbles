@@ -9,7 +9,7 @@ mod runner;
 mod snapshot;
 
 pub use eval::eval;
-pub use event::{DialogueEvent, DialogueOption};
+pub use event::{DialogueEvent, DialogueOption, line_id_from_tags};
 pub use provider::{HashMapProvider, LineProvider, PassthroughProvider};
 pub use runner::Runner;
 #[cfg(feature = "serde")]
