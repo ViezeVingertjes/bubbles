@@ -73,10 +73,10 @@ todos:
     status: completed
   - id: stdlib_fns
     content: "TDD: expanded built-in function stdlib - random_range, round, floor, ceil, min, max in addition to random/dice/visited/visited_count"
-    status: in_progress
+    status: completed
   - id: multi_file
     content: "TDD: compile_many(&[(name, source)]) merges multiple sources into one Program, erroring on duplicate node titles"
-    status: pending
+    status: in_progress
   - id: validation
     content: "TDD: compile-time validation pass - every <<jump>>, <<detour>>, and group reference resolves to a known node/group; structured DialogueError on failure"
     status: pending

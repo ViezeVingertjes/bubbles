@@ -5,10 +5,12 @@ pub mod expr;
 pub mod lexer;
 pub(crate) mod parser;
 pub mod program;
+pub mod validate;
 
 pub use ast::{Node, Stmt};
 pub use lexer::{Spanned, Token, tokenise};
 pub use program::Program;
+pub use validate::validate;
 
 use crate::error::Result;
 

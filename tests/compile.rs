@@ -1,6 +1,6 @@
 //! Integration tests for the compilation pipeline.
 
-use bubbles::compile;
+use bubbles::{compile, compile_many};
 
 #[test]
 fn empty_node_parses() {
@@ -48,4 +48,24 @@ title: B
     let prog = compile(src).unwrap();
     assert!(prog.node_exists("A"));
     assert!(prog.node_exists("B"));
+}
+
+#[test]
+fn compile_many_merges_sources() {
+    let prog = compile_many(&[
+        ("file_a", "title: A\n---\n===\n"),
+        ("file_b", "title: B\n---\n===\n"),
+    ])
+    .unwrap();
+    assert!(prog.node_exists("A"));
+    assert!(prog.node_exists("B"));
+}
+
+#[test]
+fn duplicate_node_title_is_an_error() {
+    let result = compile_many(&[
+        ("file_a", "title: Dup\n---\n===\n"),
+        ("file_b", "title: Dup\n---\n===\n"),
+    ]);
+    assert!(result.is_err());
 }
