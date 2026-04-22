@@ -1,5 +1,7 @@
 //! [`Runner`] — the public entry point for executing a compiled [`Program`].
 
+use std::collections::VecDeque;
+
 use crate::compiler::ast::Stmt;
 use crate::compiler::expr::parse_expr;
 use crate::compiler::Program;
@@ -17,6 +19,21 @@ enum State {
     Done,
 }
 
+/// A frame on the call stack.
+#[derive(Debug, Clone)]
+struct Frame {
+    /// Node title.
+    node: String,
+    /// Pending statements yet to be executed in this frame.
+    stmts: VecDeque<Stmt>,
+}
+
+impl Frame {
+    fn new(node: String, body: Vec<Stmt>) -> Self {
+        Self { node, stmts: VecDeque::from(body) }
+    }
+}
+
 /// Drives execution of a compiled [`Program`], yielding [`DialogueEvent`]s one at a time.
 ///
 /// # Pull model
@@ -27,12 +44,10 @@ pub struct Runner<S: VariableStorage> {
     program: Program,
     storage: S,
     state: State,
-    /// Current node title being executed.
-    current_node: Option<String>,
-    /// Cursor into the current node's body.
-    cursor: usize,
-    /// Pending events queued up ready to be returned by `next_event`.
-    pending: std::collections::VecDeque<DialogueEvent>,
+    /// The call stack. The top frame is the current one.
+    stack: Vec<Frame>,
+    /// Pending events ready to be returned.
+    pending: VecDeque<DialogueEvent>,
 }
 
 impl<S: VariableStorage> Runner<S> {
@@ -43,9 +58,8 @@ impl<S: VariableStorage> Runner<S> {
             program,
             storage,
             state: State::Idle,
-            current_node: None,
-            cursor: 0,
-            pending: std::collections::VecDeque::new(),
+            stack: Vec::new(),
+            pending: VecDeque::new(),
         }
     }
 
@@ -57,8 +71,9 @@ impl<S: VariableStorage> Runner<S> {
         if !self.program.node_exists(node) {
             return Err(DialogueError::UnknownNode(node.to_owned()));
         }
-        self.current_node = Some(node.to_owned());
-        self.cursor = 0;
+        let body = self.node_body(node)?;
+        self.stack.clear();
+        self.stack.push(Frame::new(node.to_owned(), body));
         self.state = State::Running;
         self.pending.push_back(DialogueEvent::NodeStarted(node.to_owned()));
         Ok(())
@@ -69,29 +84,25 @@ impl<S: VariableStorage> Runner<S> {
     /// # Errors
     /// Returns a [`DialogueError`] on runtime failures.
     pub fn next_event(&mut self) -> Result<Option<DialogueEvent>> {
-        // drain any pre-queued events first
         if let Some(ev) = self.pending.pop_front() {
             return Ok(Some(ev));
         }
-
         match self.state {
             State::Idle | State::Done => Ok(None),
             State::AwaitingOption => Err(DialogueError::Runtime(
                 "call select_option() before next_event()".into(),
             )),
             State::Running => {
-                // Loop until we produce an event or exhaust the node.
                 loop {
+                    if let Some(ev) = self.pending.pop_front() {
+                        return Ok(Some(ev));
+                    }
+                    if self.state != State::Running {
+                        return Ok(None);
+                    }
                     match self.step()? {
                         Some(ev) => return Ok(Some(ev)),
-                        None => {
-                            if let Some(ev) = self.pending.pop_front() {
-                                return Ok(Some(ev));
-                            }
-                            if self.state != State::Running {
-                                return Ok(None);
-                            }
-                        }
+                        None => {}
                     }
                 }
             }
@@ -101,15 +112,13 @@ impl<S: VariableStorage> Runner<S> {
     /// Selects an option by index after receiving [`DialogueEvent::Options`].
     ///
     /// # Errors
-    /// Returns [`DialogueError::Runtime`] if called when no options are pending or if
-    /// the index is out of range.
+    /// Returns [`DialogueError::Runtime`] if called when not awaiting an option.
     pub fn select_option(&mut self, _index: usize) -> Result<()> {
         if self.state != State::AwaitingOption {
             return Err(DialogueError::Runtime(
                 "select_option() called when not awaiting an option".into(),
             ));
         }
-        // Will be expanded once options are implemented
         self.state = State::Running;
         Ok(())
     }
@@ -125,7 +134,15 @@ impl<S: VariableStorage> Runner<S> {
         &mut self.storage
     }
 
-    // ── execution engine (grows with each todo step) ──────────────────────────
+    // ── internals ─────────────────────────────────────────────────────────────
+
+    fn node_body(&self, title: &str) -> Result<Vec<Stmt>> {
+        self.program
+            .node_group(title)
+            .and_then(|g| g.first())
+            .map(|n| n.body.clone())
+            .ok_or_else(|| DialogueError::UnknownNode(title.to_owned()))
+    }
 
     fn eval_expr_src(&self, src: &str) -> Result<Value> {
         let expr = parse_expr(src)?;
@@ -137,50 +154,65 @@ impl<S: VariableStorage> Runner<S> {
         })
     }
 
-    fn execute_stmt(&mut self, stmt: Stmt) -> Result<Option<DialogueEvent>> {
-        match stmt {
-            Stmt::Line { speaker, text, tags } => Ok(Some(DialogueEvent::Line { speaker, text, tags })),
-            Stmt::Set { name, expr_src } => {
-                let value = self.eval_expr_src(&expr_src)?;
-                self.storage.set(&name, value);
-                Ok(None) // sets produce no event; loop back via next_event()
-            }
-            _ => Err(DialogueError::Runtime("unimplemented statement type".into())),
-        }
-    }
-
     fn step(&mut self) -> Result<Option<DialogueEvent>> {
-        let node_title = match &self.current_node {
-            Some(t) => t.clone(),
-            None => {
+        // pop current frame's next statement
+        let stmt = loop {
+            let frame = match self.stack.last_mut() {
+                Some(f) => f,
+                None => {
+                    self.state = State::Done;
+                    return Ok(Some(DialogueEvent::DialogueComplete));
+                }
+            };
+            if let Some(s) = frame.stmts.pop_front() {
+                break s;
+            }
+            // frame exhausted — pop it
+            let finished_node = frame.node.clone();
+            self.stack.pop();
+            if self.stack.is_empty() {
+                // top-level node complete
                 self.state = State::Done;
-                return Ok(Some(DialogueEvent::DialogueComplete));
+                self.pending.push_back(DialogueEvent::DialogueComplete);
+                return Ok(Some(DialogueEvent::NodeComplete(finished_node)));
             }
         };
 
-        let body_len = self
-            .program
-            .node_group(&node_title)
-            .and_then(|g| g.first())
-            .map(|n| n.body.len())
-            .unwrap_or(0);
-
-        if self.cursor >= body_len {
-            // node finished
-            self.state = State::Done;
-            self.pending.push_back(DialogueEvent::DialogueComplete);
-            return Ok(Some(DialogueEvent::NodeComplete(node_title)));
-        }
-
-        // Clone what we need before borrowing mutably.
-        let stmt = self
-            .program
-            .node_group(&node_title)
-            .and_then(|g| g.first())
-            .map(|n| n.body[self.cursor].clone())
-            .ok_or_else(|| DialogueError::Runtime("cursor out of range".into()))?;
-        self.cursor += 1;
-
         self.execute_stmt(stmt)
+    }
+
+    fn execute_stmt(&mut self, stmt: Stmt) -> Result<Option<DialogueEvent>> {
+        match stmt {
+            Stmt::Line { speaker, text, tags } => {
+                Ok(Some(DialogueEvent::Line { speaker, text, tags }))
+            }
+            Stmt::Set { name, expr_src } => {
+                let value = self.eval_expr_src(&expr_src)?;
+                self.storage.set(&name, value);
+                Ok(None)
+            }
+            Stmt::If { branches, else_body } => {
+                let mut chosen = None;
+                for (cond_src, body) in branches {
+                    let v = self.eval_expr_src(&cond_src)?;
+                    if v.is_truthy() {
+                        chosen = Some(body);
+                        break;
+                    }
+                }
+                let body = chosen.unwrap_or(else_body);
+                // push a synthetic inline frame to execute the chosen body
+                if !body.is_empty() {
+                    let title = self
+                        .stack
+                        .last()
+                        .map(|f| f.node.clone())
+                        .unwrap_or_default();
+                    self.stack.push(Frame::new(title, body));
+                }
+                Ok(None)
+            }
+            _ => Err(DialogueError::Runtime("unimplemented statement type".into())),
+        }
     }
 }

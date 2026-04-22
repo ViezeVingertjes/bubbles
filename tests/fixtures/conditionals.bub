@@ -1,0 +1,9 @@
+title: Start
+---
+<<set $gold = 10>>
+<<if $gold > 5>>
+    Rich path.
+<<else>>
+    Poor path.
+<<endif>>
+===

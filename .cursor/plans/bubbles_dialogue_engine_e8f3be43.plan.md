@@ -25,10 +25,10 @@ todos:
     status: completed
   - id: variables
     content: "TDD: <<set $x = expr>> and variable read in expressions through VariableStorage"
-    status: in_progress
+    status: completed
   - id: conditionals
     content: "TDD: <<if>> / <<elseif>> / <<else>> / <<endif>> block handling inside node bodies"
-    status: pending
+    status: in_progress
   - id: interpolation
     content: "TDD: {expr} inline substitution inside line/option/command text (reuses expression evaluator — DRY)"
     status: pending
