@@ -19,10 +19,10 @@ todos:
     status: completed
   - id: lines
     content: "TDD: parse and emit Line events (plain + Speaker: attribution + metadata vec)"
-    status: in_progress
+    status: completed
   - id: expressions
     content: "TDD: expression AST + evaluator — arithmetic precedence, comparison, boolean, unary, parens; proptest coverage"
-    status: pending
+    status: in_progress
   - id: variables
     content: "TDD: <<set $x = expr>> and variable read in expressions through VariableStorage"
     status: pending
