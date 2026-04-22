@@ -76,16 +76,16 @@ todos:
     status: completed
   - id: multi_file
     content: "TDD: compile_many(&[(name, source)]) merges multiple sources into one Program, erroring on duplicate node titles"
-    status: in_progress
+    status: completed
   - id: validation
     content: "TDD: compile-time validation pass - every <<jump>>, <<detour>>, and group reference resolves to a known node/group; structured DialogueError on failure"
-    status: pending
+    status: completed
   - id: introspection
     content: "TDD: Program introspection API - node_titles(), node_tags(name), variable_declarations(), node_exists(name)"
-    status: pending
+    status: completed
   - id: save_load
     content: "TDD: serde feature — snapshot Runner mid-dialogue and restore it, preserving node pointer + variables + visited set"
-    status: pending
+    status: in_progress
   - id: example
     content: Write examples/cli_runner.rs terminal driver consuming DialogueEvent
     status: pending
