@@ -58,10 +58,10 @@ todos:
     status: completed
   - id: saliency
     content: "TDD: SaliencyStrategy trait + built-in strategies (First, Random, BestLeastRecentlyViewed). Tracks last-seen counter per content id"
-    status: in_progress
+    status: completed
   - id: line_groups
     content: "TDD: line groups (=> prefix) with optional <<if>> guards selected via the active SaliencyStrategy"
-    status: pending
+    status: in_progress
   - id: node_groups
     content: "TDD: multiple nodes sharing a title with `when:` header clauses; start() on a group title picks via SaliencyStrategy"
     status: pending

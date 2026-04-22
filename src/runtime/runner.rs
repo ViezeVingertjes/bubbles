@@ -11,6 +11,7 @@ use crate::library::FunctionLibrary;
 use crate::runtime::eval::eval;
 use crate::runtime::event::DialogueEvent;
 use crate::runtime::interpolate::interpolate;
+use crate::saliency::{Candidate, FirstAvailable, SaliencyStrategy};
 use crate::value::{Value, VariableStorage};
 
 /// Execution state of the runner.
@@ -62,6 +63,8 @@ pub struct Runner<S: VariableStorage> {
     visits: Arc<RwLock<HashMap<String, usize>>>,
     /// Seen `<<once>>` block IDs.
     once_seen: HashSet<String>,
+    /// Strategy used for line-group and node-group selection.
+    saliency: Box<dyn SaliencyStrategy>,
 }
 
 impl<S: VariableStorage> Runner<S> {
@@ -106,6 +109,7 @@ impl<S: VariableStorage> Runner<S> {
             library,
             visits,
             once_seen: HashSet::new(),
+            saliency: Box::new(FirstAvailable),
         }
     }
 
@@ -198,6 +202,11 @@ impl<S: VariableStorage> Runner<S> {
         &mut self.library
     }
 
+    /// Replaces the saliency strategy used for line and node group selection.
+    pub fn set_saliency(&mut self, strategy: impl SaliencyStrategy) {
+        self.saliency = Box::new(strategy);
+    }
+
     // ── internals ─────────────────────────────────────────────────────────────
 
     fn node_body(&self, title: &str) -> Result<Vec<Stmt>> {
@@ -271,6 +280,33 @@ impl<S: VariableStorage> Runner<S> {
                 if self.storage.get(&name).is_none() {
                     let value = self.eval_expr_src(&expr_src)?;
                     self.storage.set(&name, value);
+                }
+                Ok(None)
+            }
+            Stmt::LineGroup(variants) => {
+                let candidates: Vec<Candidate<'_>> = variants
+                    .iter()
+                    .map(|v| {
+                        let available = match &v.cond_src {
+                            Some(src) => self.eval_expr_src(src).map(|v| v.is_truthy()).unwrap_or(false),
+                            None => true,
+                        } && !(v.once && self.once_seen.contains(&v.id));
+                        Candidate { id: &v.id, available }
+                    })
+                    .collect();
+
+                if let Some(idx) = self.saliency.select(&candidates) {
+                    let chosen = &variants[idx];
+                    if chosen.once {
+                        self.once_seen.insert(chosen.id.clone());
+                    }
+                    let text = self.interpolate_text(&chosen.text)?;
+                    let line = DialogueEvent::Line {
+                        speaker: chosen.speaker.clone(),
+                        text,
+                        tags: chosen.tags.clone(),
+                    };
+                    return Ok(Some(line));
                 }
                 Ok(None)
             }
