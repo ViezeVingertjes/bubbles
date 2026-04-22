@@ -6,6 +6,9 @@
 #![warn(clippy::pedantic, clippy::nursery, clippy::cargo)]
 
 pub mod compiler;
+pub mod error;
 pub mod value;
 
+pub use compiler::{Program, compile, compile_many};
+pub use error::{DialogueError, Result};
 pub use value::{HashMapStorage, Value, VariableStorage};
