@@ -1,0 +1,34 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Format check
+        run: cargo fmt --check
+
+      - name: Clippy (all features)
+        run: cargo clippy --all-features -- -D warnings
+
+      - name: Test (all features)
+        run: cargo test --all-features
+
+      - name: Test (no default features)
+        run: cargo test --no-default-features
+
+      - name: Docs
+        run: RUSTDOCFLAGS="-D warnings" cargo doc --all-features --no-deps
+
+      - name: Naming check
+        run: bash scripts/check-naming.sh
+
+      - name: File-size check
+        run: bash scripts/check-file-sizes.sh

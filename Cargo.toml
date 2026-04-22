@@ -1,0 +1,36 @@
+[package]
+name        = "bubbles"
+version     = "0.1.0"
+edition     = "2024"
+license     = "MIT OR Apache-2.0"
+description = "Lightweight engine-agnostic dialogue runtime for Rust games."
+repository  = "https://github.com/example/bubbles"
+readme      = "README.md"
+keywords    = ["dialogue", "game", "narrative", "interactive"]
+categories  = ["game-development", "parser-implementations"]
+rust-version = "1.85"
+
+[features]
+default = ["rand"]
+rand    = ["dep:rand"]
+serde   = ["dep:serde", "indexmap/serde"]
+
+[dependencies]
+indexmap  = "2"
+logos     = "0.15"
+thiserror = "2"
+rand      = { version = "0.9", optional = true }
+serde     = { version = "1", features = ["derive"], optional = true }
+
+[dev-dependencies]
+proptest = "1"
+
+[lints.rust]
+missing_docs     = "deny"
+unsafe_code      = "deny"
+rust_2018_idioms = "deny"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+nursery  = { level = "warn", priority = -1 }
+cargo    = { level = "warn", priority = -1 }
