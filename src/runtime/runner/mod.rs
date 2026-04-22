@@ -5,7 +5,7 @@ pub(super) mod execute;
 pub(super) mod node_body;
 
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex};
 
 use crate::compiler::Program;
 use crate::compiler::ast::Stmt;
@@ -58,7 +58,7 @@ pub struct Runner<S: VariableStorage> {
     pub(super) pending: VecDeque<DialogueEvent>,
     pub(super) option_bodies: OptionBodies,
     pub(super) library: FunctionLibrary,
-    pub(super) visits: Arc<RwLock<HashMap<String, usize>>>,
+    pub(super) visits: Arc<Mutex<HashMap<String, usize>>>,
     pub(super) once_seen: HashSet<String>,
     pub(super) saliency: Box<dyn SaliencyStrategy>,
     pub(super) provider: Box<dyn LineProvider>,
@@ -68,10 +68,10 @@ impl<S: VariableStorage> Runner<S> {
     /// Creates a new runner for the given program and variable storage.
     ///
     /// # Panics
-    /// Panics only if the internal `RwLock` is poisoned, which cannot happen in normal use.
+    /// Panics only if the internal `Mutex` is poisoned, which cannot happen in normal use.
     #[must_use]
     pub fn new(program: Program, storage: S) -> Self {
-        let visits: Arc<RwLock<HashMap<String, usize>>> = Arc::default();
+        let visits: Arc<Mutex<HashMap<String, usize>>> = Arc::new(Mutex::new(HashMap::new()));
         let mut library = FunctionLibrary::new();
 
         let v1 = Arc::clone(&visits);
@@ -86,7 +86,7 @@ impl<S: VariableStorage> Runner<S> {
                 }
             };
             Ok(Value::Bool(
-                *v1.read().unwrap().get(&title).unwrap_or(&0) > 0,
+                *v1.lock().unwrap().get(&title).unwrap_or(&0) > 0,
             ))
         });
         let v2 = Arc::clone(&visits);
@@ -100,7 +100,7 @@ impl<S: VariableStorage> Runner<S> {
                     });
                 }
             };
-            let count = *v2.read().unwrap().get(&title).unwrap_or(&0);
+            let count = *v2.lock().unwrap().get(&title).unwrap_or(&0);
             #[allow(clippy::cast_precision_loss)]
             Ok(Value::Number(count as f64))
         });
@@ -126,7 +126,7 @@ impl<S: VariableStorage> Runner<S> {
     /// Returns [`DialogueError::UnknownNode`] if the title does not exist in the program.
     ///
     /// # Panics
-    /// Panics only if the internal `RwLock` is poisoned, which cannot happen in normal use.
+    /// Panics only if the internal `Mutex` is poisoned, which cannot happen in normal use.
     pub fn start(&mut self, node: &str) -> Result<()> {
         if !self.program.node_exists(node) {
             return Err(DialogueError::UnknownNode(node.to_owned()));
@@ -137,7 +137,7 @@ impl<S: VariableStorage> Runner<S> {
         self.state = State::Running;
         *self
             .visits
-            .write()
+            .lock()
             .unwrap()
             .entry(node.to_owned())
             .or_insert(0) += 1;
@@ -253,14 +253,14 @@ impl<S: VariableStorage> Runner<S> {
     ///
     /// # Panics
     ///
-    /// Panics if the internal visits lock is poisoned (only possible if a previous
-    /// thread panicked while holding it, which is not expected in normal use).
+    /// Panics if the internal visits `Mutex` is poisoned (only possible if a
+    /// previous thread panicked while holding it, which is not expected in normal use).
     #[cfg(feature = "serde")]
     #[must_use]
     pub fn snapshot(&self) -> crate::runtime::RunnerSnapshot {
         crate::runtime::RunnerSnapshot {
             current_node: self.stack.last().map(|f| f.node.clone()),
-            visits: self.visits.read().unwrap().clone(),
+            visits: self.visits.lock().unwrap().clone(),
             once_seen: self.once_seen.clone(),
         }
     }
@@ -281,7 +281,7 @@ impl<S: VariableStorage> Runner<S> {
     /// Only available with the `serde` feature.
     #[cfg(feature = "serde")]
     pub fn restore(&mut self, snapshot: crate::runtime::RunnerSnapshot) -> Result<()> {
-        *self.visits.write().unwrap() = snapshot.visits;
+        *self.visits.lock().unwrap() = snapshot.visits;
         self.once_seen = snapshot.once_seen;
         self.stack.clear();
         self.pending.clear();

@@ -23,9 +23,9 @@ impl<S: VariableStorage> Runner<S> {
             return Err(DialogueError::UnknownNode(title.to_owned()));
         };
 
-        let has_when = group.iter().any(|n| n.when_src.is_some());
+        let has_when = group.iter().any(|n| n.when.is_some());
         if !has_when {
-            return Ok(group[0].body.clone());
+            return Ok(group[0].body.as_ref().clone());
         }
 
         // Collect candidate metadata into owned data so we can borrow `self.saliency`
@@ -33,12 +33,12 @@ impl<S: VariableStorage> Runner<S> {
         let candidate_info: Vec<(String, bool, Vec<Stmt>)> = group
             .iter()
             .map(|n| {
-                let available = n.when_src.as_deref().is_none_or(|src| {
-                    self.eval_expr_src(src)
+                let available = n.when.as_ref().is_none_or(|e| {
+                    self.eval_expr(e.as_ref())
                         .map(|v| v.is_truthy())
                         .unwrap_or(false)
                 });
-                (n.title.clone(), available, n.body.clone())
+                (n.title.clone(), available, n.body.as_ref().clone())
             })
             .collect();
 

@@ -1,6 +1,8 @@
 //! `step` and `execute_stmt` — the core statement dispatch loop.
 
-use crate::compiler::ast::Stmt;
+use std::sync::Arc;
+
+use crate::compiler::ast::{Expr, IfBranch, Stmt};
 use crate::error::{DialogueError, Result};
 use crate::runtime::event::{DialogueEvent, DialogueOption};
 use crate::saliency::Candidate;
@@ -37,14 +39,14 @@ impl<S: VariableStorage> Runner<S> {
                 text,
                 tags,
             } => self.exec_line(speaker, &text, tags),
-            Stmt::Set { name, expr_src } => {
-                let value = self.eval_expr_src(&expr_src)?;
+            Stmt::Set { name, expr } => {
+                let value = self.eval_expr(expr.as_ref())?;
                 self.storage.set(&name, value);
                 Ok(None)
             }
-            Stmt::Declare { name, expr_src } => {
+            Stmt::Declare { name, expr, .. } => {
                 if self.storage.get(&name).is_none() {
-                    let value = self.eval_expr_src(&expr_src)?;
+                    let value = self.eval_expr(expr.as_ref())?;
                     self.storage.set(&name, value);
                 }
                 Ok(None)
@@ -57,10 +59,10 @@ impl<S: VariableStorage> Runner<S> {
             } => self.exec_if(branches, else_body),
             Stmt::Once {
                 block_id,
-                cond_src,
+                cond,
                 body,
                 else_body,
-            } => self.exec_once(block_id, cond_src, body, else_body),
+            } => self.exec_once(block_id, cond.as_ref(), body, else_body),
             Stmt::Jump(target) => self.exec_jump(target),
             Stmt::Detour(target) => self.exec_detour(target),
             Stmt::Return => {
@@ -106,8 +108,8 @@ impl<S: VariableStorage> Runner<S> {
         let availability: Vec<bool> = variants
             .iter()
             .map(|v| {
-                v.cond_src.as_ref().is_none_or(|src| {
-                    self.eval_expr_src(src)
+                v.cond.as_ref().is_none_or(|e| {
+                    self.eval_expr(e.as_ref())
                         .map(|val| val.is_truthy())
                         .unwrap_or(false)
                 }) && !(v.once && self.once_seen.contains(&v.id))
@@ -143,8 +145,8 @@ impl<S: VariableStorage> Runner<S> {
         let mut options = Vec::with_capacity(items.len());
         let mut bodies = Vec::with_capacity(items.len());
         for item in items {
-            let available = match &item.cond_src {
-                Some(src) => self.eval_expr_src(src)?.is_truthy(),
+            let available = match &item.cond {
+                Some(e) => self.eval_expr(e.as_ref())?.is_truthy(),
                 None => true,
             };
             let text = self.interpolate_text(&item.text)?;
@@ -162,13 +164,13 @@ impl<S: VariableStorage> Runner<S> {
 
     fn exec_if(
         &mut self,
-        branches: Vec<(String, Vec<Stmt>)>,
+        branches: Vec<IfBranch>,
         else_body: Vec<Stmt>,
     ) -> Result<Option<DialogueEvent>> {
         let mut chosen = None;
-        for (cond_src, body) in branches {
-            if self.eval_expr_src(&cond_src)?.is_truthy() {
-                chosen = Some(body);
+        for b in branches {
+            if self.eval_expr(b.cond.as_ref())?.is_truthy() {
+                chosen = Some(b.body);
                 break;
             }
         }
@@ -179,13 +181,13 @@ impl<S: VariableStorage> Runner<S> {
     fn exec_once(
         &mut self,
         block_id: String,
-        cond_src: Option<String>,
+        cond: Option<&Arc<Expr>>,
         body: Vec<Stmt>,
         else_body: Vec<Stmt>,
     ) -> Result<Option<DialogueEvent>> {
-        let cond_ok = match cond_src {
-            Some(src) => self.eval_expr_src(&src)?.is_truthy(),
+        let cond_ok = match cond {
             None => true,
+            Some(e) => self.eval_expr(e.as_ref())?.is_truthy(),
         };
         let first_time = !self.once_seen.contains(&block_id);
         let run_body = cond_ok && first_time;
@@ -205,7 +207,7 @@ impl<S: VariableStorage> Runner<S> {
         self.stack.push(Frame::new(target.clone(), body));
         *self
             .visits
-            .write()
+            .lock()
             .unwrap()
             .entry(target.clone())
             .or_insert(0) += 1;
@@ -220,7 +222,7 @@ impl<S: VariableStorage> Runner<S> {
         let body = self.pick_node_body(&target)?;
         *self
             .visits
-            .write()
+            .lock()
             .unwrap()
             .entry(target.clone())
             .or_insert(0) += 1;

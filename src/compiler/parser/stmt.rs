@@ -1,10 +1,10 @@
 //! Command, if, and once statement parsing — `impl Parser` blocks for control flow.
 
-use crate::compiler::ast::Stmt;
+use crate::compiler::ast::{IfBranch, Stmt};
 use crate::error::Result;
 
 use super::Parser;
-use super::assignments::{parse_declare, parse_set, validate_expr};
+use super::assignments::{parse_declare, parse_expr_arc, parse_set};
 use super::command::{extract_cmd, extract_cmd_line_tags, first_word, split_first_word};
 use super::text::split_trailing_tags;
 
@@ -39,12 +39,10 @@ impl Parser<'_> {
     }
 
     fn parse_if(&mut self, first_cond: &str, if_lineno: usize, cur_indent: usize) -> Result<Stmt> {
-        let cond = first_cond[2..].trim().to_owned();
-        // Validate the condition expression eagerly so the error points at the
-        // <<if>> line, not at some later <<endif>> or ===.
-        validate_expr(&cond, "<<if>>", if_lineno, self.file)?;
+        let cond_src = first_cond[2..].trim();
+        let cond0 = parse_expr_arc(cond_src, "<<if>>", if_lineno, self.file)?;
         let body = self.parse_body(cur_indent + 1)?;
-        let mut branches: Vec<(String, Vec<Stmt>)> = vec![(cond, body)];
+        let mut branches: Vec<IfBranch> = vec![IfBranch { cond: cond0, body }];
         let mut else_body = Vec::new();
 
         loop {
@@ -52,15 +50,13 @@ impl Parser<'_> {
                 Some((_, l)) if l.trim().starts_with("<<elseif ") => {
                     let (lineno2, content) = self.advance().unwrap();
                     let inner = extract_cmd(content.trim(), lineno2, self.file)?;
-                    let cond2 = inner["elseif".len()..].trim().to_owned();
-                    crate::compiler::expr::parse_expr(&cond2).map_err(|_| {
-                        self.err(
-                            lineno2,
-                            format!("invalid expression in `<<elseif>>`: `{cond2}`"),
-                        )
-                    })?;
+                    let cond_src2 = inner["elseif".len()..].trim();
+                    let cond2 = parse_expr_arc(cond_src2, "<<elseif>>", lineno2, self.file)?;
                     let b = self.parse_body(cur_indent + 1)?;
-                    branches.push((cond2, b));
+                    branches.push(IfBranch {
+                        cond: cond2,
+                        body: b,
+                    });
                 }
                 Some((_, l)) if l.trim() == "<<else>>" => {
                     self.advance();
@@ -85,10 +81,9 @@ impl Parser<'_> {
         let block_id = self.next_id();
         // `inner` is the full command text after `<<`, e.g. `once`, `once if expr`.
         let rest = inner["once".len()..].trim();
-        let cond_src = if rest.starts_with("if ") || rest == "if" {
-            let src = rest["if".len()..].trim().to_owned();
-            validate_expr(&src, "<<once if>>", once_lineno, self.file)?;
-            Some(src)
+        let cond = if rest.starts_with("if ") || rest == "if" {
+            let src = rest["if".len()..].trim();
+            Some(parse_expr_arc(src, "<<once if>>", once_lineno, self.file)?)
         } else {
             None
         };
@@ -107,7 +102,7 @@ impl Parser<'_> {
         }
         Ok(Stmt::Once {
             block_id,
-            cond_src,
+            cond,
             body,
             else_body,
         })

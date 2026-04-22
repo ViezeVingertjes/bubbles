@@ -6,10 +6,17 @@ pub(super) mod command;
 pub(super) mod stmt;
 pub(super) mod text;
 
+use std::sync::Arc;
+
 use indexmap::IndexMap;
 
-use crate::compiler::ast::Node;
+use crate::compiler::ast::{Expr, Node};
 use crate::error::{DialogueError, Result};
+
+type HeaderMap = IndexMap<String, String>;
+type WhenExpr = Option<Arc<Expr>>;
+
+use self::assignments::parse_expr_arc;
 
 // ── public entry point ────────────────────────────────────────────────────────
 
@@ -108,7 +115,7 @@ impl Parser<'_> {
     }
 
     fn parse_node(&mut self) -> Result<Node> {
-        let headers = self.parse_headers()?;
+        let (headers, when) = self.parse_headers()?;
         let title = headers
             .get("title")
             .cloned()
@@ -121,11 +128,9 @@ impl Parser<'_> {
             .get("tags")
             .map(|s| s.split_whitespace().map(str::to_owned).collect())
             .unwrap_or_default();
-        let when_src = headers.get("when").cloned();
         let mut extra = headers;
         extra.shift_remove("title");
         extra.shift_remove("tags");
-        extra.shift_remove("when");
 
         self.expect_body_start()?;
         let body = self.parse_body(0)?;
@@ -135,13 +140,15 @@ impl Parser<'_> {
             title,
             tags,
             headers: extra,
-            when_src,
-            body,
+            when,
+            body: Arc::new(body),
         })
     }
 
-    fn parse_headers(&mut self) -> Result<IndexMap<String, String>> {
+    fn parse_headers(&mut self) -> Result<(HeaderMap, WhenExpr)> {
         let mut map = IndexMap::new();
+        let mut when: WhenExpr = None;
+        let file = self.file;
         loop {
             match self.peek() {
                 None => break,
@@ -161,7 +168,11 @@ impl Parser<'_> {
                     if let Some(colon) = t.find(':') {
                         let key = t[..colon].trim().to_owned();
                         let val = t[colon + 1..].trim().to_owned();
-                        map.insert(key, val);
+                        if key == "when" {
+                            when = Some(parse_expr_arc(&val, "when:", lineno, file)?);
+                        } else {
+                            map.insert(key, val);
+                        }
                         self.advance();
                     } else {
                         return Err(self.err(lineno, format!("invalid header line: `{t}`")));
@@ -169,7 +180,7 @@ impl Parser<'_> {
                 }
             }
         }
-        Ok(map)
+        Ok((map, when))
     }
 
     fn expect_body_start(&mut self) -> Result<()> {

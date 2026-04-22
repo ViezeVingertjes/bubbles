@@ -49,7 +49,19 @@ All notable changes are documented here (keep-a-changelog format).
 - Extracted a shared `Runner::push_inline_frame` helper used by `<<if>>`,
   `<<once>>`, and option-body execution, removing three copies of the same
   frame-push idiom.
-- `parse_if` / `parse_once` now delegate to the shared `validate_expr` helper
-  instead of open-coding the same check.
+- `parse_if` / `<<once if>>` / option and line-group guards / node `when:` now
+  build a shared `Arc<Expr>` at compile time via `parse_expr_arc` instead of
+  storing only source strings and re-parsing on every evaluation.
+- `Node.body` is now `Arc<Vec<Stmt>>` so `pick_node_body` can clone the
+  statement list without re-allocating shared expression trees (each
+  `Stmt` holds `Arc<Expr>` where applicable, so `Stmt` clone is cheap for
+  hot paths like detours and `<<if>>` branches).
+- `Runner` visit counts use `Arc<Mutex<HashMap<…>>>` instead of `RwLock` —
+  the previous design only needed re-entrancy for `visited()` / `visited_count()`
+  builtins; a mutex matches single-threaded game-loop use and is simpler to
+  reason about.
+- `SaliencyStrategy` implementations live in separate files under `saliency/`
+  (`candidate`, `first`, `random`, `blrv`, `tests`) instead of a single
+  `mod.rs` over 200 lines.
 - Lint configuration is now owned exclusively by `Cargo.toml`; `src/lib.rs`
   no longer duplicates the `deny` / `warn` attributes.

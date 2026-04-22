@@ -1,5 +1,7 @@
 //! AST types: node/statement types and expression tree — data only, no logic.
 
+use std::sync::Arc;
+
 use indexmap::IndexMap;
 
 /// A complete parsed node from a `.bub` script.
@@ -9,11 +11,20 @@ pub struct Node {
     pub title: String,
     /// Tags declared in the `tags:` header.
     pub tags: Vec<String>,
-    /// All other header key-value pairs, preserved verbatim.
+    /// All other header key-value pairs, preserved verbatim (minus `title` / `tags` / `when`).
     pub headers: IndexMap<String, String>,
-    /// Optional `when:` condition source for node-group selection.
-    pub when_src: Option<String>,
-    /// The statements making up the node body.
+    /// Optional `when:` condition for node-group selection (parsed at compile time).
+    pub when: Option<Arc<Expr>>,
+    /// The statements making up the node body (shared [`Arc`] so pickers can clone cheaply).
+    pub body: Arc<Vec<Stmt>>,
+}
+
+/// One branch of an `<<if>>` chain: condition AST + body statements.
+#[derive(Debug, Clone)]
+pub struct IfBranch {
+    /// Parsed condition (same as would be produced from the source string at compile time).
+    pub cond: Arc<Expr>,
+    /// Statements when this branch is taken.
     pub body: Vec<Stmt>,
 }
 
@@ -33,15 +44,15 @@ pub enum Stmt {
     Set {
         /// Variable name including the `$` sigil.
         name: String,
-        /// Expression source string.
-        expr_src: String,
+        /// Parsed right-hand expression (compile-time).
+        expr: Arc<Expr>,
     },
     /// A conditional block.
     If {
-        /// Ordered list of `(condition_src, body)` branches.
-        branches: Vec<(String, Vec<Self>)>,
-        /// Optional else body.
-        else_body: Vec<Self>,
+        /// `if` / `elseif` branches in order.
+        branches: Vec<IfBranch>,
+    /// `else` body.
+    else_body: Vec<Self>,
     },
     /// A `<<jump NodeTitle>>` statement.
     Jump(String),
@@ -62,8 +73,8 @@ pub enum Stmt {
     Once {
         /// Stable block id (line number–based), used to track seen state.
         block_id: String,
-        /// Optional condition source for `<<once if …>>`.
-        cond_src: Option<String>,
+        /// Optional condition for `<<once if …>>` (parsed at compile time).
+        cond: Option<Arc<Expr>>,
         /// Body that runs the first time.
         body: Vec<Self>,
         /// Body that runs after the first time.
@@ -73,8 +84,10 @@ pub enum Stmt {
     Declare {
         /// Variable name.
         name: String,
-        /// Computed expression source.
-        expr_src: String,
+        /// Parsed default expression.
+        expr: Arc<Expr>,
+        /// Expression source as written (for [`crate::VariableDecl`] / tooling).
+        default_src: String,
     },
     /// A shortcut-option block.
     Options(Vec<OptionItem>),
@@ -89,8 +102,8 @@ pub struct OptionItem {
     pub id: String,
     /// Display text, may contain `{expr}`.
     pub text: String,
-    /// Optional condition source (for `-> text <<if …>>`).
-    pub cond_src: Option<String>,
+    /// Optional guard (`-> text <<if cond>>`); `None` = always available if not `once` exhausted.
+    pub cond: Option<Arc<Expr>>,
     /// Whether this option is a once-option.
     pub once: bool,
     /// Trailing tags.
@@ -108,8 +121,8 @@ pub struct LineVariant {
     pub speaker: Option<String>,
     /// Text.
     pub text: String,
-    /// Optional condition source.
-    pub cond_src: Option<String>,
+    /// Optional guard; `None` = always considered with saliency.
+    pub cond: Option<Arc<Expr>>,
     /// Whether this variant is a once-variant.
     pub once: bool,
     /// Trailing tags.

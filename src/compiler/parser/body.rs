@@ -6,6 +6,7 @@ use crate::compiler::ast::{LineVariant, OptionItem, Stmt};
 use crate::error::Result;
 
 use super::Parser;
+use super::assignments::parse_expr_arc;
 use super::stmt::parse_option_text;
 use super::text::{leading_spaces, parse_line_stmt, split_speaker, split_trailing_tags};
 
@@ -54,7 +55,7 @@ impl Parser<'_> {
             return self.parse_option_block(cur_indent);
         }
         if t.starts_with("=>") {
-            return Ok(self.parse_line_group(cur_indent));
+            return self.parse_line_group(cur_indent);
         }
         self.advance();
         Ok(parse_line_stmt(t))
@@ -62,7 +63,8 @@ impl Parser<'_> {
 
     pub(super) fn parse_option_block(&mut self, cur_indent: usize) -> Result<Stmt> {
         let mut items = Vec::new();
-        while let Some((_, content)) = self.peek() {
+        let file = self.file;
+        while let Some((lineno, content)) = self.peek() {
             let t = content.trim();
             if !t.starts_with("->") {
                 break;
@@ -73,14 +75,23 @@ impl Parser<'_> {
             }
             self.advance();
             let rest = t[2..].trim();
-            let (text_part, cond_src, once) = parse_option_text(rest);
+            let (text_part, cond_str, once) = parse_option_text(rest);
+            let cond = match cond_str {
+                None => None,
+                Some(s) => Some(parse_expr_arc(
+                    &s,
+                    "shortcut option `<<if>>`",
+                    lineno,
+                    file,
+                )?),
+            };
             let (text, tags) = split_trailing_tags(&text_part);
             let id = self.next_id();
             let body = self.parse_body(option_indent + 1)?;
             items.push(OptionItem {
                 id,
                 text,
-                cond_src,
+                cond,
                 once,
                 tags,
                 body,
@@ -89,9 +100,10 @@ impl Parser<'_> {
         Ok(Stmt::Options(items))
     }
 
-    pub(super) fn parse_line_group(&mut self, cur_indent: usize) -> Stmt {
+    pub(super) fn parse_line_group(&mut self, cur_indent: usize) -> Result<Stmt> {
         let mut variants = Vec::new();
-        while let Some((_, content)) = self.peek() {
+        let file = self.file;
+        while let Some((lineno, content)) = self.peek() {
             let t = content.trim();
             if !t.starts_with("=>") {
                 break;
@@ -102,18 +114,22 @@ impl Parser<'_> {
             self.advance();
             let rest = t[2..].trim();
             let id = self.next_id();
-            let (line_text, cond_src, once) = parse_option_text(rest);
+            let (line_text, cond_str, once) = parse_option_text(rest);
+            let cond = match cond_str {
+                None => None,
+                Some(s) => Some(parse_expr_arc(&s, "line group `<<if>>`", lineno, file)?),
+            };
             let (speaker, text) = split_speaker(&line_text);
             let (text, tags) = split_trailing_tags(&text);
             variants.push(LineVariant {
                 id,
                 speaker,
                 text,
-                cond_src,
+                cond,
                 once,
                 tags,
             });
         }
-        Stmt::LineGroup(variants)
+        Ok(Stmt::LineGroup(variants))
     }
 }

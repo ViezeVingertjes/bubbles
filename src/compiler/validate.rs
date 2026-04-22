@@ -11,7 +11,7 @@ use crate::error::{DialogueError, Result};
 pub fn validate(program: &Program) -> Result<()> {
     for variants in program.nodes.values() {
         for node in variants {
-            validate_stmts(&node.body, program)?;
+            validate_stmts(node.body.as_ref(), program)?;
         }
     }
     Ok(())
@@ -31,8 +31,8 @@ fn validate_stmts(stmts: &[Stmt], program: &Program) -> Result<()> {
                 branches,
                 else_body,
             } => {
-                for (_, body) in branches {
-                    validate_stmts(body, program)?;
+                for b in branches {
+                    validate_stmts(&b.body, program)?;
                 }
                 validate_stmts(else_body, program)?;
             }

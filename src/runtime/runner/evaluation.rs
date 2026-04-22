@@ -2,6 +2,7 @@
 //! command-argument parsing, bridging the runner's state to the stateless
 //! [`crate::runtime::eval`] and [`crate::runtime::interpolate`] modules.
 
+use crate::compiler::ast::Expr;
 use crate::error::Result;
 use crate::runtime::eval::eval;
 use crate::runtime::interpolate::interpolate;
@@ -10,10 +11,10 @@ use crate::value::{Value, VariableStorage};
 use super::Runner;
 
 impl<S: VariableStorage> Runner<S> {
-    /// Evaluates an expression source string against the current variable storage.
-    pub(super) fn eval_expr_src(&self, src: &str) -> Result<Value> {
-        let expr = crate::compiler::expr::parse_expr(src)?;
-        eval(&expr, &self.storage, &|name, args| {
+    /// Evaluates a compile-time-parsed expression against current storage and the
+    /// function library.
+    pub(super) fn eval_expr(&self, expr: &Expr) -> Result<Value> {
+        eval(expr, &self.storage, &|name, args| {
             self.library.call(name, args)
         })
     }

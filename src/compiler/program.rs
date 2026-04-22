@@ -87,8 +87,8 @@ impl Program {
             let entry = map.entry(node.title.clone()).or_default();
             // Duplicate non-grouped nodes are an error.
             if !entry.is_empty() {
-                let existing_ungrouped = entry.iter().all(|n| n.when_src.is_none());
-                if existing_ungrouped && node.when_src.is_none() {
+                let existing_ungrouped = entry.iter().all(|n| n.when.is_none());
+                if existing_ungrouped && node.when.is_none() {
                     return Err(DialogueError::DuplicateNode(node.title));
                 }
             }
@@ -109,11 +109,13 @@ fn collect_declarations(
 ) {
     for stmt in stmts {
         match stmt {
-            Stmt::Declare { name, expr_src } => {
+            Stmt::Declare {
+                name, default_src, ..
+            } => {
                 if seen.insert(name.clone()) {
                     out.push(VariableDecl {
                         name: name.clone(),
-                        default_src: expr_src.clone(),
+                        default_src: default_src.clone(),
                     });
                 }
             }
@@ -121,8 +123,8 @@ fn collect_declarations(
                 branches,
                 else_body,
             } => {
-                for (_, body) in branches {
-                    collect_declarations(body, out, seen);
+                for b in branches {
+                    collect_declarations(&b.body, out, seen);
                 }
                 collect_declarations(else_body, out, seen);
             }
