@@ -136,6 +136,14 @@ impl Parser<'_> {
                     if t == "---" || t.is_empty() || t.starts_with("//") {
                         break;
                     }
+                    // `===` in header position means the author forgot `---`.
+                    if t == "===" {
+                        return Err(self.err(
+                            lineno,
+                            "found `===` where `---` body delimiter was expected — \
+                             is the `---` line missing?",
+                        ));
+                    }
                     if let Some(colon) = t.find(':') {
                         let key = t[..colon].trim().to_owned();
                         let val = t[colon + 1..].trim().to_owned();
@@ -170,7 +178,21 @@ impl Parser<'_> {
                     return Ok(());
                 }
                 Some((n, l)) => {
-                    return Err(self.err(n, format!("expected `===`, got `{}`", l.trim())));
+                    let t = l.trim();
+                    let hint = if matches!(t, "<<endif>>" | "<<endonce>>") {
+                        format!(
+                            " — `{t}` has no matching opening block; \
+                             check indentation and that every `<<if>>` or `<<once>>` \
+                             has a corresponding `{t}`"
+                        )
+                    } else if t == "<<else>>" || t.starts_with("<<elseif") {
+                        " — unexpected `<<else>>`/`<<elseif>>`; \
+                         check that the matching `<<if>>` is correct"
+                            .to_owned()
+                    } else {
+                        String::new()
+                    };
+                    return Err(self.err(n, format!("expected `===`, got `{t}`{hint}")));
                 }
             }
         }
@@ -186,7 +208,7 @@ impl Parser<'_> {
         loop {
             match self.peek() {
                 None => break,
-                Some((_, content)) => {
+                Some((lineno, content)) => {
                     let indent = leading_spaces(content);
                     let t = content.trim();
                     if t.is_empty() || t.starts_with("//") {
@@ -195,6 +217,15 @@ impl Parser<'_> {
                     }
                     if t == "===" {
                         break;
+                    }
+                    // A `title:` line inside a body almost certainly means the
+                    // author forgot `===` to close the previous node.
+                    if min_indent == 0 && t.starts_with("title:") && t.len() > "title:".len() {
+                        return Err(self.err(
+                            lineno,
+                            "found `title:` inside a node body — \
+                             did you forget `===` to close the previous node?",
+                        ));
                     }
                     if indent < min_indent {
                         break;

@@ -40,7 +40,20 @@ impl Parser<'_> {
     }
 
     fn parse_if(&mut self, first_cond: &str, cur_indent: usize) -> Result<Stmt> {
+        // The raw line we already advanced past is no longer in the buffer, so
+        // we look at the *previous* pos for the line number. Use a conservative
+        // approach: report errors at the current pos (next unread line) which is
+        // one past the <<if>> line.
+        let if_lineno = self.pos.saturating_sub(1);
         let cond = first_cond[2..].trim().to_owned();
+        // Validate the condition expression eagerly so the error points at the
+        // <<if>> line, not at some later <<endif>> or ===.
+        crate::compiler::expr::parse_expr(&cond).map_err(|_| {
+            self.err(
+                if_lineno,
+                format!("invalid expression in `<<if>>`: `{cond}`"),
+            )
+        })?;
         let body = self.parse_body(cur_indent + 1)?;
         let mut branches: Vec<(String, Vec<Stmt>)> = vec![(cond, body)];
         let mut else_body = Vec::new();
@@ -51,6 +64,12 @@ impl Parser<'_> {
                     let (lineno2, content) = self.advance().unwrap();
                     let inner = extract_cmd(content.trim(), lineno2, self.file)?;
                     let cond2 = inner["elseif".len()..].trim().to_owned();
+                    crate::compiler::expr::parse_expr(&cond2).map_err(|_| {
+                        self.err(
+                            lineno2,
+                            format!("invalid expression in `<<elseif>>`: `{cond2}`"),
+                        )
+                    })?;
                     let b = self.parse_body(cur_indent + 1)?;
                     branches.push((cond2, b));
                 }
@@ -75,8 +94,16 @@ impl Parser<'_> {
 
     fn parse_once(&mut self, rest: &str, cur_indent: usize) -> Result<Stmt> {
         let block_id = self.next_id();
+        let once_lineno = self.pos.saturating_sub(1);
         let cond_src = if rest.starts_with("if ") || rest == "if" {
-            Some(rest["if".len()..].trim().to_owned())
+            let src = rest["if".len()..].trim().to_owned();
+            crate::compiler::expr::parse_expr(&src).map_err(|_| {
+                self.err(
+                    once_lineno,
+                    format!("invalid expression in `<<once if>>`: `{src}`"),
+                )
+            })?;
+            Some(src)
         } else {
             None
         };

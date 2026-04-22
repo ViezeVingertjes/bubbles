@@ -142,3 +142,52 @@ fn three_source_compile_many() {
     .unwrap();
     assert_eq!(prog.node_titles().count(), 3);
 }
+
+// ── error message quality ─────────────────────────────────────────────────────
+
+#[test]
+fn error_missing_title_header() {
+    let err = compile("tags: foo\n---\n===\n").unwrap_err().to_string();
+    assert!(err.contains("title:"), "got: {err}");
+}
+
+#[test]
+fn error_missing_body_delimiter() {
+    let err = compile("title: A\n===\n").unwrap_err().to_string();
+    assert!(err.contains("---"), "got: {err}");
+}
+
+#[test]
+fn error_missing_node_terminator() {
+    let err = compile("title: A\n---\nHello.\ntitle: B\n---\n===\n")
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("title:") && err.contains("==="), "got: {err}");
+}
+
+#[test]
+fn error_invalid_expression_in_if() {
+    let err = compile("title: A\n---\n<<if $x &&>>\nHello.\n<<endif>>\n===\n")
+        .unwrap_err()
+        .to_string();
+    assert!(
+        err.contains("<<if>>") && err.contains("$x &&"),
+        "got: {err}"
+    );
+}
+
+#[test]
+fn error_invalid_expression_in_set() {
+    let err = compile("title: A\n---\n<<set $x = 1 +>>\n===\n")
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("<<set>>"), "got: {err}");
+}
+
+#[test]
+fn error_dangling_endif_gives_hint() {
+    let err = compile("title: A\n---\n<<endif>>\n===\n")
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("<<endif>>"), "got: {err}");
+}

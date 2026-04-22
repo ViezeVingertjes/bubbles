@@ -121,3 +121,33 @@ fn storage_getter_works() {
     let runner = Runner::new(prog, storage);
     assert_eq!(runner.storage().get("$x"), Some(Value::Number(42.0)));
 }
+
+#[test]
+fn division_by_zero_returns_error() {
+    let prog = compile("title: A\n---\n<<set $x = 10 / 0>>\n===\n").unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("A").unwrap();
+    let err = loop {
+        match runner.next_event() {
+            Err(e) => break e.to_string(),
+            Ok(None) => panic!("dialogue ended without error"),
+            Ok(Some(_)) => {}
+        }
+    };
+    assert!(err.contains("division by zero"), "got: {err}");
+}
+
+#[test]
+fn undefined_variable_returns_error() {
+    let prog = compile("title: A\n---\n{$notset}\n===\n").unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("A").unwrap();
+    let err = loop {
+        match runner.next_event() {
+            Err(e) => break e.to_string(),
+            Ok(None) => panic!("dialogue ended without error"),
+            Ok(Some(_)) => {}
+        }
+    };
+    assert!(err.contains("$notset"), "got: {err}");
+}

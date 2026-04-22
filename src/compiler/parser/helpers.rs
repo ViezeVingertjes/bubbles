@@ -51,6 +51,17 @@ pub(super) fn split_first_word(s: &str) -> (&str, &str) {
         .map_or((s, ""), |i| (&s[..i], s[i..].trim_start()))
 }
 
+/// Validates an expression source at parse time, returning a clear error on the
+/// correct line rather than a cryptic runtime failure later.
+fn validate_expr(src: &str, context: &str, line: usize, file: &str) -> Result<()> {
+    crate::compiler::expr::parse_expr(src).map_err(|_| DialogueError::Parse {
+        file: file.to_owned(),
+        line,
+        message: format!("invalid expression in {context}: `{src}`"),
+    })?;
+    Ok(())
+}
+
 pub(super) fn parse_set(inner: &str, line: usize, file: &str) -> Result<Stmt> {
     let rest = inner["set".len()..].trim();
     let (name, after) = split_first_word(rest);
@@ -66,6 +77,7 @@ pub(super) fn parse_set(inner: &str, line: usize, file: &str) -> Result<Stmt> {
             ),
         })?
         .to_owned();
+    validate_expr(&expr_src, "<<set>>", line, file)?;
     Ok(Stmt::Set {
         name: name.to_owned(),
         expr_src,
@@ -84,6 +96,7 @@ pub(super) fn parse_declare(inner: &str, line: usize, file: &str) -> Result<Stmt
             message: format!("expected `= expr` after variable in `<<declare>>`, got `{after}`"),
         })?
         .to_owned();
+    validate_expr(&expr_src, "<<declare>>", line, file)?;
     Ok(Stmt::Declare {
         name: name.to_owned(),
         expr_src,

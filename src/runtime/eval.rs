@@ -95,7 +95,15 @@ where
 
 fn num_op(left: Value, right: Value, op: &str, calc: impl Fn(f64, f64) -> f64) -> Result<Value> {
     match (left, right) {
-        (Value::Number(a), Value::Number(b)) => Ok(Value::Number(calc(a, b))),
+        (Value::Number(a), Value::Number(b)) => {
+            if op == "/" && b == 0.0 {
+                return Err(DialogueError::Runtime("division by zero".into()));
+            }
+            if op == "%" && b == 0.0 {
+                return Err(DialogueError::Runtime("modulo by zero".into()));
+            }
+            Ok(Value::Number(calc(a, b)))
+        }
         (lv, rv) => Err(DialogueError::Type(format!(
             "operator `{op}` requires numbers, got {lv:?} and {rv:?}"
         ))),
