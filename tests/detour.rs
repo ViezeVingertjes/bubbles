@@ -8,7 +8,11 @@ fn line_texts(events: &[DialogueEvent]) -> Vec<&str> {
     events
         .iter()
         .filter_map(|e| {
-            if let DialogueEvent::Line { text, .. } = e { Some(text.as_str()) } else { None }
+            if let DialogueEvent::Line { text, .. } = e {
+                Some(text.as_str())
+            } else {
+                None
+            }
         })
         .collect()
 }
@@ -28,7 +32,10 @@ Inside sub.
 ===
 ";
     let events = common::play(src, "Start");
-    assert_eq!(line_texts(&events), ["Before detour.", "Inside sub.", "After detour."]);
+    assert_eq!(
+        line_texts(&events),
+        ["Before detour.", "Inside sub.", "After detour."]
+    );
 }
 
 #[test]
@@ -48,5 +55,8 @@ Should not appear.
 ===
 ";
     let events = common::play(src, "Start");
-    assert_eq!(line_texts(&events), ["Before detour.", "Sub line.", "After sub."]);
+    assert_eq!(
+        line_texts(&events),
+        ["Before detour.", "Sub line.", "After sub."]
+    );
 }

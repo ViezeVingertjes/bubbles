@@ -30,7 +30,8 @@ impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Number(v) => {
-                // Omit ".0" suffix so `{$n}` renders as "2" not "2".
+                // Omit ".0" suffix so `{$n}` renders as "2" not "2.0".
+                #[allow(clippy::cast_possible_truncation)]
                 if v.fract() == 0.0 && v.abs() < 1e15 {
                     write!(f, "{}", *v as i64)
                 } else {
@@ -44,19 +45,27 @@ impl fmt::Display for Value {
 }
 
 impl From<f64> for Value {
-    fn from(v: f64) -> Self { Self::Number(v) }
+    fn from(v: f64) -> Self {
+        Self::Number(v)
+    }
 }
 
 impl From<bool> for Value {
-    fn from(v: bool) -> Self { Self::Bool(v) }
+    fn from(v: bool) -> Self {
+        Self::Bool(v)
+    }
 }
 
 impl From<String> for Value {
-    fn from(v: String) -> Self { Self::Text(v) }
+    fn from(v: String) -> Self {
+        Self::Text(v)
+    }
 }
 
 impl From<&str> for Value {
-    fn from(v: &str) -> Self { Self::Text(v.to_owned()) }
+    fn from(v: &str) -> Self {
+        Self::Text(v.to_owned())
+    }
 }
 
 #[cfg(test)]

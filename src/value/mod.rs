@@ -1,7 +1,7 @@
 //! Value model: [`Value`] enum, [`VariableStorage`] trait, and [`HashMapStorage`].
 
 mod storage;
-mod value;
+mod types;
 
 pub use storage::{HashMapStorage, VariableStorage};
-pub use value::Value;
+pub use types::Value;

@@ -8,7 +8,11 @@ fn lines_from(events: &[DialogueEvent]) -> Vec<&str> {
     events
         .iter()
         .filter_map(|e| {
-            if let DialogueEvent::Line { text, .. } = e { Some(text.as_str()) } else { None }
+            if let DialogueEvent::Line { text, .. } = e {
+                Some(text.as_str())
+            } else {
+                None
+            }
         })
         .collect()
 }
@@ -17,10 +21,10 @@ fn lines_from(events: &[DialogueEvent]) -> Vec<&str> {
 fn variable_and_expression_substituted() {
     let events = common::play_fixture("interpolation", "Start");
     let lines = lines_from(&events);
-    assert_eq!(lines, [
-        "Hello Bob, you have 42 coins.",
-        "The answer is 42.",
-    ]);
+    assert_eq!(
+        lines,
+        ["Hello Bob, you have 42 coins.", "The answer is 42.",]
+    );
 }
 
 #[test]

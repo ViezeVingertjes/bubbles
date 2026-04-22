@@ -1,7 +1,7 @@
 //! [`DialogueEvent`] and [`DialogueOption`] — the output types of the runner.
 
 /// An option presented to the player.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DialogueOption {
     /// Display text of the option.
     pub text: String,

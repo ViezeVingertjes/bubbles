@@ -29,15 +29,18 @@ where
 /// Loads a fixture file from `tests/fixtures/<name>.bub` and runs it.
 pub fn play_fixture(name: &str, start_node: &str) -> Vec<DialogueEvent> {
     let path = format!("tests/fixtures/{name}.bub");
-    let source = std::fs::read_to_string(&path)
-        .unwrap_or_else(|_| panic!("fixture not found: {path}"));
+    let source =
+        std::fs::read_to_string(&path).unwrap_or_else(|_| panic!("fixture not found: {path}"));
     play(&source, start_node)
 }
 
 fn collect(runner: &mut Runner<HashMapStorage>) -> Vec<DialogueEvent> {
     let mut events = Vec::new();
     loop {
-        match runner.next_event().unwrap_or_else(|e| panic!("runtime error: {e}")) {
+        match runner
+            .next_event()
+            .unwrap_or_else(|e| panic!("runtime error: {e}"))
+        {
             Some(ev) => events.push(ev),
             None => break,
         }

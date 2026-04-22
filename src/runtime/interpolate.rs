@@ -20,11 +20,13 @@ where
     while let Some(open) = remaining.find('{') {
         result.push_str(&remaining[..open]);
         let after_open = &remaining[open + 1..];
-        let close = after_open.find('}').ok_or_else(|| crate::error::DialogueError::Parse {
-            file: "<line>".into(),
-            line: 0,
-            message: format!("unclosed `{{` in text: `{text}`"),
-        })?;
+        let close = after_open
+            .find('}')
+            .ok_or_else(|| crate::error::DialogueError::Parse {
+                file: "<line>".into(),
+                line: 0,
+                message: format!("unclosed `{{` in text: `{text}`"),
+            })?;
         let expr_src = &after_open[..close];
         let expr = parse_expr(expr_src)?;
         let value = eval(&expr, storage, fns)?;
@@ -54,13 +56,19 @@ mod tests {
     fn single_variable_substituted() {
         let mut s = HashMapStorage::new();
         s.set("$name", Value::Text("Alice".into()));
-        assert_eq!(interpolate("Hello {$name}!", &s, &no_fns).unwrap(), "Hello Alice!");
+        assert_eq!(
+            interpolate("Hello {$name}!", &s, &no_fns).unwrap(),
+            "Hello Alice!"
+        );
     }
 
     #[test]
     fn arithmetic_expression_substituted() {
         let s = HashMapStorage::new();
-        assert_eq!(interpolate("Result: {1 + 2}", &s, &no_fns).unwrap(), "Result: 3");
+        assert_eq!(
+            interpolate("Result: {1 + 2}", &s, &no_fns).unwrap(),
+            "Result: 3"
+        );
     }
 
     #[test]
@@ -68,6 +76,9 @@ mod tests {
         let mut s = HashMapStorage::new();
         s.set("$a", Value::Number(2.0));
         s.set("$b", Value::Number(3.0));
-        assert_eq!(interpolate("{$a} * {$b} = {$a * $b}", &s, &no_fns).unwrap(), "2 * 3 = 6");
+        assert_eq!(
+            interpolate("{$a} * {$b} = {$a * $b}", &s, &no_fns).unwrap(),
+            "2 * 3 = 6"
+        );
     }
 }

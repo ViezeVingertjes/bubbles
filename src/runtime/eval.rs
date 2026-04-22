@@ -7,6 +7,10 @@ use crate::value::{Value, VariableStorage};
 /// Evaluate an [`Expr`] AST node using `storage` for variable reads and `fns` for function calls.
 ///
 /// `fns` receives the function name and evaluated arguments and must return a [`Value`].
+///
+/// # Errors
+/// Returns [`crate::error::DialogueError`] for undefined variables, type mismatches, or failed
+/// function calls.
 pub fn eval<S, F>(expr: &Expr, storage: &S, fns: &F) -> Result<Value>
 where
     S: VariableStorage,
@@ -16,9 +20,9 @@ where
         Expr::Number(n) => Ok(Value::Number(*n)),
         Expr::Text(s) => Ok(Value::Text(s.clone())),
         Expr::Bool(b) => Ok(Value::Bool(*b)),
-        Expr::Var(name) => storage.get(name).ok_or_else(|| {
-            DialogueError::UndefinedVariable(name.clone())
-        }),
+        Expr::Var(name) => storage
+            .get(name)
+            .ok_or_else(|| DialogueError::UndefinedVariable(name.clone())),
         Expr::Call { name, args } => {
             let evaluated: Result<Vec<Value>> =
                 args.iter().map(|a| eval(a, storage, fns)).collect();
@@ -41,13 +45,7 @@ where
     }
 }
 
-fn eval_binary<S, F>(
-    left: &Expr,
-    op: BinOp,
-    right: &Expr,
-    storage: &S,
-    fns: &F,
-) -> Result<Value>
+fn eval_binary<S, F>(left: &Expr, op: BinOp, right: &Expr, storage: &S, fns: &F) -> Result<Value>
 where
     S: VariableStorage,
     F: Fn(&str, Vec<Value>) -> Result<Value>,
@@ -81,31 +79,35 @@ where
             (Value::Text(a), b) => Ok(Value::Text(a + &b.to_string())),
             (a, b) => Err(DialogueError::Type(format!("cannot add {a:?} and {b:?}"))),
         },
-        BinOp::Sub => num_op(lv, rv, "-", |a, b| a - b),
-        BinOp::Mul => num_op(lv, rv, "*", |a, b| a * b),
-        BinOp::Div => num_op(lv, rv, "/", |a, b| a / b),
-        BinOp::Rem => num_op(lv, rv, "%", |a, b| a % b),
+        BinOp::Sub => num_op(lv, rv, "-", |x, y| x - y),
+        BinOp::Mul => num_op(lv, rv, "*", |x, y| x * y),
+        BinOp::Div => num_op(lv, rv, "/", |x, y| x / y),
+        BinOp::Rem => num_op(lv, rv, "%", |x, y| x % y),
         BinOp::Eq => Ok(Value::Bool(lv == rv)),
         BinOp::Neq => Ok(Value::Bool(lv != rv)),
-        BinOp::Lt => cmp_op(lv, rv, "<", |a: f64, b: f64| a < b),
-        BinOp::Lte => cmp_op(lv, rv, "<=", |a: f64, b: f64| a <= b),
-        BinOp::Gt => cmp_op(lv, rv, ">", |a: f64, b: f64| a > b),
-        BinOp::Gte => cmp_op(lv, rv, ">=", |a: f64, b: f64| a >= b),
+        BinOp::Lt => cmp_op(lv, rv, "<", |x: f64, y: f64| x < y),
+        BinOp::Lte => cmp_op(lv, rv, "<=", |x: f64, y: f64| x <= y),
+        BinOp::Gt => cmp_op(lv, rv, ">", |x: f64, y: f64| x > y),
+        BinOp::Gte => cmp_op(lv, rv, ">=", |x: f64, y: f64| x >= y),
         BinOp::And | BinOp::Or => unreachable!("handled above"),
     }
 }
 
-fn num_op(l: Value, r: Value, op: &str, f: impl Fn(f64, f64) -> f64) -> Result<Value> {
-    match (l, r) {
-        (Value::Number(a), Value::Number(b)) => Ok(Value::Number(f(a, b))),
-        (l, r) => Err(DialogueError::Type(format!("operator `{op}` requires numbers, got {l:?} and {r:?}"))),
+fn num_op(left: Value, right: Value, op: &str, calc: impl Fn(f64, f64) -> f64) -> Result<Value> {
+    match (left, right) {
+        (Value::Number(a), Value::Number(b)) => Ok(Value::Number(calc(a, b))),
+        (lv, rv) => Err(DialogueError::Type(format!(
+            "operator `{op}` requires numbers, got {lv:?} and {rv:?}"
+        ))),
     }
 }
 
-fn cmp_op(l: Value, r: Value, op: &str, f: impl Fn(f64, f64) -> bool) -> Result<Value> {
-    match (l, r) {
-        (Value::Number(a), Value::Number(b)) => Ok(Value::Bool(f(a, b))),
-        (l, r) => Err(DialogueError::Type(format!("operator `{op}` requires numbers, got {l:?} and {r:?}"))),
+fn cmp_op(left: Value, right: Value, op: &str, pred: impl Fn(f64, f64) -> bool) -> Result<Value> {
+    match (left, right) {
+        (Value::Number(a), Value::Number(b)) => Ok(Value::Bool(pred(a, b))),
+        (lv, rv) => Err(DialogueError::Type(format!(
+            "operator `{op}` requires numbers, got {lv:?} and {rv:?}"
+        ))),
     }
 }
 
@@ -160,7 +162,10 @@ mod tests {
 
     #[test]
     fn eval_string_concat() {
-        assert_eq!(ev(r#""hello" + " world""#), Value::Text("hello world".into()));
+        assert_eq!(
+            ev(r#""hello" + " world""#),
+            Value::Text("hello world".into())
+        );
     }
 
     #[test]

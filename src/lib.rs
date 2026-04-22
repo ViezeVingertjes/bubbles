@@ -54,6 +54,8 @@ pub mod value;
 pub use compiler::{Program, compile, compile_many, validate};
 pub use error::{DialogueError, Result};
 pub use library::FunctionLibrary;
-pub use runtime::{DialogueEvent, DialogueOption, HashMapProvider, LineProvider, PassthroughProvider, Runner};
+pub use runtime::{
+    DialogueEvent, DialogueOption, HashMapProvider, LineProvider, PassthroughProvider, Runner,
+};
 pub use saliency::{Candidate, FirstAvailable, SaliencyStrategy};
 pub use value::{HashMapStorage, Value, VariableStorage};

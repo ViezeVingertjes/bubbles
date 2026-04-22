@@ -15,8 +15,8 @@ fn main() {
     });
     let start = args.next().unwrap_or_else(|| "Start".to_owned());
 
-    let source = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("cannot read `{path}`: {e}"));
+    let source =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("cannot read `{path}`: {e}"));
 
     let prog = compile(&source).unwrap_or_else(|e| panic!("compile error: {e}"));
     let mut runner = Runner::new(prog, HashMapStorage::new());
@@ -46,7 +46,10 @@ fn main() {
                 let choice = loop {
                     print!("choose: ");
                     io::stdout().flush().ok();
-                    let line = stdin.lock().lines().next()
+                    let line = stdin
+                        .lock()
+                        .lines()
+                        .next()
                         .and_then(|l| l.ok())
                         .unwrap_or_default();
                     if let Ok(n) = line.trim().parse::<usize>() {

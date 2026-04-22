@@ -29,7 +29,9 @@ fn set_evaluated_expression() {
     let mut runner = Runner::new(prog, HashMapStorage::new());
     runner.start("Start").unwrap();
     while let Some(ev) = runner.next_event().unwrap() {
-        if ev == DialogueEvent::DialogueComplete { break; }
+        if ev == DialogueEvent::DialogueComplete {
+            break;
+        }
     }
     assert_eq!(runner.storage().get("$x"), Some(Value::Number(12.0)));
 }
@@ -41,7 +43,9 @@ fn set_boolean_from_comparison() {
     let mut runner = Runner::new(prog, HashMapStorage::new());
     runner.start("Start").unwrap();
     while let Some(ev) = runner.next_event().unwrap() {
-        if ev == DialogueEvent::DialogueComplete { break; }
+        if ev == DialogueEvent::DialogueComplete {
+            break;
+        }
     }
     assert_eq!(runner.storage().get("$rich"), Some(Value::Bool(true)));
 }
@@ -53,7 +57,9 @@ fn declare_initialises_once() {
     let mut runner = Runner::new(prog, HashMapStorage::new());
     runner.start("Start").unwrap();
     while let Some(ev) = runner.next_event().unwrap() {
-        if ev == DialogueEvent::DialogueComplete { break; }
+        if ev == DialogueEvent::DialogueComplete {
+            break;
+        }
     }
     // second declare is a no-op since $x was already set
     assert_eq!(runner.storage().get("$x"), Some(Value::Number(5.0)));

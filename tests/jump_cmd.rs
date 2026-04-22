@@ -8,7 +8,11 @@ fn line_texts(events: &[DialogueEvent]) -> Vec<&str> {
     events
         .iter()
         .filter_map(|e| {
-            if let DialogueEvent::Line { text, .. } = e { Some(text.as_str()) } else { None }
+            if let DialogueEvent::Line { text, .. } = e {
+                Some(text.as_str())
+            } else {
+                None
+            }
         })
         .collect()
 }
@@ -27,7 +31,10 @@ fn jump_emits_node_events() {
     let node_events: Vec<_> = events
         .iter()
         .filter(|e| {
-            matches!(e, DialogueEvent::NodeStarted(_) | DialogueEvent::NodeComplete(_))
+            matches!(
+                e,
+                DialogueEvent::NodeStarted(_) | DialogueEvent::NodeComplete(_)
+            )
         })
         .collect();
     assert!(node_events.len() >= 2);
@@ -47,7 +54,11 @@ title: Start
     let cmds: Vec<_> = events
         .iter()
         .filter_map(|e| {
-            if let DialogueEvent::Command { name, args, .. } = e { Some((name.as_str(), args)) } else { None }
+            if let DialogueEvent::Command { name, args, .. } = e {
+                Some((name.as_str(), args))
+            } else {
+                None
+            }
         })
         .collect();
     assert_eq!(cmds.len(), 1);
@@ -62,7 +73,11 @@ fn command_no_args() {
     let cmds: Vec<_> = events
         .iter()
         .filter_map(|e| {
-            if let DialogueEvent::Command { name, args, .. } = e { Some((name.as_str(), args.as_slice())) } else { None }
+            if let DialogueEvent::Command { name, args, .. } = e {
+                Some((name.as_str(), args.as_slice()))
+            } else {
+                None
+            }
         })
         .collect();
     assert_eq!(cmds, [("fade_out", [].as_slice())]);

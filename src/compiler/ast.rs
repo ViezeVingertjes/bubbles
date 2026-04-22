@@ -1,4 +1,4 @@
-//! AST node types produced by the parser — data only, no logic.
+//! AST types: node/statement types and expression tree — data only, no logic.
 
 use indexmap::IndexMap;
 
@@ -39,9 +39,9 @@ pub enum Stmt {
     /// A conditional block.
     If {
         /// Ordered list of `(condition_src, body)` branches.
-        branches: Vec<(String, Vec<Stmt>)>,
+        branches: Vec<(String, Vec<Self>)>,
         /// Optional else body.
-        else_body: Vec<Stmt>,
+        else_body: Vec<Self>,
     },
     /// A `<<jump NodeTitle>>` statement.
     Jump(String),
@@ -65,9 +65,9 @@ pub enum Stmt {
         /// Optional condition source for `<<once if …>>`.
         cond_src: Option<String>,
         /// Body that runs the first time.
-        body: Vec<Stmt>,
+        body: Vec<Self>,
         /// Body that runs after the first time.
-        else_body: Vec<Stmt>,
+        else_body: Vec<Self>,
     },
     /// A `<<declare $var = expr>>` smart-variable declaration.
     Declare {
@@ -114,4 +114,82 @@ pub struct LineVariant {
     pub once: bool,
     /// Trailing tags.
     pub tags: Vec<String>,
+}
+
+// ── expression AST ────────────────────────────────────────────────────────────
+
+/// A node in the expression AST.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Expr {
+    /// Numeric literal.
+    Number(f64),
+    /// String literal.
+    Text(String),
+    /// Boolean literal.
+    Bool(bool),
+    /// Variable read, e.g. `$gold`.
+    Var(String),
+    /// Function call, e.g. `random(1, 6)`.
+    Call {
+        /// Function name.
+        name: String,
+        /// Argument expressions.
+        args: Vec<Self>,
+    },
+    /// Unary operator.
+    Unary {
+        /// Operator.
+        op: UnOp,
+        /// Operand.
+        expr: Box<Self>,
+    },
+    /// Binary operator.
+    Binary {
+        /// Left operand.
+        left: Box<Self>,
+        /// Operator.
+        op: BinOp,
+        /// Right operand.
+        right: Box<Self>,
+    },
+}
+
+/// Binary operator kinds.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BinOp {
+    /// `+`
+    Add,
+    /// `-`
+    Sub,
+    /// `*`
+    Mul,
+    /// `/`
+    Div,
+    /// `%`
+    Rem,
+    /// `==`
+    Eq,
+    /// `!=`
+    Neq,
+    /// `<`
+    Lt,
+    /// `<=`
+    Lte,
+    /// `>`
+    Gt,
+    /// `>=`
+    Gte,
+    /// `&&`
+    And,
+    /// `||`
+    Or,
+}
+
+/// Unary operator kinds.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UnOp {
+    /// Arithmetic negation `-`.
+    Neg,
+    /// Logical negation `!`.
+    Not,
 }

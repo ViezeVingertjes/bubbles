@@ -30,71 +30,100 @@ pub enum Token {
 
     // ── delimiters ─────────────────────────────────────────────────────────────
     /// `(` – opens a parenthesised sub-expression or argument list.
-    #[token("(")] LParen,
+    #[token("(")]
+    LParen,
     /// `)` – closes a parenthesised sub-expression or argument list.
-    #[token(")")] RParen,
+    #[token(")")]
+    RParen,
     /// `,` – argument separator.
-    #[token(",")] Comma,
+    #[token(",")]
+    Comma,
     /// `<<` – opens a command/statement block.
-    #[token("<<")] CmdOpen,
+    #[token("<<")]
+    CmdOpen,
     /// `>>` – closes a command/statement block.
-    #[token(">>")] CmdClose,
+    #[token(">>")]
+    CmdClose,
     /// `{` – opens an inline expression.
-    #[token("{")] BraceOpen,
+    #[token("{")]
+    BraceOpen,
     /// `}` – closes an inline expression.
-    #[token("}")] BraceClose,
+    #[token("}")]
+    BraceClose,
 
     // ── arithmetic ─────────────────────────────────────────────────────────────
     /// `+`
-    #[token("+")] Plus,
+    #[token("+")]
+    Plus,
     /// `-`
-    #[token("-")] Minus,
+    #[token("-")]
+    Minus,
     /// `*`
-    #[token("*")] Star,
+    #[token("*")]
+    Star,
     /// `/`
-    #[token("/")] Slash,
+    #[token("/")]
+    Slash,
     /// `%`
-    #[token("%")] Percent,
+    #[token("%")]
+    Percent,
 
     // ── comparison (order matters: `>=` before `>`) ───────────────────────────
     /// `>=`
-    #[token(">=")] Gte,
+    #[token(">=")]
+    Gte,
     /// `<=`
-    #[token("<=")] Lte,
+    #[token("<=")]
+    Lte,
     /// `>`
-    #[token(">")] Gt,
+    #[token(">")]
+    Gt,
     /// `<`
-    #[token("<")] Lt,
+    #[token("<")]
+    Lt,
     /// `==`
-    #[token("==")] EqEq,
+    #[token("==")]
+    EqEq,
     /// `!=`
-    #[token("!=")] Neq,
+    #[token("!=")]
+    Neq,
 
     // ── logical ────────────────────────────────────────────────────────────────
     /// `&&`
-    #[token("&&")] AndAnd,
+    #[token("&&")]
+    AndAnd,
     /// `||`
-    #[token("||")] OrOr,
+    #[token("||")]
+    OrOr,
     /// `!`
-    #[token("!")] Bang,
+    #[token("!")]
+    Bang,
 
     // ── assignment / misc ──────────────────────────────────────────────────────
     /// `=` (used in `<<set $x = …>>`)
-    #[token("=")] Eq,
+    #[token("=")]
+    Eq,
     /// `:`
-    #[token(":")] Colon,
+    #[token(":")]
+    Colon,
     /// `->`
-    #[token("->")] Arrow,
+    #[token("->")]
+    Arrow,
     /// `=>`
-    #[token("=>")] FatArrow,
+    #[token("=>")]
+    FatArrow,
     /// `---` body-start delimiter.
-    #[token("---")] BodyStart,
+    #[token("---")]
+    BodyStart,
     /// `===` node-end delimiter.
-    #[token("===")] NodeEnd,
+    #[token("===")]
+    NodeEnd,
     /// `#` tag prefix.
-    #[token("#")] Hash,
+    #[token("#")]
+    Hash,
     /// Newline.
-    #[token("\n")] Newline,
+    #[token("\n")]
+    Newline,
 }
 
 /// A spanned token pair.
@@ -143,7 +172,14 @@ mod tests {
     fn lex_comparison_tokens() {
         assert_eq!(
             tokens(">= <= > < == !="),
-            vec![Token::Gte, Token::Lte, Token::Gt, Token::Lt, Token::EqEq, Token::Neq]
+            vec![
+                Token::Gte,
+                Token::Lte,
+                Token::Gt,
+                Token::Lt,
+                Token::EqEq,
+                Token::Neq
+            ]
         );
     }
 
@@ -151,13 +187,22 @@ mod tests {
     fn lex_arithmetic_tokens() {
         assert_eq!(
             tokens("+ - * / %"),
-            vec![Token::Plus, Token::Minus, Token::Star, Token::Slash, Token::Percent]
+            vec![
+                Token::Plus,
+                Token::Minus,
+                Token::Star,
+                Token::Slash,
+                Token::Percent
+            ]
         );
     }
 
     #[test]
     fn lex_logical_tokens() {
-        assert_eq!(tokens("&& || !"), vec![Token::AndAnd, Token::OrOr, Token::Bang]);
+        assert_eq!(
+            tokens("&& || !"),
+            vec![Token::AndAnd, Token::OrOr, Token::Bang]
+        );
     }
 
     #[test]

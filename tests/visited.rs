@@ -26,9 +26,16 @@ title: A
 ===
 ";
     let events = common::play(src, "A");
-    let lines: Vec<_> = events.iter().filter_map(|e| {
-        if let DialogueEvent::Line { text, .. } = e { Some(text.as_str()) } else { None }
-    }).collect();
+    let lines: Vec<_> = events
+        .iter()
+        .filter_map(|e| {
+            if let DialogueEvent::Line { text, .. } = e {
+                Some(text.as_str())
+            } else {
+                None
+            }
+        })
+        .collect();
     // First visit: visited("A") was already incremented when start() was called,
     // so "Been here." will appear on the first run (count is 1).
     assert!(lines.contains(&"Been here.") || lines.contains(&"First time."));

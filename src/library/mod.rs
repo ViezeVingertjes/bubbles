@@ -20,7 +20,9 @@ impl FunctionLibrary {
     /// Creates a library with the built-in functions pre-registered.
     #[must_use]
     pub fn new() -> Self {
-        let mut lib = Self { fns: HashMap::new() };
+        let mut lib = Self {
+            fns: HashMap::new(),
+        };
         lib.register_builtins();
         lib
     }
@@ -41,10 +43,12 @@ impl FunctionLibrary {
     /// Returns [`DialogueError::Function`] if the function is unknown or the call fails.
     pub fn call(&self, name: &str, args: Vec<Value>) -> Result<Value> {
         self.fns.get(name).map_or_else(
-            || Err(DialogueError::Function {
-                name: name.to_owned(),
-                message: "unknown function".into(),
-            }),
+            || {
+                Err(DialogueError::Function {
+                    name: name.to_owned(),
+                    message: "unknown function".into(),
+                })
+            },
             |f| f(args),
         )
     }
@@ -80,25 +84,25 @@ impl FunctionLibrary {
             let n = require_one_number("abs", &args)?;
             Ok(Value::Number(n.abs()))
         });
-        self.register("clamp", |args| {
-            match args.as_slice() {
-                [Value::Number(v), Value::Number(lo), Value::Number(hi)] => {
-                    Ok(Value::Number(v.clamp(*lo, *hi)))
-                }
-                _ => Err(DialogueError::Function {
-                    name: "clamp".into(),
-                    message: format!("expected 3 number arguments, got {:?}", args),
-                }),
+        self.register("clamp", |args| match args.as_slice() {
+            [Value::Number(v), Value::Number(lo), Value::Number(hi)] => {
+                Ok(Value::Number(v.clamp(*lo, *hi)))
             }
+            _ => Err(DialogueError::Function {
+                name: "clamp".into(),
+                message: format!("expected 3 number arguments, got {args:?}"),
+            }),
         });
         self.register("string", |args| {
-            match args.into_iter().next() {
-                Some(v) => Ok(Value::Text(v.to_string())),
-                None => Err(DialogueError::Function {
-                    name: "string".into(),
-                    message: "expected 1 argument".into(),
-                }),
-            }
+            args.into_iter().next().map_or_else(
+                || {
+                    Err(DialogueError::Function {
+                        name: "string".into(),
+                        message: "expected 1 argument".into(),
+                    })
+                },
+                |v| Ok(Value::Text(v.to_string())),
+            )
         });
         self.register("int", |args| {
             let n = require_one_number("int", &args)?;
@@ -107,6 +111,11 @@ impl FunctionLibrary {
     }
 
     #[cfg(feature = "rand")]
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        clippy::cast_precision_loss
+    )]
     fn register_rand_builtins(&mut self) {
         use rand::Rng as _;
         self.register("random", |_args| {
@@ -122,7 +131,9 @@ impl FunctionLibrary {
                     message: format!("lo ({lo}) > hi ({hi})"),
                 });
             }
-            Ok(Value::Number(rand::rng().random_range(lo..=hi) as f64))
+            Ok(Value::Number(f64::from(
+                rand::rng().random_range(lo as i32..=hi as i32),
+            )))
         });
         self.register("dice", |args| {
             let (sides, count) = require_two_numbers("dice", &args)?;
@@ -155,7 +166,7 @@ fn require_one_number(name: &str, args: &[Value]) -> Result<f64> {
         [Value::Number(n)] => Ok(*n),
         _ => Err(DialogueError::Function {
             name: name.to_owned(),
-            message: format!("expected 1 number argument, got {:?}", args),
+            message: format!("expected 1 number argument, got {args:?}"),
         }),
     }
 }
@@ -165,7 +176,7 @@ fn require_two_numbers(name: &str, args: &[Value]) -> Result<(f64, f64)> {
         [Value::Number(a), Value::Number(b)] => Ok((*a, *b)),
         _ => Err(DialogueError::Function {
             name: name.to_owned(),
-            message: format!("expected 2 number arguments, got {:?}", args),
+            message: format!("expected 2 number arguments, got {args:?}"),
         }),
     }
 }
@@ -177,14 +188,25 @@ mod tests {
     #[test]
     fn round_builtin() {
         let lib = FunctionLibrary::new();
-        assert_eq!(lib.call("round", vec![Value::Number(3.7)]).unwrap(), Value::Number(4.0));
+        assert_eq!(
+            lib.call("round", vec![Value::Number(3.7)]).unwrap(),
+            Value::Number(4.0)
+        );
     }
 
     #[test]
     fn min_max_builtins() {
         let lib = FunctionLibrary::new();
-        assert_eq!(lib.call("min", vec![Value::Number(2.0), Value::Number(5.0)]).unwrap(), Value::Number(2.0));
-        assert_eq!(lib.call("max", vec![Value::Number(2.0), Value::Number(5.0)]).unwrap(), Value::Number(5.0));
+        assert_eq!(
+            lib.call("min", vec![Value::Number(2.0), Value::Number(5.0)])
+                .unwrap(),
+            Value::Number(2.0)
+        );
+        assert_eq!(
+            lib.call("max", vec![Value::Number(2.0), Value::Number(5.0)])
+                .unwrap(),
+            Value::Number(5.0)
+        );
     }
 
     #[test]
@@ -203,7 +225,10 @@ mod tests {
                 Err(DialogueError::Runtime("double expects one number".into()))
             }
         });
-        assert_eq!(lib.call("double", vec![Value::Number(5.0)]).unwrap(), Value::Number(10.0));
+        assert_eq!(
+            lib.call("double", vec![Value::Number(5.0)]).unwrap(),
+            Value::Number(10.0)
+        );
     }
 
     #[cfg(feature = "rand")]
@@ -211,7 +236,9 @@ mod tests {
     fn random_range_within_bounds() {
         let lib = FunctionLibrary::new();
         for _ in 0..20 {
-            let v = lib.call("random_range", vec![Value::Number(1.0), Value::Number(6.0)]).unwrap();
+            let v = lib
+                .call("random_range", vec![Value::Number(1.0), Value::Number(6.0)])
+                .unwrap();
             if let Value::Number(n) = v {
                 assert!((1.0..=6.0).contains(&n));
             }

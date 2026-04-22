@@ -1,0 +1,243 @@
+//! `step` and `execute_stmt` — the core statement dispatch loop.
+
+use crate::compiler::ast::Stmt;
+use crate::error::{DialogueError, Result};
+use crate::runtime::event::{DialogueEvent, DialogueOption};
+use crate::saliency::Candidate;
+use crate::value::VariableStorage;
+
+use super::{Frame, Runner, State};
+
+impl<S: VariableStorage> Runner<S> {
+    pub(super) fn step(&mut self) -> Result<Option<DialogueEvent>> {
+        let stmt = loop {
+            let Some(frame) = self.stack.last_mut() else {
+                self.state = State::Done;
+                return Ok(Some(DialogueEvent::DialogueComplete));
+            };
+            if let Some(s) = frame.stmts.pop_front() {
+                break s;
+            }
+            let finished_node = frame.node.clone();
+            self.stack.pop();
+            if self.stack.is_empty() {
+                self.state = State::Done;
+                self.pending.push_back(DialogueEvent::DialogueComplete);
+                return Ok(Some(DialogueEvent::NodeComplete(finished_node)));
+            }
+        };
+
+        self.execute_stmt(stmt)
+    }
+
+    pub(super) fn execute_stmt(&mut self, stmt: Stmt) -> Result<Option<DialogueEvent>> {
+        match stmt {
+            Stmt::Line {
+                speaker,
+                text,
+                tags,
+            } => self.exec_line(speaker, &text, tags),
+            Stmt::Set { name, expr_src } => {
+                let value = self.eval_expr_src(&expr_src)?;
+                self.storage.set(&name, value);
+                Ok(None)
+            }
+            Stmt::Declare { name, expr_src } => {
+                if self.storage.get(&name).is_none() {
+                    let value = self.eval_expr_src(&expr_src)?;
+                    self.storage.set(&name, value);
+                }
+                Ok(None)
+            }
+            Stmt::LineGroup(variants) => self.exec_line_group(&variants),
+            Stmt::Options(items) => self.exec_options(items),
+            Stmt::If {
+                branches,
+                else_body,
+            } => self.exec_if(branches, else_body),
+            Stmt::Once {
+                block_id,
+                cond_src,
+                body,
+                else_body,
+            } => self.exec_once(block_id, cond_src, body, else_body),
+            Stmt::Jump(target) => self.exec_jump(target),
+            Stmt::Detour(target) => self.exec_detour(target),
+            Stmt::Return => {
+                self.stack.pop();
+                Ok(None)
+            }
+            Stmt::Command {
+                name,
+                args_src,
+                tags,
+            } => {
+                let args = self.parse_command_args(&args_src)?;
+                Ok(Some(DialogueEvent::Command { name, args, tags }))
+            }
+        }
+    }
+
+    fn exec_line(
+        &self,
+        speaker: Option<String>,
+        text: &str,
+        tags: Vec<String>,
+    ) -> Result<Option<DialogueEvent>> {
+        let text = self.interpolate_text(text)?;
+        let text = tags
+            .iter()
+            .find_map(|t| t.strip_prefix("line:"))
+            .and_then(|id| self.provider.get(id))
+            .unwrap_or(text);
+        Ok(Some(DialogueEvent::Line {
+            speaker,
+            text,
+            tags,
+        }))
+    }
+
+    fn exec_line_group(
+        &mut self,
+        variants: &[crate::compiler::ast::LineVariant],
+    ) -> Result<Option<DialogueEvent>> {
+        let candidates: Vec<Candidate<'_>> = variants
+            .iter()
+            .map(|v| {
+                let available = v.cond_src.as_ref().is_none_or(|src| {
+                    self.eval_expr_src(src)
+                        .map(|val| val.is_truthy())
+                        .unwrap_or(false)
+                }) && !(v.once && self.once_seen.contains(&v.id));
+                Candidate {
+                    id: &v.id,
+                    available,
+                }
+            })
+            .collect();
+
+        if let Some(idx) = self.saliency.select(&candidates) {
+            let chosen = &variants[idx];
+            if chosen.once {
+                self.once_seen.insert(chosen.id.clone());
+            }
+            let text = self.interpolate_text(&chosen.text)?;
+            return Ok(Some(DialogueEvent::Line {
+                speaker: chosen.speaker.clone(),
+                text,
+                tags: chosen.tags.clone(),
+            }));
+        }
+        Ok(None)
+    }
+
+    fn exec_options(
+        &mut self,
+        items: Vec<crate::compiler::ast::OptionItem>,
+    ) -> Result<Option<DialogueEvent>> {
+        let mut options = Vec::with_capacity(items.len());
+        let mut bodies = Vec::with_capacity(items.len());
+        for item in items {
+            let available = match &item.cond_src {
+                Some(src) => self.eval_expr_src(src)?.is_truthy(),
+                None => true,
+            };
+            let text = self.interpolate_text(&item.text)?;
+            options.push(DialogueOption {
+                text,
+                available,
+                tags: item.tags.clone(),
+            });
+            bodies.push(item.body);
+        }
+        self.option_bodies = bodies;
+        self.state = State::AwaitingOption;
+        Ok(Some(DialogueEvent::Options(options)))
+    }
+
+    fn exec_if(
+        &mut self,
+        branches: Vec<(String, Vec<Stmt>)>,
+        else_body: Vec<Stmt>,
+    ) -> Result<Option<DialogueEvent>> {
+        let mut chosen = None;
+        for (cond_src, body) in branches {
+            let v = self.eval_expr_src(&cond_src)?;
+            if v.is_truthy() {
+                chosen = Some(body);
+                break;
+            }
+        }
+        let body = chosen.unwrap_or(else_body);
+        if !body.is_empty() {
+            let title = self
+                .stack
+                .last()
+                .map(|f| f.node.clone())
+                .unwrap_or_default();
+            self.stack.push(Frame::new(title, body));
+        }
+        Ok(None)
+    }
+
+    fn exec_once(
+        &mut self,
+        block_id: String,
+        cond_src: Option<String>,
+        body: Vec<Stmt>,
+        else_body: Vec<Stmt>,
+    ) -> Result<Option<DialogueEvent>> {
+        let cond_ok = match cond_src {
+            Some(src) => self.eval_expr_src(&src)?.is_truthy(),
+            None => true,
+        };
+        let first_time = !self.once_seen.contains(&block_id);
+        let run_body = cond_ok && first_time;
+        if run_body {
+            self.once_seen.insert(block_id);
+        }
+        let chosen = if run_body { body } else { else_body };
+        if !chosen.is_empty() {
+            let title = self
+                .stack
+                .last()
+                .map(|f| f.node.clone())
+                .unwrap_or_default();
+            self.stack.push(Frame::new(title, chosen));
+        }
+        Ok(None)
+    }
+
+    fn exec_jump(&mut self, target: String) -> Result<Option<DialogueEvent>> {
+        if !self.program.node_exists(&target) {
+            return Err(DialogueError::UnknownNode(target));
+        }
+        let body = self.node_body(&target)?;
+        self.stack.clear();
+        self.stack.push(Frame::new(target.clone(), body));
+        *self
+            .visits
+            .write()
+            .unwrap()
+            .entry(target.clone())
+            .or_insert(0) += 1;
+        self.pending.push_front(DialogueEvent::NodeStarted(target));
+        Ok(None)
+    }
+
+    fn exec_detour(&mut self, target: String) -> Result<Option<DialogueEvent>> {
+        if !self.program.node_exists(&target) {
+            return Err(DialogueError::UnknownNode(target));
+        }
+        let body = self.node_body(&target)?;
+        *self
+            .visits
+            .write()
+            .unwrap()
+            .entry(target.clone())
+            .or_insert(0) += 1;
+        self.stack.push(Frame::new(target.clone(), body));
+        self.pending.push_front(DialogueEvent::NodeStarted(target));
+        Ok(None)
+    }
+}

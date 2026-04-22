@@ -32,7 +32,11 @@ fn two_options_first_selected() {
     let lines: Vec<_> = events
         .iter()
         .filter_map(|e| {
-            if let DialogueEvent::Line { text, .. } = e { Some(text.as_str()) } else { None }
+            if let DialogueEvent::Line { text, .. } = e {
+                Some(text.as_str())
+            } else {
+                None
+            }
         })
         .collect();
     assert_eq!(lines, ["Question?", "You fight."]);
@@ -48,7 +52,11 @@ fn two_options_second_selected() {
     let lines: Vec<_> = events
         .iter()
         .filter_map(|e| {
-            if let DialogueEvent::Line { text, .. } = e { Some(text.as_str()) } else { None }
+            if let DialogueEvent::Line { text, .. } = e {
+                Some(text.as_str())
+            } else {
+                None
+            }
         })
         .collect();
     assert_eq!(lines, ["Question?", "You run."]);

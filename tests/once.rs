@@ -6,7 +6,11 @@ fn line_texts(events: &[DialogueEvent]) -> Vec<String> {
     events
         .iter()
         .filter_map(|e| {
-            if let DialogueEvent::Line { text, .. } = e { Some(text.clone()) } else { None }
+            if let DialogueEvent::Line { text, .. } = e {
+                Some(text.clone())
+            } else {
+                None
+            }
         })
         .collect()
 }
@@ -18,7 +22,9 @@ fn play_to_end(runner: &mut Runner<HashMapStorage>) -> Vec<DialogueEvent> {
             Some(ev) => {
                 let done = ev == DialogueEvent::DialogueComplete;
                 events.push(ev);
-                if done { break; }
+                if done {
+                    break;
+                }
             }
             None => break,
         }

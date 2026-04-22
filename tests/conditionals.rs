@@ -37,7 +37,11 @@ title: Start
     let lines: Vec<_> = events
         .iter()
         .filter_map(|e| {
-            if let DialogueEvent::Line { text, .. } = e { Some(text.as_str()) } else { None }
+            if let DialogueEvent::Line { text, .. } = e {
+                Some(text.as_str())
+            } else {
+                None
+            }
         })
         .collect();
     assert_eq!(lines, ["Poor path."]);
@@ -62,7 +66,11 @@ title: Start
     let lines: Vec<_> = events
         .iter()
         .filter_map(|e| {
-            if let DialogueEvent::Line { text, .. } = e { Some(text.as_str()) } else { None }
+            if let DialogueEvent::Line { text, .. } = e {
+                Some(text.as_str())
+            } else {
+                None
+            }
         })
         .collect();
     assert_eq!(lines, ["Mid."]);

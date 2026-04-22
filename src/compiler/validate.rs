@@ -27,13 +27,18 @@ fn validate_stmts(stmts: &[Stmt], program: &Program) -> Result<()> {
                     )));
                 }
             }
-            Stmt::If { branches, else_body } => {
+            Stmt::If {
+                branches,
+                else_body,
+            } => {
                 for (_, body) in branches {
                     validate_stmts(body, program)?;
                 }
                 validate_stmts(else_body, program)?;
             }
-            Stmt::Once { body, else_body, .. } => {
+            Stmt::Once {
+                body, else_body, ..
+            } => {
                 validate_stmts(body, program)?;
                 validate_stmts(else_body, program)?;
             }

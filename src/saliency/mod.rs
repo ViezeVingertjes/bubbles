@@ -59,7 +59,10 @@ mod tests {
         available
             .iter()
             .enumerate()
-            .map(|(i, &a)| Candidate { id: Box::leak(format!("c{i}").into_boxed_str()), available: a })
+            .map(|(i, &a)| Candidate {
+                id: Box::leak(format!("c{i}").into_boxed_str()),
+                available: a,
+            })
             .collect()
     }
 
