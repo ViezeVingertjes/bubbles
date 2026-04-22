@@ -335,6 +335,20 @@ impl<S: VariableStorage> Runner<S> {
                 self.pending.push_front(DialogueEvent::NodeStarted(target));
                 Ok(None)
             }
+            Stmt::Detour(target) => {
+                if !self.program.node_exists(&target) {
+                    return Err(DialogueError::UnknownNode(target));
+                }
+                let body = self.node_body(&target)?;
+                *self.visits.write().unwrap().entry(target.clone()).or_insert(0) += 1;
+                self.stack.push(Frame::new(target.clone(), body));
+                self.pending.push_front(DialogueEvent::NodeStarted(target));
+                Ok(None)
+            }
+            Stmt::Return => {
+                self.stack.pop();
+                Ok(None)
+            }
             Stmt::Command { name, args_src, tags } => {
                 let args = self.parse_command_args(&args_src)?;
                 Ok(Some(DialogueEvent::Command { name, args, tags }))
