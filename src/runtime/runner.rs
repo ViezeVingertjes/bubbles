@@ -1,10 +1,12 @@
 //! [`Runner`] — the public entry point for executing a compiled [`Program`].
 
 use crate::compiler::ast::Stmt;
+use crate::compiler::expr::parse_expr;
 use crate::compiler::Program;
 use crate::error::{DialogueError, Result};
+use crate::runtime::eval::eval;
 use crate::runtime::event::DialogueEvent;
-use crate::value::VariableStorage;
+use crate::value::{Value, VariableStorage};
 
 /// Execution state of the runner.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -77,7 +79,22 @@ impl<S: VariableStorage> Runner<S> {
             State::AwaitingOption => Err(DialogueError::Runtime(
                 "call select_option() before next_event()".into(),
             )),
-            State::Running => self.step(),
+            State::Running => {
+                // Loop until we produce an event or exhaust the node.
+                loop {
+                    match self.step()? {
+                        Some(ev) => return Ok(Some(ev)),
+                        None => {
+                            if let Some(ev) = self.pending.pop_front() {
+                                return Ok(Some(ev));
+                            }
+                            if self.state != State::Running {
+                                return Ok(None);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -110,9 +127,24 @@ impl<S: VariableStorage> Runner<S> {
 
     // ── execution engine (grows with each todo step) ──────────────────────────
 
+    fn eval_expr_src(&self, src: &str) -> Result<Value> {
+        let expr = parse_expr(src)?;
+        eval(&expr, &self.storage, &|name, _args| {
+            Err(DialogueError::Function {
+                name: name.to_owned(),
+                message: "function library not yet attached".into(),
+            })
+        })
+    }
+
     fn execute_stmt(&mut self, stmt: Stmt) -> Result<Option<DialogueEvent>> {
         match stmt {
             Stmt::Line { speaker, text, tags } => Ok(Some(DialogueEvent::Line { speaker, text, tags })),
+            Stmt::Set { name, expr_src } => {
+                let value = self.eval_expr_src(&expr_src)?;
+                self.storage.set(&name, value);
+                Ok(None) // sets produce no event; loop back via next_event()
+            }
             _ => Err(DialogueError::Runtime("unimplemented statement type".into())),
         }
     }

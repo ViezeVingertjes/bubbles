@@ -22,10 +22,10 @@ todos:
     status: completed
   - id: expressions
     content: "TDD: expression AST + evaluator — arithmetic precedence, comparison, boolean, unary, parens; proptest coverage"
-    status: in_progress
+    status: completed
   - id: variables
     content: "TDD: <<set $x = expr>> and variable read in expressions through VariableStorage"
-    status: pending
+    status: in_progress
   - id: conditionals
     content: "TDD: <<if>> / <<elseif>> / <<else>> / <<endif>> block handling inside node bodies"
     status: pending
