@@ -4,11 +4,14 @@ version     = "0.1.0"
 edition     = "2024"
 license     = "MIT OR Apache-2.0"
 description = "Lightweight engine-agnostic dialogue runtime for Rust games."
-repository  = "https://github.com/example/bubbles"
+repository  = "https://github.com/yourusername/bubbles"
+homepage    = "https://github.com/yourusername/bubbles"
+documentation = "https://docs.rs/bubbles"
 readme      = "README.md"
-keywords    = ["dialogue", "game", "narrative", "interactive"]
+keywords    = ["dialogue", "game", "narrative", "interactive-fiction"]
 categories  = ["game-development", "parser-implementations"]
 rust-version = "1.85"
+exclude     = [".github", "scripts"]
 
 [features]
 default = ["rand"]

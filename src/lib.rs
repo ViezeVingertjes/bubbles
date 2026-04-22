@@ -36,10 +36,10 @@
 //! | Module | Contents |
 //! |--------|----------|
 //! | [`value`] | [`Value`], [`VariableStorage`], [`HashMapStorage`] |
-//! | [`compiler`] | [`compile`], [`compile_many`], [`validate`], [`Program`] |
-//! | [`runtime`] | [`Runner`], [`DialogueEvent`], [`LineProvider`] |
+//! | [`compiler`] | [`compile`], [`compile_many`], [`validate`], [`Program`], [`VariableDecl`] |
+//! | [`runtime`] | [`Runner`], [`DialogueEvent`], [`LineProvider`], `RunnerSnapshot` (serde) |
 //! | [`library`] | [`FunctionLibrary`] and built-in functions |
-//! | [`saliency`] | [`SaliencyStrategy`], [`FirstAvailable`] |
+//! | [`saliency`] | [`SaliencyStrategy`], [`FirstAvailable`], [`BestLeastRecentlyViewed`] |
 
 #![deny(missing_docs, unsafe_code)]
 #![warn(clippy::pedantic, clippy::nursery, clippy::cargo)]
@@ -51,11 +51,15 @@ pub mod runtime;
 pub mod saliency;
 pub mod value;
 
-pub use compiler::{Program, compile, compile_many, validate};
+pub use compiler::{Program, VariableDecl, compile, compile_many, validate};
 pub use error::{DialogueError, Result};
 pub use library::FunctionLibrary;
+#[cfg(feature = "serde")]
+pub use runtime::RunnerSnapshot;
 pub use runtime::{
     DialogueEvent, DialogueOption, HashMapProvider, LineProvider, PassthroughProvider, Runner,
 };
-pub use saliency::{Candidate, FirstAvailable, SaliencyStrategy};
+#[cfg(feature = "rand")]
+pub use saliency::RandomAvailable;
+pub use saliency::{BestLeastRecentlyViewed, Candidate, FirstAvailable, SaliencyStrategy};
 pub use value::{HashMapStorage, Value, VariableStorage};
