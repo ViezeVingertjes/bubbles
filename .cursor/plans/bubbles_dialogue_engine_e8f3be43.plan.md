@@ -52,10 +52,10 @@ todos:
     status: completed
   - id: detour
     content: "TDD: <<detour Node>> and <<return>>. Runner maintains a return-address stack; detour pushes, return/node-end pops"
-    status: in_progress
+    status: completed
   - id: smart_vars
     content: "TDD: <<declare $x = expr>> registers a read-only computed variable; reads evaluate the stored expression against current storage"
-    status: pending
+    status: in_progress
   - id: saliency
     content: "TDD: SaliencyStrategy trait + built-in strategies (First, Random, BestLeastRecentlyViewed). Tracks last-seen counter per content id"
     status: pending

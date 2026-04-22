@@ -1,4 +1,4 @@
-//! Integration tests for <<set>> and variable storage.
+//! Integration tests for <<set>>, <<declare>>, and variable storage.
 
 mod common;
 
@@ -44,4 +44,17 @@ fn set_boolean_from_comparison() {
         if ev == DialogueEvent::DialogueComplete { break; }
     }
     assert_eq!(runner.storage().get("$rich"), Some(Value::Bool(true)));
+}
+
+#[test]
+fn declare_initialises_once() {
+    let src = "title: Start\n---\n<<declare $x = 5>>\n<<declare $x = 99>>\n===\n";
+    let prog = compile(src).unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("Start").unwrap();
+    while let Some(ev) = runner.next_event().unwrap() {
+        if ev == DialogueEvent::DialogueComplete { break; }
+    }
+    // second declare is a no-op since $x was already set
+    assert_eq!(runner.storage().get("$x"), Some(Value::Number(5.0)));
 }

@@ -266,6 +266,14 @@ impl<S: VariableStorage> Runner<S> {
                 self.storage.set(&name, value);
                 Ok(None)
             }
+            Stmt::Declare { name, expr_src } => {
+                // Only initialise if not already present (respects saved-game state).
+                if self.storage.get(&name).is_none() {
+                    let value = self.eval_expr_src(&expr_src)?;
+                    self.storage.set(&name, value);
+                }
+                Ok(None)
+            }
             Stmt::Options(items) => {
                 let mut options = Vec::with_capacity(items.len());
                 let mut bodies = Vec::with_capacity(items.len());
