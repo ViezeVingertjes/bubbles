@@ -45,7 +45,9 @@ impl Parser<'_> {
     }
 
     pub(super) fn parse_stmt(&mut self, cur_indent: usize) -> Result<Stmt> {
-        let (lineno, content) = self.peek().unwrap();
+        let (lineno, content) = self
+            .peek()
+            .expect("parse_stmt called only when peek() is Some");
         let t = content.trim();
 
         if t.starts_with("<<") {
@@ -57,7 +59,9 @@ impl Parser<'_> {
         if t.starts_with("=>") {
             return self.parse_line_group(cur_indent);
         }
-        let (lineno, _) = self.advance().unwrap();
+        let (lineno, _) = self
+            .advance()
+            .expect("peek() was Some so advance() cannot be None");
         let file = self.file;
         parse_line_stmt(t, lineno, file)
     }

@@ -2,15 +2,6 @@
 
 use thiserror::Error;
 
-/// A byte-offset span in a source string.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Span {
-    /// Start offset (inclusive).
-    pub start: usize,
-    /// End offset (exclusive).
-    pub end: usize,
-}
-
 /// Alias for `Result<T, DialogueError>`.
 pub type Result<T> = core::result::Result<T, DialogueError>;
 

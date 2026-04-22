@@ -10,7 +10,9 @@ use super::text::split_trailing_tags;
 
 impl Parser<'_> {
     pub(super) fn parse_command_stmt(&mut self, lineno: usize, cur_indent: usize) -> Result<Stmt> {
-        let (_, content) = self.advance().unwrap();
+        let (_, content) = self
+            .advance()
+            .expect("parse_command_stmt called only when peek() is Some");
         let t = content.trim();
         let (t_core, line_tags) = extract_cmd_line_tags(t);
         let inner = extract_cmd(t_core, lineno, self.file)?;
@@ -49,7 +51,9 @@ impl Parser<'_> {
         loop {
             match self.peek() {
                 Some((_, l)) if l.trim().starts_with("<<elseif ") => {
-                    let (lineno2, content) = self.advance().unwrap();
+                    let (lineno2, content) = self
+                        .advance()
+                        .expect("peek() matched Some so advance() cannot be None");
                     let inner = extract_cmd(content.trim(), lineno2, self.file)?;
                     let cond_src2 = inner["elseif".len()..].trim();
                     let cond2 = parse_expr_arc(cond_src2, "<<elseif>>", lineno2, self.file)?;

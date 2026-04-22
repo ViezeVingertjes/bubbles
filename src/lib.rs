@@ -39,7 +39,7 @@
 //! | [`compiler`] | [`compile`], [`compile_many`], [`validate`], [`Program`], [`VariableDecl`] |
 //! | [`runtime`] | [`Runner`], [`DialogueEvent`], [`LineProvider`], `RunnerSnapshot` (serde) |
 //! | [`library`] | [`FunctionLibrary`] and built-in functions |
-//! | [`saliency`] | [`SaliencyStrategy`], [`FirstAvailable`], [`BestLeastRecentlyViewed`] |
+//! | [`saliency`] | [`SaliencyStrategy`], [`FirstAvailable`], [`BestLeastRecentlyViewed`], `RandomAvailable` (`rand` feature) |
 //!
 //! Lint policy is defined once in `Cargo.toml` under `[lints.rust]` /
 //! `[lints.clippy]`; we deliberately do not duplicate it here.

@@ -64,6 +64,10 @@ impl<S: VariableStorage> Runner<S> {
         let idx = self.saliency.select(&candidates).ok_or_else(|| {
             DialogueError::Runtime(format!("node group '{title}' has no available candidate"))
         })?;
-        Ok(candidate_info.into_iter().nth(idx).unwrap().2)
+        Ok(candidate_info
+            .into_iter()
+            .nth(idx)
+            .expect("saliency returned an in-bounds index")
+            .2)
     }
 }
