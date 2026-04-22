@@ -9,10 +9,12 @@ pub mod compiler;
 pub mod error;
 pub mod library;
 pub mod runtime;
+pub mod saliency;
 pub mod value;
 
 pub use compiler::{Program, compile, compile_many};
 pub use error::{DialogueError, Result};
 pub use library::FunctionLibrary;
 pub use runtime::{DialogueEvent, DialogueOption, Runner};
+pub use saliency::{Candidate, FirstAvailable, SaliencyStrategy};
 pub use value::{HashMapStorage, Value, VariableStorage};

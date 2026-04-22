@@ -55,10 +55,10 @@ todos:
     status: completed
   - id: smart_vars
     content: "TDD: <<declare $x = expr>> registers a read-only computed variable; reads evaluate the stored expression against current storage"
-    status: in_progress
+    status: completed
   - id: saliency
     content: "TDD: SaliencyStrategy trait + built-in strategies (First, Random, BestLeastRecentlyViewed). Tracks last-seen counter per content id"
-    status: pending
+    status: in_progress
   - id: line_groups
     content: "TDD: line groups (=> prefix) with optional <<if>> guards selected via the active SaliencyStrategy"
     status: pending
