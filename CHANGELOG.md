@@ -65,3 +65,10 @@ All notable changes are documented here (keep-a-changelog format).
   `mod.rs` over 200 lines.
 - Lint configuration is now owned exclusively by `Cargo.toml`; `src/lib.rs`
   no longer duplicates the `deny` / `warn` attributes.
+- `{expr}` fragments in line text, option text, line-group text, and command
+  argument strings are now parsed at compile time (via `parse_interpolated`
+  into `Vec<TextSegment>`) and stored as `TextSegment::Literal` /
+  `TextSegment::Expr(Arc<Expr>)`. At runtime, `Runner::eval_segments` evaluates
+  each segment in a single pass with no re-parsing, removing the `interpolate`
+  runtime-parse path entirely. Invalid `{expr}` fragments in any text field are
+  now caught by `compile()` / `compile_many()` with a `Parse` error.

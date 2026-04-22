@@ -7,7 +7,7 @@ pub(crate) mod parser;
 pub mod program;
 pub(crate) mod validate;
 
-pub use ast::{BinOp, Expr, IfBranch, LineVariant, Node, OptionItem, Stmt, UnOp};
+pub use ast::{BinOp, Expr, IfBranch, LineVariant, Node, OptionItem, Stmt, TextSegment, UnOp};
 pub use lexer::{Spanned, Token, tokenise};
 pub use program::{Program, VariableDecl};
 pub use validate::validate;

@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::compiler::ast::{Expr, IfBranch, Stmt};
+use crate::compiler::ast::{Expr, IfBranch, Stmt, TextSegment};
 use crate::error::{DialogueError, Result};
 use crate::runtime::event::{DialogueEvent, DialogueOption};
 use crate::saliency::Candidate;
@@ -69,12 +69,8 @@ impl<S: VariableStorage> Runner<S> {
                 self.stack.pop();
                 Ok(None)
             }
-            Stmt::Command {
-                name,
-                args_src,
-                tags,
-            } => {
-                let args = self.parse_command_args(&args_src)?;
+            Stmt::Command { name, args, tags } => {
+                let args = self.eval_segments_as_args(&args)?;
                 Ok(Some(DialogueEvent::Command { name, args, tags }))
             }
         }
@@ -83,10 +79,10 @@ impl<S: VariableStorage> Runner<S> {
     fn exec_line(
         &self,
         speaker: Option<String>,
-        text: &str,
+        text: &[TextSegment],
         tags: Vec<String>,
     ) -> Result<Option<DialogueEvent>> {
-        let text = self.interpolate_text(text)?;
+        let text = self.eval_segments(text)?;
         let text = tags
             .iter()
             .find_map(|t| t.strip_prefix("line:"))
@@ -128,7 +124,7 @@ impl<S: VariableStorage> Runner<S> {
             if chosen.once {
                 self.once_seen.insert(chosen.id.clone());
             }
-            let text = self.interpolate_text(&chosen.text)?;
+            let text = self.eval_segments(&chosen.text)?;
             return Ok(Some(DialogueEvent::Line {
                 speaker: chosen.speaker.clone(),
                 text,
@@ -149,7 +145,7 @@ impl<S: VariableStorage> Runner<S> {
                 Some(e) => self.eval_expr(e.as_ref())?.is_truthy(),
                 None => true,
             };
-            let text = self.interpolate_text(&item.text)?;
+            let text = self.eval_segments(&item.text)?;
             options.push(DialogueOption {
                 text,
                 available,

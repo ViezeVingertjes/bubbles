@@ -1,11 +1,10 @@
-//! Thin wrappers around expression evaluation, text interpolation, and
-//! command-argument parsing, bridging the runner's state to the stateless
-//! [`crate::runtime::eval`] and [`crate::runtime::interpolate`] modules.
+//! Thin wrappers around expression evaluation and pre-parsed text segment
+//! rendering, bridging the runner's state to the stateless
+//! [`crate::runtime::eval`] module.
 
-use crate::compiler::ast::Expr;
+use crate::compiler::ast::{Expr, TextSegment};
 use crate::error::Result;
 use crate::runtime::eval::eval;
-use crate::runtime::interpolate::interpolate;
 use crate::value::{Value, VariableStorage};
 
 use super::Runner;
@@ -19,19 +18,29 @@ impl<S: VariableStorage> Runner<S> {
         })
     }
 
-    /// Runs inline `{expr}` substitution on `text` using current storage.
-    pub(super) fn interpolate_text(&self, text: &str) -> Result<String> {
-        interpolate(text, &self.storage, &|name, args| {
-            self.library.call(name, args)
-        })
+    /// Renders pre-parsed text segments into a final string.
+    ///
+    /// Literal segments are appended verbatim; `Expr` segments are evaluated
+    /// against current storage and converted to their string representation.
+    pub(super) fn eval_segments(&self, segments: &[TextSegment]) -> Result<String> {
+        let mut out = String::new();
+        for seg in segments {
+            match seg {
+                TextSegment::Literal(s) => out.push_str(s),
+                TextSegment::Expr(e) => out.push_str(&self.eval_expr(e.as_ref())?.to_string()),
+            }
+        }
+        Ok(out)
     }
 
-    /// Splits `args_src` into whitespace-separated tokens after interpolation.
-    pub(super) fn parse_command_args(&self, args_src: &str) -> Result<Vec<String>> {
-        if args_src.trim().is_empty() {
+    /// Renders pre-parsed segments then splits the result on whitespace.
+    ///
+    /// Returns an empty `Vec` when all segments are empty or whitespace-only.
+    pub(super) fn eval_segments_as_args(&self, segments: &[TextSegment]) -> Result<Vec<String>> {
+        let text = self.eval_segments(segments)?;
+        if text.trim().is_empty() {
             return Ok(Vec::new());
         }
-        let interpolated = self.interpolate_text(args_src)?;
-        Ok(interpolated.split_whitespace().map(str::to_owned).collect())
+        Ok(text.split_whitespace().map(str::to_owned).collect())
     }
 }

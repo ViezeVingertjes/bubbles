@@ -35,8 +35,8 @@ pub enum Stmt {
     Line {
         /// Optional speaker prefix (`Alice:`).
         speaker: Option<String>,
-        /// Raw text, may contain `{expr}` fragments.
-        text: String,
+        /// Pre-parsed text segments (literals and `{expr}` fragments).
+        text: Vec<TextSegment>,
         /// Trailing `#tag` metadata.
         tags: Vec<String>,
     },
@@ -51,8 +51,8 @@ pub enum Stmt {
     If {
         /// `if` / `elseif` branches in order.
         branches: Vec<IfBranch>,
-    /// `else` body.
-    else_body: Vec<Self>,
+        /// `else` body.
+        else_body: Vec<Self>,
     },
     /// A `<<jump NodeTitle>>` statement.
     Jump(String),
@@ -64,8 +64,8 @@ pub enum Stmt {
     Command {
         /// Command name.
         name: String,
-        /// Raw argument string (may contain `{expr}` fragments).
-        args_src: String,
+        /// Pre-parsed argument segments (literals and `{expr}` fragments).
+        args: Vec<TextSegment>,
         /// Trailing `#tag` metadata.
         tags: Vec<String>,
     },
@@ -100,8 +100,8 @@ pub enum Stmt {
 pub struct OptionItem {
     /// Stable id for once/saliency tracking.
     pub id: String,
-    /// Display text, may contain `{expr}`.
-    pub text: String,
+    /// Pre-parsed display text (literals and `{expr}` fragments).
+    pub text: Vec<TextSegment>,
     /// Optional guard (`-> text <<if cond>>`); `None` = always available if not `once` exhausted.
     pub cond: Option<Arc<Expr>>,
     /// Whether this option is a once-option.
@@ -119,14 +119,36 @@ pub struct LineVariant {
     pub id: String,
     /// Optional speaker.
     pub speaker: Option<String>,
-    /// Text.
-    pub text: String,
+    /// Pre-parsed text segments (literals and `{expr}` fragments).
+    pub text: Vec<TextSegment>,
     /// Optional guard; `None` = always considered with saliency.
     pub cond: Option<Arc<Expr>>,
     /// Whether this variant is a once-variant.
     pub once: bool,
     /// Trailing tags.
     pub tags: Vec<String>,
+}
+
+// ── interpolated text ─────────────────────────────────────────────────────────
+
+/// One segment of text that may contain `{expr}` fragments.
+///
+/// Line text, option text, line-variant text, and command argument strings are
+/// all stored as `Vec<TextSegment>` so that `{expr}` fragments are parsed once
+/// at compile time and evaluated cheaply at runtime.
+#[derive(Debug, Clone)]
+pub enum TextSegment {
+    /// A literal string with no interpolation.
+    Literal(String),
+    /// An `{expr}` fragment whose source has already been parsed.
+    Expr(Arc<Expr>),
+}
+
+impl TextSegment {
+    /// Convenience: construct a literal segment from any `Into<String>`.
+    pub fn literal(s: impl Into<String>) -> Self {
+        Self::Literal(s.into())
+    }
 }
 
 // ── expression AST ────────────────────────────────────────────────────────────

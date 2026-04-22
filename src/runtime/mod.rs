@@ -2,7 +2,7 @@
 
 mod eval;
 mod event;
-pub(crate) mod interpolate;
+mod interpolate;
 mod provider;
 mod runner;
 #[cfg(feature = "serde")]

@@ -6,7 +6,7 @@ use crate::compiler::ast::{LineVariant, OptionItem, Stmt};
 use crate::error::Result;
 
 use super::Parser;
-use super::assignments::parse_expr_arc;
+use super::assignments::{parse_expr_arc, parse_interpolated};
 use super::stmt::parse_option_text;
 use super::text::{leading_spaces, parse_line_stmt, split_speaker, split_trailing_tags};
 
@@ -57,8 +57,9 @@ impl Parser<'_> {
         if t.starts_with("=>") {
             return self.parse_line_group(cur_indent);
         }
-        self.advance();
-        Ok(parse_line_stmt(t))
+        let (lineno, _) = self.advance().unwrap();
+        let file = self.file;
+        parse_line_stmt(t, lineno, file)
     }
 
     pub(super) fn parse_option_block(&mut self, cur_indent: usize) -> Result<Stmt> {
@@ -85,7 +86,8 @@ impl Parser<'_> {
                     file,
                 )?),
             };
-            let (text, tags) = split_trailing_tags(&text_part);
+            let (raw, tags) = split_trailing_tags(&text_part);
+            let text = parse_interpolated(&raw, "option text", lineno, file)?;
             let id = self.next_id();
             let body = self.parse_body(option_indent + 1)?;
             items.push(OptionItem {
@@ -119,8 +121,9 @@ impl Parser<'_> {
                 None => None,
                 Some(s) => Some(parse_expr_arc(&s, "line group `<<if>>`", lineno, file)?),
             };
-            let (speaker, text) = split_speaker(&line_text);
-            let (text, tags) = split_trailing_tags(&text);
+            let (speaker, raw) = split_speaker(&line_text);
+            let (raw, tags) = split_trailing_tags(&raw);
+            let text = parse_interpolated(&raw, "line group text", lineno, file)?;
             variants.push(LineVariant {
                 id,
                 speaker,

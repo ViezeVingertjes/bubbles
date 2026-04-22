@@ -246,6 +246,45 @@ fn error_set_missing_equals_and_to() {
     assert!(compile("title: A\n---\n<<set $x 5>>\n===\n").is_err());
 }
 
+// ── compile-time validation of {expr} in text / args ─────────────────────────
+
+#[test]
+fn error_bad_expr_in_line_text_at_compile_time() {
+    let err = compile("title: A\n---\nHello {1+}\n===\n")
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("line"), "expected parse error, got: {err}");
+}
+
+#[test]
+fn error_bad_expr_in_option_text_at_compile_time() {
+    let err = compile("title: A\n---\n-> Choice {$x &&}\n===\n")
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("parse"), "expected parse error, got: {err}");
+}
+
+#[test]
+fn error_bad_expr_in_line_group_text_at_compile_time() {
+    let err = compile("title: A\n---\n=> => Bark {!}\n===\n")
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("parse"), "expected parse error, got: {err}");
+}
+
+#[test]
+fn error_bad_expr_in_command_args_at_compile_time() {
+    let err = compile("title: A\n---\n<<play {1+}>>\n===\n")
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("parse"), "expected parse error, got: {err}");
+}
+
+#[test]
+fn valid_interpolated_text_compiles() {
+    assert!(compile("title: A\n---\nHello {$name}!\n===\n").is_ok());
+}
+
 // ── line numbers in error messages point at the source, not buffer index ──────
 
 #[test]

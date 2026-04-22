@@ -2,6 +2,9 @@
 //! and plain-line statement construction.
 
 use crate::compiler::ast::Stmt;
+use crate::error::Result;
+
+use super::assignments::parse_interpolated;
 
 pub(super) fn leading_spaces(s: &str) -> usize {
     s.len() - s.trim_start().len()
@@ -39,12 +42,13 @@ pub(super) fn split_speaker(s: &str) -> (Option<String>, String) {
     (None, s.to_owned())
 }
 
-pub(super) fn parse_line_stmt(t: &str) -> Stmt {
+pub(super) fn parse_line_stmt(t: &str, lineno: usize, file: &str) -> Result<Stmt> {
     let (speaker, rest) = split_speaker(t);
-    let (text, tags) = split_trailing_tags(&rest);
-    Stmt::Line {
+    let (raw, tags) = split_trailing_tags(&rest);
+    let text = parse_interpolated(&raw, "line text", lineno, file)?;
+    Ok(Stmt::Line {
         speaker,
         text,
         tags,
-    }
+    })
 }

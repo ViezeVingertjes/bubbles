@@ -4,7 +4,7 @@ use crate::compiler::ast::{IfBranch, Stmt};
 use crate::error::Result;
 
 use super::Parser;
-use super::assignments::{parse_declare, parse_expr_arc, parse_set};
+use super::assignments::{parse_declare, parse_expr_arc, parse_interpolated, parse_set};
 use super::command::{extract_cmd, extract_cmd_line_tags, first_word, split_first_word};
 use super::text::split_trailing_tags;
 
@@ -26,12 +26,13 @@ impl Parser<'_> {
             "once" => self.parse_once(inner, lineno, cur_indent),
             _ => {
                 let (cmd_name, rest) = split_first_word(inner);
-                let (args_src, inner_tags) = split_trailing_tags(rest);
+                let (args_raw, inner_tags) = split_trailing_tags(rest);
+                let args = parse_interpolated(&args_raw, "command args", lineno, self.file)?;
                 let mut tags = inner_tags;
                 tags.extend(line_tags);
                 Ok(Stmt::Command {
                     name: cmd_name.to_owned(),
-                    args_src,
+                    args,
                     tags,
                 })
             }
