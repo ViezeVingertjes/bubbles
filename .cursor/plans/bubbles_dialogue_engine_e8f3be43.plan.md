@@ -28,10 +28,10 @@ todos:
     status: completed
   - id: conditionals
     content: "TDD: <<if>> / <<elseif>> / <<else>> / <<endif>> block handling inside node bodies"
-    status: in_progress
+    status: completed
   - id: interpolation
     content: "TDD: {expr} inline substitution inside line/option/command text (reuses expression evaluator — DRY)"
-    status: pending
+    status: in_progress
   - id: options
     content: "TDD: shortcut options (->) emitted as DialogueEvent::Options; select_option round-trip; guards; indented bodies"
     status: pending

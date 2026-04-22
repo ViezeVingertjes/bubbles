@@ -2,6 +2,7 @@
 
 mod eval;
 mod event;
+pub(crate) mod interpolate;
 mod runner;
 
 pub use eval::eval;

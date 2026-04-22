@@ -8,6 +8,7 @@ use crate::compiler::Program;
 use crate::error::{DialogueError, Result};
 use crate::runtime::eval::eval;
 use crate::runtime::event::DialogueEvent;
+use crate::runtime::interpolate::interpolate;
 use crate::value::{Value, VariableStorage};
 
 /// Execution state of the runner.
@@ -144,14 +145,20 @@ impl<S: VariableStorage> Runner<S> {
             .ok_or_else(|| DialogueError::UnknownNode(title.to_owned()))
     }
 
+    fn no_fns(name: &str, _args: Vec<Value>) -> Result<Value> {
+        Err(DialogueError::Function {
+            name: name.to_owned(),
+            message: "function library not yet attached".into(),
+        })
+    }
+
     fn eval_expr_src(&self, src: &str) -> Result<Value> {
         let expr = parse_expr(src)?;
-        eval(&expr, &self.storage, &|name, _args| {
-            Err(DialogueError::Function {
-                name: name.to_owned(),
-                message: "function library not yet attached".into(),
-            })
-        })
+        eval(&expr, &self.storage, &Self::no_fns)
+    }
+
+    fn interpolate_text(&self, text: &str) -> Result<String> {
+        interpolate(text, &self.storage, &Self::no_fns)
     }
 
     fn step(&mut self) -> Result<Option<DialogueEvent>> {
@@ -184,6 +191,7 @@ impl<S: VariableStorage> Runner<S> {
     fn execute_stmt(&mut self, stmt: Stmt) -> Result<Option<DialogueEvent>> {
         match stmt {
             Stmt::Line { speaker, text, tags } => {
+                let text = self.interpolate_text(&text)?;
                 Ok(Some(DialogueEvent::Line { speaker, text, tags }))
             }
             Stmt::Set { name, expr_src } => {

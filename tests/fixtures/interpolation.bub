@@ -1,0 +1,7 @@
+title: Start
+---
+<<set $name = "Bob">>
+<<set $gold = 42>>
+Hello {$name}, you have {$gold} coins.
+The answer is {6 * 7}.
+===
