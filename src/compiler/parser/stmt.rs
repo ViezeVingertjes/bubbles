@@ -92,9 +92,11 @@ impl Parser<'_> {
         })
     }
 
-    fn parse_once(&mut self, rest: &str, cur_indent: usize) -> Result<Stmt> {
+    fn parse_once(&mut self, inner: &str, cur_indent: usize) -> Result<Stmt> {
         let block_id = self.next_id();
         let once_lineno = self.pos.saturating_sub(1);
+        // `inner` is the full command text after `<<`, e.g. `once`, `once if expr`.
+        let rest = inner["once".len()..].trim();
         let cond_src = if rest.starts_with("if ") || rest == "if" {
             let src = rest["if".len()..].trim().to_owned();
             crate::compiler::expr::parse_expr(&src).map_err(|_| {

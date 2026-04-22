@@ -57,6 +57,24 @@ Done.
 }
 
 #[test]
+fn once_if_skips_body_when_condition_false() {
+    let src = "\
+title: Start
+---
+<<once if false>>
+    Secret.
+<<endonce>>
+After.
+===
+";
+    let prog = compile(src).unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("Start").unwrap();
+    let events = play_to_end(&mut runner);
+    assert_eq!(line_texts(&events), ["After."]);
+}
+
+#[test]
 fn once_else_runs_after_first() {
     let src = "\
 title: Start
