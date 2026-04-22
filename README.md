@@ -4,7 +4,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/bubbles.svg)](https://crates.io/crates/bubbles)
 [![docs.rs](https://docs.rs/bubbles/badge.svg)](https://docs.rs/bubbles)
-[![CI](https://github.com/yourusername/bubbles/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/bubbles/actions)
+[![CI](https://github.com/ViezeVingertjes/bubbles/actions/workflows/ci.yml/badge.svg)](https://github.com/ViezeVingertjes/bubbles/actions)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
 
 Write branching `.bub` scripts, compile them once at startup, then drive the

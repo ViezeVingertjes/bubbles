@@ -4,13 +4,13 @@ Thank you for your interest! Contributions of all kinds are welcome — bug repo
 
 ## Before you start
 
-- Check the [issue tracker](https://github.com/yourusername/bubbles/issues) to see if your topic is already being discussed.
+- Check the [issue tracker](https://github.com/ViezeVingertjes/bubbles/issues) to see if your topic is already being discussed.
 - For large changes (new features, architectural refactors) please open an issue first so we can align before you invest time coding.
 
 ## Development setup
 
 ```bash
-git clone https://github.com/yourusername/bubbles
+git clone https://github.com/ViezeVingertjes/bubbles
 cd bubbles
 cargo build --all-features
 cargo test --all-features
