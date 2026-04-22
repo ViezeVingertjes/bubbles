@@ -20,12 +20,10 @@ pub fn validate(program: &Program) -> Result<()> {
 fn validate_stmts(stmts: &[Stmt], program: &Program) -> Result<()> {
     for stmt in stmts {
         match stmt {
-            Stmt::Jump(target) | Stmt::Detour(target) => {
-                if !program.node_exists(target) {
-                    return Err(DialogueError::Validation(format!(
-                        "reference to unknown node '{target}'"
-                    )));
-                }
+            Stmt::Jump(target) | Stmt::Detour(target) if !program.node_exists(target) => {
+                return Err(DialogueError::Validation(format!(
+                    "reference to unknown node '{target}'"
+                )));
             }
             Stmt::If {
                 branches,

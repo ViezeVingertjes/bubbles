@@ -104,11 +104,10 @@ impl<S: VariableStorage> Runner<S> {
         let availability: Vec<bool> = variants
             .iter()
             .map(|v| {
-                v.cond.as_ref().is_none_or(|e| {
-                    self.eval_expr(e.as_ref())
-                        .map(|val| val.is_truthy())
-                        .unwrap_or(false)
-                }) && !(v.once && self.once_seen.contains(&v.id))
+                v.cond
+                    .as_ref()
+                    .is_none_or(|e| self.eval_expr(e.as_ref()).is_ok_and(|val| val.is_truthy()))
+                    && !(v.once && self.once_seen.contains(&v.id))
             })
             .collect();
 

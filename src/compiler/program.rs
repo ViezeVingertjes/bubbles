@@ -111,13 +111,11 @@ fn collect_declarations(
         match stmt {
             Stmt::Declare {
                 name, default_src, ..
-            } => {
-                if seen.insert(name.clone()) {
-                    out.push(VariableDecl {
-                        name: name.clone(),
-                        default_src: default_src.clone(),
-                    });
-                }
+            } if seen.insert(name.clone()) => {
+                out.push(VariableDecl {
+                    name: name.clone(),
+                    default_src: default_src.clone(),
+                });
             }
             Stmt::If {
                 branches,

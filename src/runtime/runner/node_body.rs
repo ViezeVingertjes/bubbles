@@ -33,11 +33,10 @@ impl<S: VariableStorage> Runner<S> {
         let candidate_info: Vec<(String, bool, Vec<Stmt>)> = group
             .iter()
             .map(|n| {
-                let available = n.when.as_ref().is_none_or(|e| {
-                    self.eval_expr(e.as_ref())
-                        .map(|v| v.is_truthy())
-                        .unwrap_or(false)
-                });
+                let available = n
+                    .when
+                    .as_ref()
+                    .is_none_or(|e| self.eval_expr(e.as_ref()).is_ok_and(|v| v.is_truthy()));
                 (n.title.clone(), available, n.body.as_ref().clone())
             })
             .collect();
