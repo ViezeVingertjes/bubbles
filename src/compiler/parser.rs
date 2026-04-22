@@ -224,7 +224,9 @@ impl<'src> Parser<'src> {
     fn parse_command_stmt(&mut self, lineno: usize, cur_indent: usize) -> Result<Stmt> {
         let (_, content) = self.advance().unwrap();
         let t = content.trim();
-        let inner = extract_cmd(t, lineno, self.file)?;
+        // Extract any trailing #tags that appear after the closing >>
+        let (t_core, line_tags) = extract_cmd_line_tags(t);
+        let inner = extract_cmd(t_core, lineno, self.file)?;
 
         let kw = first_word(inner);
         match kw {
@@ -243,7 +245,10 @@ impl<'src> Parser<'src> {
             "once" => self.parse_once(inner, cur_indent, lineno),
             _ => {
                 let (cmd_name, rest) = split_first_word(inner);
-                let (args_src, tags) = split_trailing_tags(rest);
+                // merge inner tags with outer line tags
+                let (args_src, inner_tags) = split_trailing_tags(rest);
+                let mut tags = inner_tags;
+                tags.extend(line_tags);
                 Ok(Stmt::Command {
                     name: cmd_name.to_owned(),
                     args_src: args_src.to_owned(),
@@ -381,8 +386,33 @@ fn leading_spaces(s: &str) -> usize {
     s.len() - s.trim_start().len()
 }
 
+/// Splits `<<cmd>> #tag1 #tag2` into `("<<cmd>>", vec!["tag1","tag2"])`.
+fn extract_cmd_line_tags(t: &str) -> (&str, Vec<String>) {
+    if let Some(close) = t.find(">>") {
+        let cmd_part = &t[..close + 2];
+        let after = t[close + 2..].trim();
+        if after.is_empty() {
+            return (cmd_part, Vec::new());
+        }
+        // Prepend a space so split_trailing_tags can detect ` #tag` anchors.
+        let padded = format!(" {after}");
+        let (_, tags) = split_trailing_tags(&padded);
+        (cmd_part, tags)
+    } else {
+        (t, Vec::new())
+    }
+}
+
+/// Extracts the inner text of `<<…>>`, ignoring any trailing ` #tag` tokens after `>>`.
 fn extract_cmd<'a>(t: &'a str, line: usize, file: &str) -> Result<&'a str> {
-    let inner = t
+    // Find the closing `>>` then slice only up to (and including) it.
+    let close = t.find(">>").ok_or_else(|| DialogueError::Parse {
+        file: file.to_owned(),
+        line,
+        message: format!("malformed command (missing `>>`): `{t}`"),
+    })?;
+    let with_close = &t[..close + 2]; // includes ">>"
+    let inner = with_close
         .strip_prefix("<<")
         .and_then(|s| s.strip_suffix(">>"))
         .ok_or_else(|| DialogueError::Parse {

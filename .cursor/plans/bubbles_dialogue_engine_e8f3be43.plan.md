@@ -64,10 +64,10 @@ todos:
     status: completed
   - id: node_groups
     content: "TDD: multiple nodes sharing a title with `when:` header clauses; start() on a group title picks via SaliencyStrategy"
-    status: in_progress
+    status: completed
   - id: line_metadata
     content: "TDD: parse #line:xxxx (and other #tag) into Line.metadata on lines, options, and commands"
-    status: pending
+    status: in_progress
   - id: line_provider
     content: "TDD: LineProvider trait with default identity impl; Runner consults it when a Line carries a #line: tag before emitting"
     status: pending
