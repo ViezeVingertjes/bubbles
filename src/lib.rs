@@ -5,6 +5,7 @@
 #![deny(missing_docs, unsafe_code)]
 #![warn(clippy::pedantic, clippy::nursery, clippy::cargo)]
 
+pub mod compiler;
 pub mod value;
 
 pub use value::{HashMapStorage, Value, VariableStorage};

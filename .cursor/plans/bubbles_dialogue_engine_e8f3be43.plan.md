@@ -7,10 +7,10 @@ todos:
     status: in_progress
   - id: value_storage
     content: "TDD: Value enum + VariableStorage trait + HashMapStorage default impl (+ serde feature-gated derives)"
-    status: in_progress
+    status: completed
   - id: lexer
     content: "TDD: logos-based lexer with spans; round-trip property tests"
-    status: pending
+    status: in_progress
   - id: parser_skeleton
     content: "TDD: hand-written recursive-descent parser — empty node, title/tags header, body delimiters, DialogueError with spans"
     status: pending
