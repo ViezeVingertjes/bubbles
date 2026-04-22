@@ -219,18 +219,6 @@ Variable storage is serialised separately via `runner.storage()`.
 
 ---
 
-## Deliberately out of scope for v0.1
-
-- Bytecode / compiled program format (seam exists; can be added without API churn)
-- Markup (`[b]text[/b]`) — line text is emitted raw; hosts parse what they need
-- Format functions (`[plural]`, `[select]`, `[ordinal]`)
-- Async function primitives (host delays `next_event()` — documented pattern)
-- Editor tooling, graph visualiser, REPL
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) if you'd like to help drive v0.2.
-
----
-
 ## License
 
 Licensed under either of [Apache-2.0](LICENSE-APACHE) or [MIT](LICENSE-MIT) at your option.
