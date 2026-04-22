@@ -146,7 +146,7 @@ proptest! {
         let lt = eval(&format!("{a} < {b}")) == Value::Bool(true);
         let eq = eval(&format!("{a} == {b}")) == Value::Bool(true);
         let gt = eval(&format!("{a} > {b}")) == Value::Bool(true);
-        let exactly_one = (lt as u8) + (eq as u8) + (gt as u8) == 1;
+        let exactly_one = u8::from(lt) + u8::from(eq) + u8::from(gt) == 1;
         prop_assert!(exactly_one);
     }
 

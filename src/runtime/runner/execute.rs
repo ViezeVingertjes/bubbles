@@ -167,21 +167,12 @@ impl<S: VariableStorage> Runner<S> {
     ) -> Result<Option<DialogueEvent>> {
         let mut chosen = None;
         for (cond_src, body) in branches {
-            let v = self.eval_expr_src(&cond_src)?;
-            if v.is_truthy() {
+            if self.eval_expr_src(&cond_src)?.is_truthy() {
                 chosen = Some(body);
                 break;
             }
         }
-        let body = chosen.unwrap_or(else_body);
-        if !body.is_empty() {
-            let title = self
-                .stack
-                .last()
-                .map(|f| f.node.clone())
-                .unwrap_or_default();
-            self.stack.push(Frame::new(title, body));
-        }
+        self.push_inline_frame(chosen.unwrap_or(else_body));
         Ok(None)
     }
 
@@ -201,15 +192,7 @@ impl<S: VariableStorage> Runner<S> {
         if run_body {
             self.once_seen.insert(block_id);
         }
-        let chosen = if run_body { body } else { else_body };
-        if !chosen.is_empty() {
-            let title = self
-                .stack
-                .last()
-                .map(|f| f.node.clone())
-                .unwrap_or_default();
-            self.stack.push(Frame::new(title, chosen));
-        }
+        self.push_inline_frame(if run_body { body } else { else_body });
         Ok(None)
     }
 

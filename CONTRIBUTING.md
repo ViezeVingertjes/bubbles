@@ -60,9 +60,12 @@ All of these are enforced in CI and by the pre-commit hook.
 
 ## File size discipline
 
-- Hard cap: **~250 LOC per file** (blank lines and tests excluded).
-- Over ~300 LOC is a refactor trigger, not something we merge.
-- One concept per file. No `utils.rs`, `helpers.rs`, or `common.rs` catch-alls.
+- Hard cap: **300 non-blank LOC per file** (enforced by
+  `scripts/check-file-sizes.sh` in CI and the pre-commit hook).
+- Aim for ~250 LOC; hitting 300 is a refactor signal.
+- One concept per file. No `utils.rs`, `helpers.rs`, or `common.rs` catch-alls
+  in `src/`. (`tests/common/mod.rs` is the one intentional exception: an
+  integration-test harness shared across binaries.)
 - `mod.rs` files are thin: declare submodules and re-export the public surface only.
 
 ## Pull request checklist

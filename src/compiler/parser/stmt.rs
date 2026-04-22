@@ -4,10 +4,9 @@ use crate::compiler::ast::Stmt;
 use crate::error::Result;
 
 use super::Parser;
-use super::helpers::{
-    extract_cmd, extract_cmd_line_tags, first_word, parse_declare, parse_set, split_first_word,
-    split_trailing_tags,
-};
+use super::assignments::{parse_declare, parse_set, validate_expr};
+use super::command::{extract_cmd, extract_cmd_line_tags, first_word, split_first_word};
+use super::text::split_trailing_tags;
 
 impl Parser<'_> {
     pub(super) fn parse_command_stmt(&mut self, lineno: usize, cur_indent: usize) -> Result<Stmt> {
@@ -23,8 +22,8 @@ impl Parser<'_> {
             "return" => Ok(Stmt::Return),
             "set" => parse_set(inner, lineno, self.file),
             "declare" => parse_declare(inner, lineno, self.file),
-            "if" => self.parse_if(inner, cur_indent),
-            "once" => self.parse_once(inner, cur_indent),
+            "if" => self.parse_if(inner, lineno, cur_indent),
+            "once" => self.parse_once(inner, lineno, cur_indent),
             _ => {
                 let (cmd_name, rest) = split_first_word(inner);
                 let (args_src, inner_tags) = split_trailing_tags(rest);
@@ -39,21 +38,11 @@ impl Parser<'_> {
         }
     }
 
-    fn parse_if(&mut self, first_cond: &str, cur_indent: usize) -> Result<Stmt> {
-        // The raw line we already advanced past is no longer in the buffer, so
-        // we look at the *previous* pos for the line number. Use a conservative
-        // approach: report errors at the current pos (next unread line) which is
-        // one past the <<if>> line.
-        let if_lineno = self.pos.saturating_sub(1);
+    fn parse_if(&mut self, first_cond: &str, if_lineno: usize, cur_indent: usize) -> Result<Stmt> {
         let cond = first_cond[2..].trim().to_owned();
         // Validate the condition expression eagerly so the error points at the
         // <<if>> line, not at some later <<endif>> or ===.
-        crate::compiler::expr::parse_expr(&cond).map_err(|_| {
-            self.err(
-                if_lineno,
-                format!("invalid expression in `<<if>>`: `{cond}`"),
-            )
-        })?;
+        validate_expr(&cond, "<<if>>", if_lineno, self.file)?;
         let body = self.parse_body(cur_indent + 1)?;
         let mut branches: Vec<(String, Vec<Stmt>)> = vec![(cond, body)];
         let mut else_body = Vec::new();
@@ -92,19 +81,13 @@ impl Parser<'_> {
         })
     }
 
-    fn parse_once(&mut self, inner: &str, cur_indent: usize) -> Result<Stmt> {
+    fn parse_once(&mut self, inner: &str, once_lineno: usize, cur_indent: usize) -> Result<Stmt> {
         let block_id = self.next_id();
-        let once_lineno = self.pos.saturating_sub(1);
         // `inner` is the full command text after `<<`, e.g. `once`, `once if expr`.
         let rest = inner["once".len()..].trim();
         let cond_src = if rest.starts_with("if ") || rest == "if" {
             let src = rest["if".len()..].trim().to_owned();
-            crate::compiler::expr::parse_expr(&src).map_err(|_| {
-                self.err(
-                    once_lineno,
-                    format!("invalid expression in `<<once if>>`: `{src}`"),
-                )
-            })?;
+            validate_expr(&src, "<<once if>>", once_lineno, self.file)?;
             Some(src)
         } else {
             None

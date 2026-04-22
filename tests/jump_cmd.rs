@@ -28,7 +28,7 @@ fn jump_transitions_to_node() {
 #[test]
 fn jump_emits_node_events() {
     let events = common::play_fixture("jump", "Start");
-    let node_events: Vec<_> = events
+    let node_event_count = events
         .iter()
         .filter(|e| {
             matches!(
@@ -36,8 +36,8 @@ fn jump_emits_node_events() {
                 DialogueEvent::NodeStarted(_) | DialogueEvent::NodeComplete(_)
             )
         })
-        .collect();
-    assert!(node_events.len() >= 2);
+        .count();
+    assert!(node_event_count >= 2);
 }
 
 // ── commands ──────────────────────────────────────────────────────────────────

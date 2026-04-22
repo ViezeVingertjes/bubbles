@@ -1,7 +1,7 @@
 //! A minimal command-line dialogue runner for `.bub` script files.
 //!
 //! Usage:
-//!   cargo run --example cli_runner -- path/to/script.bub StartNode
+//!   `cargo run --example cli_runner -- path/to/script.bub StartNode`
 
 use std::io::{self, BufRead as _, Write as _};
 
@@ -50,7 +50,7 @@ fn main() {
                         .lock()
                         .lines()
                         .next()
-                        .and_then(|l| l.ok())
+                        .and_then(Result::ok)
                         .unwrap_or_default();
                     if let Ok(n) = line.trim().parse::<usize>() {
                         if n < opts.len() && opts[n].available {

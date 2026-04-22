@@ -1,4 +1,4 @@
-//! Integration tests for visited() and visited_count().
+//! Integration tests for `visited()` and `visited_count()`.
 
 mod common;
 

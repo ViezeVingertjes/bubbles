@@ -1,12 +1,12 @@
-//! Internal helper methods on [`Runner`] — node body selection, expression
-//! evaluation, text interpolation, and visit-count queries.
+//! Node-body selection, including node-group resolution via the active
+//! [`SaliencyStrategy`].
+//!
+//! [`SaliencyStrategy`]: crate::saliency::SaliencyStrategy
 
 use crate::compiler::ast::Stmt;
 use crate::error::{DialogueError, Result};
-use crate::runtime::eval::eval;
-use crate::runtime::interpolate::interpolate;
 use crate::saliency::Candidate;
-use crate::value::{Value, VariableStorage};
+use crate::value::VariableStorage;
 
 use super::Runner;
 
@@ -65,29 +65,5 @@ impl<S: VariableStorage> Runner<S> {
             DialogueError::Runtime(format!("node group '{title}' has no available candidate"))
         })?;
         Ok(candidate_info.into_iter().nth(idx).unwrap().2)
-    }
-
-    /// Evaluates an expression source string against the current variable storage.
-    pub(super) fn eval_expr_src(&self, src: &str) -> Result<Value> {
-        let expr = crate::compiler::expr::parse_expr(src)?;
-        eval(&expr, &self.storage, &|name, args| {
-            self.library.call(name, args)
-        })
-    }
-
-    /// Runs inline `{expr}` substitution on `text` using current storage.
-    pub(super) fn interpolate_text(&self, text: &str) -> Result<String> {
-        interpolate(text, &self.storage, &|name, args| {
-            self.library.call(name, args)
-        })
-    }
-
-    /// Splits `args_src` into whitespace-separated tokens after interpolation.
-    pub(super) fn parse_command_args(&self, args_src: &str) -> Result<Vec<String>> {
-        if args_src.trim().is_empty() {
-            return Ok(Vec::new());
-        }
-        let interpolated = self.interpolate_text(args_src)?;
-        Ok(interpolated.split_whitespace().map(str::to_owned).collect())
     }
 }

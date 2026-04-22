@@ -1,7 +1,0 @@
-title: Start
----
-<<set $gold = 10>>
-<<set $name = "Alice">>
-<<set $rich = $gold > 5>>
-I have some gold.
-===

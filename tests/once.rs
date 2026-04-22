@@ -17,16 +17,11 @@ fn line_texts(events: &[DialogueEvent]) -> Vec<String> {
 
 fn play_to_end(runner: &mut Runner<HashMapStorage>) -> Vec<DialogueEvent> {
     let mut events = Vec::new();
-    loop {
-        match runner.next_event().unwrap() {
-            Some(ev) => {
-                let done = ev == DialogueEvent::DialogueComplete;
-                events.push(ev);
-                if done {
-                    break;
-                }
-            }
-            None => break,
+    while let Some(ev) = runner.next_event().unwrap() {
+        let done = ev == DialogueEvent::DialogueComplete;
+        events.push(ev);
+        if done {
+            break;
         }
     }
     events

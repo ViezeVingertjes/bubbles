@@ -4,11 +4,8 @@ use bubbles::{DialogueEvent, HashMapStorage, Runner, compile};
 
 fn drain(runner: &mut Runner<HashMapStorage>) -> Vec<DialogueEvent> {
     let mut events = Vec::new();
-    loop {
-        match runner.next_event().unwrap() {
-            Some(ev) => events.push(ev),
-            None => break,
-        }
+    while let Some(ev) = runner.next_event().unwrap() {
+        events.push(ev);
     }
     events
 }

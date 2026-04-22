@@ -245,3 +245,37 @@ fn error_set_to_without_expression() {
 fn error_set_missing_equals_and_to() {
     assert!(compile("title: A\n---\n<<set $x 5>>\n===\n").is_err());
 }
+
+// ── line numbers in error messages point at the source, not buffer index ──────
+
+#[test]
+fn error_line_number_for_if_reports_source_line() {
+    let src = "\n\n// leading comment\ntitle: A\n---\n<<if $x &&>>\nHello.\n<<endif>>\n===\n";
+    //         1 2 3                   4     5   6 (<<if>> is on source line 6)
+    let err = compile(src).unwrap_err().to_string();
+    assert!(err.contains(":6:"), "expected line 6 in error, got: {err}");
+}
+
+#[test]
+fn error_line_number_for_elseif_reports_source_line() {
+    let src = "title: A\n---\n<<if true>>\n    a\n<<elseif 1+>>\n    b\n<<endif>>\n===\n";
+    //    1         2   3           4    5 (<<elseif>> on line 5)
+    let err = compile(src).unwrap_err().to_string();
+    assert!(err.contains(":5:"), "expected line 5 in error, got: {err}");
+}
+
+#[test]
+fn error_line_number_for_once_if_reports_source_line() {
+    let src = "\ntitle: A\n---\n<<once if 1+>>\n    x\n<<endonce>>\n===\n";
+    //         1 2         3   4 (<<once if>> on line 4)
+    let err = compile(src).unwrap_err().to_string();
+    assert!(err.contains(":4:"), "expected line 4 in error, got: {err}");
+}
+
+#[test]
+fn error_line_number_for_missing_body_delimiter_reports_source_line() {
+    // `---` is missing on line 4 (the `===` arrives instead).
+    let src = "\n\ntitle: A\n===\n";
+    let err = compile(src).unwrap_err().to_string();
+    assert!(err.contains(":4:"), "expected line 4 in error, got: {err}");
+}

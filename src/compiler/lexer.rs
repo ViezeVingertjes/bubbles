@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn lex_float() {
-        assert_eq!(tokens("3.14"), vec![Token::Number(3.14)]);
+        assert_eq!(tokens("2.5"), vec![Token::Number(2.5)]);
     }
 
     #[test]

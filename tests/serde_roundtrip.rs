@@ -12,7 +12,7 @@ mod serde_tests {
 
     #[test]
     fn value_number_round_trips() {
-        let v = Value::Number(3.14);
+        let v = Value::Number(2.5);
         let json = serde_json::to_string(&v).unwrap();
         assert_eq!(serde_json::from_str::<Value>(&json).unwrap(), v);
     }
@@ -106,7 +106,7 @@ Goodbye.
         assert_eq!(snap.visits.get("Intro").copied().unwrap_or(0), 1);
     }
 
-    /// `restore()` preserves once_seen so blocks don't re-fire after load.
+    /// `restore()` preserves `once_seen` so blocks don't re-fire after load.
     #[test]
     fn restore_preserves_once_seen() {
         let prog = compile(SCRIPT).unwrap();

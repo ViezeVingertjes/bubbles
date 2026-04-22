@@ -40,9 +40,9 @@
 //! | [`runtime`] | [`Runner`], [`DialogueEvent`], [`LineProvider`], `RunnerSnapshot` (serde) |
 //! | [`library`] | [`FunctionLibrary`] and built-in functions |
 //! | [`saliency`] | [`SaliencyStrategy`], [`FirstAvailable`], [`BestLeastRecentlyViewed`] |
-
-#![deny(missing_docs, unsafe_code)]
-#![warn(clippy::pedantic, clippy::nursery, clippy::cargo)]
+//!
+//! Lint policy is defined once in `Cargo.toml` under `[lints.rust]` /
+//! `[lints.clippy]`; we deliberately do not duplicate it here.
 
 pub mod compiler;
 pub mod error;

@@ -1,4 +1,10 @@
 //! Shared test harness for integration tests.
+//!
+//! Each `tests/*.rs` file is compiled as its own binary and sees the *entire*
+//! `common` module, but only uses a subset. The `dead_code` allow is therefore
+//! intentional: unused helpers here are NOT dead code across the full suite.
+
+#![allow(dead_code)]
 
 use bubbles::{DialogueEvent, HashMapStorage, Runner, compile};
 
@@ -10,7 +16,7 @@ pub fn play(source: &str, start_node: &str) -> Vec<DialogueEvent> {
     let prog = compile(source).expect("compile failed");
     let mut runner = Runner::new(prog, HashMapStorage::new());
     runner.start(start_node).expect("start failed");
-    collect(&mut runner)
+    drain(&mut runner)
 }
 
 /// Loads a fixture file from `tests/fixtures/<name>.bub` and runs it.
@@ -21,16 +27,17 @@ pub fn play_fixture(name: &str, start_node: &str) -> Vec<DialogueEvent> {
     play(&source, start_node)
 }
 
-fn collect(runner: &mut Runner<HashMapStorage>) -> Vec<DialogueEvent> {
+/// Drains every remaining event from `runner`, panicking on any runtime error.
+///
+/// This is the shared counterpart to the ad-hoc `drain(runner)` helpers that
+/// appear in many integration tests; new tests should prefer this one.
+pub fn drain(runner: &mut Runner<HashMapStorage>) -> Vec<DialogueEvent> {
     let mut events = Vec::new();
-    loop {
-        match runner
-            .next_event()
-            .unwrap_or_else(|e| panic!("runtime error: {e}"))
-        {
-            Some(ev) => events.push(ev),
-            None => break,
-        }
+    while let Some(ev) = runner
+        .next_event()
+        .unwrap_or_else(|e| panic!("runtime error: {e}"))
+    {
+        events.push(ev);
     }
     events
 }

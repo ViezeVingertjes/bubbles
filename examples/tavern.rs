@@ -16,7 +16,7 @@ use bubbles::saliency::BestLeastRecentlyViewed;
 use bubbles::{DialogueEvent, HashMapStorage, Runner, Value, VariableStorage, compile_many};
 
 // Each source file is compiled together — demonstrating multi-file support.
-const TAVERN: &str = r#"
+const TAVERN: &str = r"
 title: Tavern
 tags: scene indoor
 ---
@@ -46,9 +46,9 @@ Barkeep: What'll it be?
     Barkeep: Safe travels, then.
     <<jump End>>
 ===
-"#;
+";
 
-const SERVICES: &str = r#"
+const SERVICES: &str = r"
 title: PourAle
 ---
 <<pour_ale>>
@@ -73,7 +73,7 @@ Barkeep: Anything else?
 title: End
 ---
 ===
-"#;
+";
 
 fn main() {
     // ── compile ──────────────────────────────────────────────────────────────

@@ -35,3 +35,21 @@ All notable changes are documented here (keep-a-changelog format).
 ### Fixed
 
 - `<<once if …>>` conditions are recognised (parser strips the `once` prefix before reading `if`).
+- Parse errors in `<<if>>`, `<<once if>>`, missing `---`, missing `===`, and missing
+  `title:` headers now report the actual source line number instead of an internal
+  buffer index (which previously drifted past blank lines and comments).
+- Resolved blocking `clippy::approx_constant` errors that caused CI to fail on
+  the `--all-features` test build.
+
+### Changed
+
+- `helpers.rs` files in `src/compiler/parser/` and `src/runtime/runner/` split
+  into concept-focused modules (`text`, `command`, `assignments`, `body` /
+  `evaluation`, `node_body`) to satisfy the one-concept-per-file rule.
+- Extracted a shared `Runner::push_inline_frame` helper used by `<<if>>`,
+  `<<once>>`, and option-body execution, removing three copies of the same
+  frame-push idiom.
+- `parse_if` / `parse_once` now delegate to the shared `validate_expr` helper
+  instead of open-coding the same check.
+- Lint configuration is now owned exclusively by `Cargo.toml`; `src/lib.rs`
+  no longer duplicates the `deny` / `warn` attributes.

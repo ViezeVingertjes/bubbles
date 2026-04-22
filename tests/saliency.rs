@@ -1,5 +1,6 @@
-//! Integration tests for saliency strategies: FirstAvailable, RandomAvailable,
-//! and BestLeastRecentlyViewed, used with line groups and node groups.
+//! Integration tests for saliency strategies: `FirstAvailable`,
+//! `RandomAvailable`, and `BestLeastRecentlyViewed`, used with line groups
+//! and node groups.
 
 use bubbles::saliency::{BestLeastRecentlyViewed, FirstAvailable};
 use bubbles::{DialogueEvent, HashMapStorage, Runner, compile};

@@ -1,7 +1,8 @@
 //! [`Runner`] — the public entry point for executing a compiled [`Program`].
 
+pub(super) mod evaluation;
 pub(super) mod execute;
-pub(super) mod helpers;
+pub(super) mod node_body;
 
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::{Arc, RwLock};
@@ -191,15 +192,24 @@ impl<S: VariableStorage> Runner<S> {
         })?;
         self.option_bodies.clear();
         self.state = State::Running;
-        if !body.is_empty() {
-            let title = self
-                .stack
-                .last()
-                .map(|f| f.node.clone())
-                .unwrap_or_default();
-            self.stack.push(Frame::new(title, body));
-        }
+        self.push_inline_frame(body);
         Ok(())
+    }
+
+    /// Pushes `body` as a new frame on top of the stack, inheriting the
+    /// current frame's node title. No-op when `body` is empty.
+    ///
+    /// Used by `<<if>>`, `<<once>>`, and option-body execution.
+    pub(super) fn push_inline_frame(&mut self, body: Vec<Stmt>) {
+        if body.is_empty() {
+            return;
+        }
+        let title = self
+            .stack
+            .last()
+            .map(|f| f.node.clone())
+            .unwrap_or_default();
+        self.stack.push(Frame::new(title, body));
     }
 
     /// Returns a shared reference to the variable storage.

@@ -1,15 +1,15 @@
 //! Line-oriented recursive-descent parser that converts `.bub` source into a [`Vec<Node>`].
 
-pub(super) mod helpers;
+pub(super) mod assignments;
+pub(super) mod body;
+pub(super) mod command;
 pub(super) mod stmt;
+pub(super) mod text;
 
 use indexmap::IndexMap;
 
-use crate::compiler::ast::{LineVariant, Node, OptionItem, Stmt};
+use crate::compiler::ast::Node;
 use crate::error::{DialogueError, Result};
-
-use helpers::{leading_spaces, parse_line_stmt, split_trailing_tags};
-use stmt::parse_option_text;
 
 // ── public entry point ────────────────────────────────────────────────────────
 
@@ -76,6 +76,20 @@ impl<'src> Parser<'src> {
             }
         }
     }
+
+    /// Returns the source line number that `advance()` last consumed, or the
+    /// file's final source line if no lines have been consumed yet. Used for
+    /// reporting errors that fire after end-of-file.
+    pub(super) fn last_lineno(&self) -> usize {
+        if self.pos == 0 {
+            self.lines.first().map_or(1, |&(n, _)| n)
+        } else {
+            self.lines
+                .get(self.pos - 1)
+                .or_else(|| self.lines.last())
+                .map_or(1, |&(n, _)| n)
+        }
+    }
 }
 
 // ── file / node parsing ───────────────────────────────────────────────────────
@@ -100,7 +114,7 @@ impl Parser<'_> {
             .cloned()
             .ok_or_else(|| DialogueError::Parse {
                 file: self.file.to_owned(),
-                line: self.pos,
+                line: self.last_lineno(),
                 message: "node is missing a `title:` header".into(),
             })?;
         let tags = headers
@@ -162,14 +176,18 @@ impl Parser<'_> {
         match self.advance() {
             Some((_, l)) if l.trim() == "---" => Ok(()),
             Some((n, l)) => Err(self.err(n, format!("expected `---`, got `{}`", l.trim()))),
-            None => Err(self.err(self.pos, "unexpected end of file, expected `---`")),
+            None => Err(self.err(self.last_lineno(), "unexpected end of file, expected `---`")),
         }
     }
 
     fn expect_node_end(&mut self) -> Result<()> {
         loop {
             match self.peek() {
-                None => return Err(self.err(self.pos, "unexpected end of file, expected `===`")),
+                None => {
+                    return Err(
+                        self.err(self.last_lineno(), "unexpected end of file, expected `===`")
+                    );
+                }
                 Some((_, l)) if l.trim().is_empty() || l.trim().starts_with("//") => {
                     self.advance();
                 }
@@ -199,125 +217,4 @@ impl Parser<'_> {
     }
 }
 
-// ── body parsing (delegates individual stmts to stmt module) ──────────────────
-
-impl Parser<'_> {
-    /// Parses body statements at or deeper than `min_indent`.
-    pub(super) fn parse_body(&mut self, min_indent: usize) -> Result<Vec<Stmt>> {
-        let mut stmts = Vec::new();
-        loop {
-            match self.peek() {
-                None => break,
-                Some((lineno, content)) => {
-                    let indent = leading_spaces(content);
-                    let t = content.trim();
-                    if t.is_empty() || t.starts_with("//") {
-                        self.advance();
-                        continue;
-                    }
-                    if t == "===" {
-                        break;
-                    }
-                    // A `title:` line inside a body almost certainly means the
-                    // author forgot `===` to close the previous node.
-                    if min_indent == 0 && t.starts_with("title:") && t.len() > "title:".len() {
-                        return Err(self.err(
-                            lineno,
-                            "found `title:` inside a node body — \
-                             did you forget `===` to close the previous node?",
-                        ));
-                    }
-                    if indent < min_indent {
-                        break;
-                    }
-                    if matches!(t, "<<else>>" | "<<elseif" | "<<endif>>" | "<<endonce>>")
-                        || t.starts_with("<<elseif ")
-                    {
-                        break;
-                    }
-                    let stmt = self.parse_stmt(min_indent)?;
-                    stmts.push(stmt);
-                }
-            }
-        }
-        Ok(stmts)
-    }
-
-    pub(super) fn parse_stmt(&mut self, cur_indent: usize) -> Result<Stmt> {
-        let (lineno, content) = self.peek().unwrap();
-        let t = content.trim();
-
-        if t.starts_with("<<") {
-            return self.parse_command_stmt(lineno, cur_indent);
-        }
-        if t.starts_with("->") {
-            return self.parse_option_block(cur_indent);
-        }
-        if t.starts_with("=>") {
-            return Ok(self.parse_line_group(cur_indent));
-        }
-        self.advance();
-        Ok(parse_line_stmt(t))
-    }
-
-    // ── shortcut options ──────────────────────────────────────────────────────
-
-    pub(super) fn parse_option_block(&mut self, cur_indent: usize) -> Result<Stmt> {
-        let mut items = Vec::new();
-        while let Some((_, content)) = self.peek() {
-            let t = content.trim();
-            if !t.starts_with("->") {
-                break;
-            }
-            let option_indent = leading_spaces(content);
-            if option_indent < cur_indent {
-                break;
-            }
-            self.advance();
-            let rest = t[2..].trim();
-            let (text_part, cond_src, once) = parse_option_text(rest);
-            let (text, tags) = split_trailing_tags(&text_part);
-            let id = self.next_id();
-            let body = self.parse_body(option_indent + 1)?;
-            items.push(OptionItem {
-                id,
-                text,
-                cond_src,
-                once,
-                tags,
-                body,
-            });
-        }
-        Ok(Stmt::Options(items))
-    }
-
-    // ── line groups ───────────────────────────────────────────────────────────
-
-    pub(super) fn parse_line_group(&mut self, cur_indent: usize) -> Stmt {
-        let mut variants = Vec::new();
-        while let Some((_, content)) = self.peek() {
-            let t = content.trim();
-            if !t.starts_with("=>") {
-                break;
-            }
-            if leading_spaces(content) < cur_indent {
-                break;
-            }
-            self.advance();
-            let rest = t[2..].trim();
-            let id = self.next_id();
-            let (line_text, cond_src, once) = parse_option_text(rest);
-            let (speaker, text) = helpers::split_speaker(&line_text);
-            let (text, tags) = split_trailing_tags(&text);
-            variants.push(LineVariant {
-                id,
-                speaker,
-                text,
-                cond_src,
-                once,
-                tags,
-            });
-        }
-        Stmt::LineGroup(variants)
-    }
-}
+// Body-level parsing lives in [`body`].
