@@ -7,6 +7,8 @@
 [![CI](https://github.com/ViezeVingertjes/bubbles/actions/workflows/ci.yml/badge.svg)](https://github.com/ViezeVingertjes/bubbles/actions)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
 
+Crates.io and docs.rs badges above fill in after the first release on crates.io.
+
 Write branching `.bub` scripts, compile them once at startup, then drive the
 dialogue from any game loop with a simple pull-based event API.  Designed to
 integrate cleanly into Bevy, Godot, or any custom Rust engine — zero async

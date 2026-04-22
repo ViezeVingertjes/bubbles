@@ -13,19 +13,6 @@ pub fn play(source: &str, start_node: &str) -> Vec<DialogueEvent> {
     collect(&mut runner)
 }
 
-/// Like [`play`] but allows customising the runner before starting (e.g. registering
-/// functions, setting variables, installing saliency strategies).
-pub fn play_with<F>(source: &str, start_node: &str, setup: F) -> Vec<DialogueEvent>
-where
-    F: FnOnce(&mut Runner<HashMapStorage>),
-{
-    let prog = compile(source).expect("compile failed");
-    let mut runner = Runner::new(prog, HashMapStorage::new());
-    setup(&mut runner);
-    runner.start(start_node).expect("start failed");
-    collect(&mut runner)
-}
-
 /// Loads a fixture file from `tests/fixtures/<name>.bub` and runs it.
 pub fn play_fixture(name: &str, start_node: &str) -> Vec<DialogueEvent> {
     let path = format!("tests/fixtures/{name}.bub");

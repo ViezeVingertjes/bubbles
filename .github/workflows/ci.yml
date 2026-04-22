@@ -32,3 +32,8 @@ jobs:
 
       - name: File-size check
         run: bash scripts/check-file-sizes.sh
+
+      - name: cargo-deny
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
