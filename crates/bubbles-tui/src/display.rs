@@ -45,9 +45,9 @@ impl From<DialogueOption> for DisplayedOption {
 /// Which pane currently owns the keyboard focus.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FocusPanel {
-    /// The dialogue / options pane.
-    Dialogue,
-    /// The transcript pane.
+    /// The options list (arrow keys navigate choices).
+    Options,
+    /// The transcript pane (arrow keys scroll the history).
     Transcript,
 }
 

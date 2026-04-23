@@ -50,6 +50,18 @@ impl Session {
         Ok(event)
     }
 
+    /// Restarts execution from `start_node` without clearing variables or
+    /// once-seen state.  The runner's internal storage and saliency history
+    /// are preserved; only the execution stack is reset.
+    ///
+    /// # Errors
+    /// Returns [`DialogueError::UnknownNode`] if `start_node` does not exist.
+    pub fn restart(&mut self, start_node: &str) -> Result<(), DialogueError> {
+        self.runner.start(start_node)?;
+        self.done = false;
+        Ok(())
+    }
+
     /// Commits an option choice to the runner.
     ///
     /// # Errors

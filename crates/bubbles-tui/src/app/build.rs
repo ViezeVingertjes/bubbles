@@ -87,7 +87,7 @@ impl AppState {
             options: Vec::new(),
             focused_option: None,
             transcript: Transcript::new(),
-            focus: FocusPanel::Dialogue,
+            focus: FocusPanel::Options,
             error_overlay,
             history: Vec::new(),
             recording: true,

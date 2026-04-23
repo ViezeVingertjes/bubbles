@@ -83,7 +83,7 @@ impl AppState {
         self.transcript.scroll()
     }
 
-    /// `true` when the transcript pane currently owns the keyboard focus.
+    /// `true` when the transcript pane has keyboard focus (arrow keys scroll).
     #[must_use]
     pub const fn transcript_focused(&self) -> bool {
         matches!(self.focus, FocusPanel::Transcript)
@@ -150,6 +150,7 @@ impl AppState {
             Intent::ScrollUp => self.transcript.scroll_up(),
             Intent::ScrollDown => self.transcript.scroll_down(),
             Intent::Reload => self.reload(),
+            Intent::Restart => self.do_restart(),
             Intent::DismissError => self.error_overlay = None,
             Intent::StepBack => self.step_back(),
         }
@@ -241,7 +242,7 @@ impl AppState {
 
     fn move_focus(&mut self, delta: FocusShift) {
         match self.focus {
-            FocusPanel::Dialogue => self.shift_option_focus(delta),
+            FocusPanel::Options => self.shift_option_focus(delta),
             FocusPanel::Transcript => match delta {
                 FocusShift::Next => self.transcript.scroll_down(),
                 FocusShift::Prev => self.transcript.scroll_up(),
@@ -264,8 +265,8 @@ impl AppState {
 
     const fn toggle_focus(&mut self) {
         self.focus = match self.focus {
-            FocusPanel::Dialogue => FocusPanel::Transcript,
-            FocusPanel::Transcript => FocusPanel::Dialogue,
+            FocusPanel::Options => FocusPanel::Transcript,
+            FocusPanel::Transcript => FocusPanel::Options,
         };
     }
 
@@ -292,6 +293,28 @@ impl AppState {
 
     fn reload(&mut self) {
         self.reset_runtime_state();
+        self.history.clear();
+    }
+
+    fn do_restart(&mut self) {
+        let result = self.session.as_mut().map(|s| s.restart(&self.start_node));
+
+        match result {
+            Some(Ok(())) => self.error_overlay = None,
+            Some(Err(err)) => {
+                let excerpt = self.sources.source_for_error(&err);
+                self.error_overlay = Some(ErrorOverlay::from_error(&err, excerpt));
+                self.session = None;
+            }
+            None => {
+                // No active session (compile error on load) - full reload.
+                self.reset_runtime_state();
+            }
+        }
+        self.transcript = Transcript::new();
+        self.current_line = None;
+        self.options.clear();
+        self.focused_option = None;
         self.history.clear();
     }
 }

@@ -21,8 +21,13 @@ pub fn render(state: &AppState, frame: &mut Frame<'_>, area: Rect) {
     let start = end.saturating_sub(visible_rows);
 
     let lines: Vec<Line<'_>> = if entries.is_empty() {
+        let hint = if state.is_done() {
+            "(empty)"
+        } else {
+            "Press Enter to begin."
+        };
         vec![Line::from(Span::styled(
-            "(empty)",
+            hint,
             Style::default().add_modifier(Modifier::DIM),
         ))]
     } else {

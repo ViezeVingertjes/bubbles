@@ -35,4 +35,8 @@ pub enum Intent {
     DismissError,
     /// Rewind one visible step by replaying the input history.
     StepBack,
+    /// Restart execution from the start node without clearing variables or
+    /// once-seen state.  Use this to see second-visit dialogue variants after
+    /// running through the script at least once.
+    Restart,
 }

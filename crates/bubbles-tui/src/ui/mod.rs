@@ -15,13 +15,17 @@ use crate::app::AppState;
 
 /// Draws the current [`AppState`] into `frame`.
 ///
-/// The layout is a horizontal split:
+/// Layout:
 ///
 /// ```text
-/// ┌ dialogue ──────────┐┌ transcript ────────┐
-/// │ …                  ││ …                  │
-/// └────────────────────┘└────────────────────┘
-///   footer keybinds
+/// ┌ transcript ─────────────────────────────────┐
+/// │ [→ Node]                                     │
+/// │ NPC: Hello!                                  │
+/// └─────────────────────────────────────────────┘
+/// ┌ options (only when active) ─────────────────┐
+/// │ > 1. Reply A    2. Reply B                   │
+/// └─────────────────────────────────────────────┘
+///   footer keybinds (1 line)
 /// ```
 pub fn render(state: &AppState, frame: &mut Frame<'_>) {
     let outer = Layout::default()
@@ -29,13 +33,20 @@ pub fn render(state: &AppState, frame: &mut Frame<'_>) {
         .constraints([Constraint::Min(1), Constraint::Length(1)])
         .split(frame.area());
 
-    let panes = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(60), Constraint::Percentage(40)])
-        .split(outer[0]);
+    let content = outer[0];
 
-    dialogue::render(state, frame, panes[0]);
-    transcript::render(state, frame, panes[1]);
+    if state.options().is_empty() {
+        transcript::render(state, frame, content);
+    } else {
+        let options_height = dialogue::options_height(state);
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Min(3), Constraint::Length(options_height)])
+            .split(content);
+        transcript::render(state, frame, chunks[0]);
+        dialogue::render_options(state, frame, chunks[1]);
+    }
+
     frame.render_widget(footer::footer(state), outer[1]);
 
     if let Some(overlay) = state.error_overlay() {

@@ -18,20 +18,20 @@ pub fn footer(state: &AppState) -> Paragraph<'_> {
 
 fn hint_text(state: &AppState) -> &'static str {
     if state.error_overlay().is_some() {
-        return "  r: reload    x: dismiss    q/Esc: quit";
+        return "  r: reload    R: restart    x: dismiss    q/Esc: quit";
     }
     if state.is_done() {
-        return "  q/Esc: quit    Tab: focus transcript";
+        return "  r: reload    R: restart    q/Esc: quit";
     }
     match state.focus() {
-        FocusPanel::Dialogue if state.options().is_empty() => {
-            "  Enter: advance    b: back    Tab: transcript    q/Esc: quit"
+        FocusPanel::Options if state.options().is_empty() => {
+            "  Enter: advance    b: back    r: reload    R: restart    Tab: scroll transcript    q/Esc: quit"
         }
-        FocusPanel::Dialogue => {
-            "  \u{2191}/\u{2193}: focus    Enter: choose    1-9: pick    b: back    q/Esc: quit"
+        FocusPanel::Options => {
+            "  \u{2191}/\u{2193}: option    Enter: choose    1-9: pick    b: back    r: reload    R: restart    Tab: scroll transcript    q/Esc: quit"
         }
         FocusPanel::Transcript => {
-            "  \u{2191}/\u{2193}: scroll    b: back    Tab: dialogue    q/Esc: quit"
+            "  \u{2191}/\u{2193}: scroll    b: back    r: reload    R: restart    Tab: options    q/Esc: quit"
         }
     }
 }
