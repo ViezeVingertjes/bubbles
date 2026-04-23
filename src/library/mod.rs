@@ -108,6 +108,23 @@ impl FunctionLibrary {
             let n = require_one_number("int", &args)?;
             Ok(Value::Number(n.trunc()))
         });
+        self.register("plural", |args| match args.as_slice() {
+            [Value::Number(n), Value::Text(singular), Value::Text(plural)] => {
+                // Treat |n| == 1 as singular; all other values (0, 2, …) are plural.
+                let form = if (n.abs() - 1.0).abs() < f64::EPSILON {
+                    singular
+                } else {
+                    plural
+                };
+                Ok(Value::Text(form.clone()))
+            }
+            _ => Err(DialogueError::Function {
+                name: "plural".into(),
+                message: format!(
+                    "expected (number, string, string), got {args:?}"
+                ),
+            }),
+        });
     }
 
     #[cfg(feature = "rand")]

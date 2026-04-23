@@ -34,3 +34,44 @@ fn no_braces_unchanged() {
     let lines = lines_from(&events);
     assert_eq!(lines, ["Hello world."]);
 }
+
+// ── plural() ──────────────────────────────────────────────────────────────────
+
+#[test]
+fn plural_singular_in_line() {
+    let src = "\
+title: Start
+---
+<<declare $n = 1>>
+You have {$n} {plural($n, \"apple\", \"apples\")}.
+===
+";
+    let events = common::play(src, "Start");
+    assert_eq!(lines_from(&events), ["You have 1 apple."]);
+}
+
+#[test]
+fn plural_plural_in_line() {
+    let src = "\
+title: Start
+---
+<<declare $n = 3>>
+You have {$n} {plural($n, \"coin\", \"coins\")}.
+===
+";
+    let events = common::play(src, "Start");
+    assert_eq!(lines_from(&events), ["You have 3 coins."]);
+}
+
+#[test]
+fn plural_zero_uses_plural_form() {
+    let src = "\
+title: Start
+---
+<<declare $n = 0>>
+{plural($n, \"item\", \"items\")} remaining.
+===
+";
+    let events = common::play(src, "Start");
+    assert_eq!(lines_from(&events), ["items remaining."]);
+}
