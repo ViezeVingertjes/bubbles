@@ -2,7 +2,6 @@
 
 mod eval;
 mod event;
-mod interpolate;
 mod provider;
 mod runner;
 #[cfg(feature = "serde")]

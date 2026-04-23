@@ -2,6 +2,15 @@
 
 All notable changes are documented here (keep-a-changelog format).
 
+## [Unreleased]
+
+### Internal
+
+- Removed `src/runtime/interpolate.rs`, a dead module that only held a duplicate
+  copy of the interpolation algorithm used by its own tests.  End-to-end
+  behaviour is still covered by `tests/interpolation.rs` and
+  `tests/compiled_expr_pipeline.rs`.
+
 ## [0.2.0] — 2026-04-23
 
 ### Added
