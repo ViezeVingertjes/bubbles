@@ -1,6 +1,6 @@
 //! Integration tests for the compilation pipeline.
 
-use bubbles::{compile, compile_many, compile_many_validated, compile_validated, validate};
+use bubbles::{DialogueError, compile, compile_many, validate};
 
 #[test]
 fn empty_node_parses() {
@@ -121,13 +121,11 @@ title: B
 }
 
 #[test]
-fn validate_rejects_unknown_jump_target() {
-    let prog = compile("title: A\n---\n<<jump Missing>>\n===\n").unwrap();
-    assert!(validate(&prog).is_err());
-}
-
-#[test]
-fn validate_accepts_valid_jump_target() {
+fn validate_standalone_rejects_unknown_jump_target() {
+    // validate() is a power-user hook for Programs built outside of compile().
+    // Build one manually via compile_many (without validation) is not possible
+    // anymore, so we test via the public validate() fn directly on a known-good
+    // program and confirm it still runs without error.
     let prog = compile("title: A\n---\n<<jump B>>\n===\ntitle: B\n---\n===\n").unwrap();
     assert!(validate(&prog).is_ok());
 }
@@ -392,42 +390,41 @@ fn unknown_char_in_set_expression_is_a_parse_error() {
     );
 }
 
-// ── compile_validated / compile_many_validated ────────────────────────────────
+// ── compile always validates ──────────────────────────────────────────────────
 
 #[test]
-fn compile_validated_rejects_unknown_jump_target() {
-    // compile alone succeeds; compile_validated must catch the bad jump.
+fn compile_rejects_unknown_jump_target() {
     let src = "title: A\n---\n<<jump Missing>>\n===\n";
+    let err = compile(src).unwrap_err();
     assert!(
-        compile(src).is_ok(),
-        "compile alone should not validate jump targets"
+        matches!(err, DialogueError::Validation(_)),
+        "expected Validation error, got: {err:?}"
     );
-    let err = compile_validated(src).unwrap_err().to_string();
     assert!(
-        err.contains("Missing") || err.contains("unknown"),
-        "expected validation error mentioning 'Missing', got: {err}"
+        err.to_string().contains("Missing"),
+        "error should mention the unknown target, got: {err}"
     );
 }
 
 #[test]
-fn compile_validated_accepts_valid_program() {
+fn compile_accepts_valid_jump() {
     let src = "title: A\n---\n<<jump B>>\n===\ntitle: B\n---\nHello.\n===\n";
-    assert!(compile_validated(src).is_ok());
+    assert!(compile(src).is_ok());
 }
 
 #[test]
-fn compile_many_validated_rejects_unknown_detour_target() {
+fn compile_many_rejects_unknown_detour_target() {
     let src_a = "title: A\n---\n<<detour Missing>>\n===\n";
-    let result = compile_many_validated(&[("a", src_a)]);
+    let err = compile_many(&[("a", src_a)]).unwrap_err();
     assert!(
-        result.is_err(),
-        "expected validation error for unknown detour target"
+        matches!(err, DialogueError::Validation(_)),
+        "expected Validation error, got: {err:?}"
     );
 }
 
 #[test]
-fn compile_many_validated_accepts_cross_file_jump() {
-    let result = compile_many_validated(&[
+fn compile_many_accepts_cross_file_jump() {
+    let result = compile_many(&[
         ("a", "title: A\n---\n<<jump B>>\n===\n"),
         ("b", "title: B\n---\nHello.\n===\n"),
     ]);

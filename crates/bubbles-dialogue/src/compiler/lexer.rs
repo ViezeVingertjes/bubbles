@@ -134,8 +134,8 @@ pub type Spanned = (Token, std::ops::Range<usize>);
 /// caller handles partial input (e.g. tag extraction). Use
 /// [`tokenise_strict`] inside the expression compiler so that bad
 /// characters produce clear parse errors.
-#[must_use]
-pub fn tokenise(input: &str) -> Vec<Spanned> {
+#[cfg(test)]
+pub(crate) fn tokenise(input: &str) -> Vec<Spanned> {
     Token::lexer(input)
         .spanned()
         .filter_map(|(t, span)| t.ok().map(|t| (t, span)))

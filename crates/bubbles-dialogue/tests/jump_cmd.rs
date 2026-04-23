@@ -80,20 +80,27 @@ title: Start
 }
 
 #[test]
-fn jump_line_may_carry_trailing_tags_after_command() {
-    use bubbles::compile;
-    let prog = compile("title: A\n---\n<<jump B #cut>>\n===\ntitle: B\n---\nOK\n===\n").unwrap();
-    assert!(prog.node_exists("B"));
+fn jump_with_trailing_tag_is_rejected_at_compile_time() {
+    // The parser includes the trailing `#cut` in the jump target name,
+    // producing an unknown-node reference that compile() catches during
+    // validation.  This test documents that behaviour: authors must not
+    // put tags on jump lines.
+    use bubbles::{DialogueError, compile};
+    let err = compile("title: A\n---\n<<jump B #cut>>\n===\ntitle: B\n---\nOK\n===\n").unwrap_err();
+    assert!(
+        matches!(err, DialogueError::Validation(_)),
+        "expected Validation error, got: {err:?}"
+    );
 }
 
 #[test]
-fn detour_to_unknown_node_errors_at_runtime() {
-    use bubbles::{HashMapStorage, Runner, compile};
-    let prog = compile("title: A\n---\n<<detour Missing>>\n===\n").unwrap();
-    let mut runner = Runner::new(prog, HashMapStorage::new());
-    runner.start("A").unwrap();
-    runner.next_event().unwrap();
-    assert!(runner.next_event().is_err());
+fn detour_to_unknown_node_errors_at_compile_time() {
+    use bubbles::{DialogueError, compile};
+    let err = compile("title: A\n---\n<<detour Missing>>\n===\n").unwrap_err();
+    assert!(
+        matches!(err, DialogueError::Validation(_)),
+        "expected Validation error, got: {err:?}"
+    );
 }
 
 #[test]

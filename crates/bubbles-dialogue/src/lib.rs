@@ -51,10 +51,7 @@ pub mod runtime;
 pub mod saliency;
 pub mod value;
 
-pub use compiler::{
-    Program, VariableDecl, compile, compile_many, compile_many_validated, compile_validated,
-    validate,
-};
+pub use compiler::{Program, VariableDecl, compile, compile_many, validate};
 pub use error::{DialogueError, Result};
 pub use library::FunctionLibrary;
 #[cfg(feature = "serde")]

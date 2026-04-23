@@ -156,15 +156,16 @@ fn next_event_while_awaiting_option_errors() {
 }
 
 #[test]
-fn runtime_jump_to_unknown_node_errors_even_without_validate() {
-    let prog = compile("title: A\n---\n<<jump Nope>>\n===\n").unwrap();
-    let mut runner = Runner::new(prog, HashMapStorage::new());
-    runner.start("A").unwrap();
-    runner.next_event().unwrap(); // NodeStarted
-    let err = runner.next_event().unwrap_err().to_string();
+fn compile_rejects_unknown_jump_target_at_compile_time() {
+    // compile() always validates; bad targets are caught before a runner exists.
+    let err = compile("title: A\n---\n<<jump Nope>>\n===\n").unwrap_err();
     assert!(
-        err.contains("Nope") || err.contains("unknown"),
-        "got: {err}"
+        matches!(err, DialogueError::Validation(_)),
+        "expected Validation, got: {err:?}"
+    );
+    assert!(
+        err.to_string().contains("Nope"),
+        "error should mention the unknown target, got: {err}"
     );
 }
 
