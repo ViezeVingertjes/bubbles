@@ -205,6 +205,20 @@ impl<S: VariableStorage> Runner<S> {
         self.provider = Box::new(provider);
     }
 
+    /// Replaces the saliency strategy from an already-boxed value.
+    ///
+    /// Used by [`crate::runtime::RunnerBuilder`] to avoid double-boxing.
+    pub(crate) fn set_saliency_box(&mut self, strategy: Box<dyn SaliencyStrategy>) {
+        self.saliency = strategy;
+    }
+
+    /// Sets the line provider from an already-boxed value.
+    ///
+    /// Used by [`crate::runtime::RunnerBuilder`] to avoid double-boxing.
+    pub(crate) fn set_provider_box(&mut self, provider: Box<dyn LineProvider>) {
+        self.provider = provider;
+    }
+
     // ── save / load ───────────────────────────────────────────────────────────
 
     /// Captures the current session state into a serialisable `RunnerSnapshot`.

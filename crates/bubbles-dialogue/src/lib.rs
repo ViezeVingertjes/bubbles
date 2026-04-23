@@ -61,7 +61,7 @@ pub use library::FunctionLibrary;
 pub use runtime::RunnerSnapshot;
 pub use runtime::{
     DialogueEvent, DialogueOption, HashMapProvider, LineProvider, PassthroughProvider, Runner,
-    line_id_from_tags,
+    RunnerBuilder, line_id_from_tags,
 };
 #[cfg(feature = "rand")]
 pub use saliency::RandomAvailable;
