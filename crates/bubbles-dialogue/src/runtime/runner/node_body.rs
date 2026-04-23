@@ -65,12 +65,20 @@ impl<S: VariableStorage> Runner<S> {
             .collect();
 
         let idx = self.saliency.select(&candidates).ok_or_else(|| {
-            DialogueError::Runtime(format!("node group '{title}' has no available candidate"))
+            DialogueError::ProtocolViolation(format!(
+                "node group '{title}' has no available candidate"
+            ))
         })?;
-        Ok(candidate_info
+        let len = candidate_info.len();
+        candidate_info
             .into_iter()
             .nth(idx)
-            .expect("saliency returned an in-bounds index")
-            .2)
+            .map(|(_, _, body)| body)
+            .ok_or_else(|| {
+                DialogueError::ProtocolViolation(format!(
+                    "saliency strategy returned index {idx} but node group '{title}' \
+                     only has {len} candidate(s)"
+                ))
+            })
     }
 }
