@@ -9,6 +9,11 @@ pub struct DisplayedLine {
     pub speaker: Option<String>,
     /// Fully interpolated line text (all `{expr}` fragments already resolved).
     pub text: String,
+    /// The `#line:id` tag value for this line, if one was present in the
+    /// source. Useful for VO lookup, localisation, and analytics.
+    pub line_id: Option<String>,
+    /// Any additional `#tag` values attached to this line in the source.
+    pub tags: Vec<String>,
 }
 
 /// An option ready to be drawn on screen.

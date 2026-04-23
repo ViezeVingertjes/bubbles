@@ -26,12 +26,23 @@ pub fn apply_event(
             transcript.push(TranscriptEntry::NodeComplete(name));
             false
         }
-        DialogueEvent::Line { speaker, text, .. } => {
+        DialogueEvent::Line {
+            speaker,
+            text,
+            tags,
+            line_id,
+            ..
+        } => {
             transcript.push(TranscriptEntry::Line {
                 speaker: speaker.clone(),
                 text: text.clone(),
             });
-            *current_line = Some(DisplayedLine { speaker, text });
+            *current_line = Some(DisplayedLine {
+                speaker,
+                text,
+                line_id,
+                tags,
+            });
             true
         }
         DialogueEvent::Options(opts) => {
