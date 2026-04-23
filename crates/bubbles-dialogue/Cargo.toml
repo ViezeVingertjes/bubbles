@@ -24,7 +24,7 @@ serde   = ["dep:serde", "indexmap/serde"]
 indexmap  = "2"
 logos     = "0.16"
 thiserror = "2"
-rand      = { version = "0.9", optional = true }
+rand      = { version = "0.10", optional = true }
 serde     = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]

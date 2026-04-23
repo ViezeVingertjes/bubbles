@@ -114,7 +114,7 @@ Identical in shape to the Rust version - just a different presentation layer.
 The `rand` feature uses `rand` which, on `wasm32-unknown-unknown`, delegates to `getrandom`. You'll need:
 
 ```toml
-getrandom = { version = "0.2", features = ["js"] }
+getrandom = { version = "0.4", features = ["js"] }
 ```
 
 If you're shipping a standalone wasm host (not browser), provide a custom `getrandom` source or replace the RNG-using builtins yourself.

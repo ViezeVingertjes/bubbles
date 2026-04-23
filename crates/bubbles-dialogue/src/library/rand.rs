@@ -8,7 +8,7 @@ use super::math::require_two_numbers;
 
 impl FunctionLibrary {
     pub(super) fn register_rand_builtins(&mut self) {
-        use rand::Rng as _;
+        use rand::RngExt as _;
         self.register("random", |_args| {
             Ok(Value::Number(rand::rng().random::<f64>()))
         });
