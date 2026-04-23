@@ -13,7 +13,7 @@ const BRANCH: &str =
 
 fn advance_until_done(state: &mut AppState, max_steps: usize) {
     for _ in 0..max_steps {
-        state.apply(Intent::Advance).unwrap();
+        state.apply(Intent::Advance);
         if state.is_done() {
             return;
         }
@@ -63,11 +63,11 @@ fn choosing_an_option_is_recorded_in_the_transcript() {
         if !state.options().is_empty() {
             break;
         }
-        state.apply(Intent::Advance).unwrap();
+        state.apply(Intent::Advance);
     }
     assert!(!state.options().is_empty(), "expected option prompt");
 
-    state.apply(Intent::SelectOption(1)).unwrap();
+    state.apply(Intent::SelectOption(1));
 
     let chosen = state
         .transcript()
@@ -84,7 +84,7 @@ fn choosing_an_option_is_recorded_in_the_transcript() {
 fn transcript_appears_in_rendered_buffer() {
     let mut state = AppState::from_source(THREE_LINES_AND_A_COMMAND, "A").unwrap();
     for _ in 0..3 {
-        state.apply(Intent::Advance).unwrap();
+        state.apply(Intent::Advance);
     }
 
     let backend = TestBackend::new(120, 24);
@@ -115,16 +115,16 @@ fn toggle_focus_and_scroll_up_shows_older_entries() {
     advance_until_done(&mut state, 16);
 
     assert_eq!(state.transcript_scroll(), 0);
-    state.apply(Intent::ToggleFocus).unwrap();
+    state.apply(Intent::ToggleFocus);
     assert!(state.transcript_focused());
 
-    state.apply(Intent::ScrollUp).unwrap();
-    state.apply(Intent::ScrollUp).unwrap();
+    state.apply(Intent::ScrollUp);
+    state.apply(Intent::ScrollUp);
     assert_eq!(state.transcript_scroll(), 2);
 
-    state.apply(Intent::ScrollDown).unwrap();
+    state.apply(Intent::ScrollDown);
     assert_eq!(state.transcript_scroll(), 1);
 
-    state.apply(Intent::ToggleFocus).unwrap();
+    state.apply(Intent::ToggleFocus);
     assert!(!state.transcript_focused());
 }

@@ -48,10 +48,7 @@ fn event_loop(state: &mut AppState, tui: &mut terminal::Tui) -> io::Result<()> {
             return Ok(());
         }
         if let Some(intent) = terminal::next_intent()? {
-            if let Err(e) = state.apply(intent) {
-                eprintln!("runtime error: {e}");
-                return Ok(());
-            }
+            state.apply(intent);
             if matches!(intent, Intent::Quit) {
                 return Ok(());
             }

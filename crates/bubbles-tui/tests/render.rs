@@ -17,7 +17,7 @@ fn buffer_text(terminal: &Terminal<TestBackend>) -> String {
 fn line_text_appears_in_rendered_buffer() {
     let mut state =
         AppState::from_source("title: A\n---\nAlice: Hello there.\n===\n", "A").unwrap();
-    state.apply(Intent::Advance).unwrap();
+    state.apply(Intent::Advance);
 
     let backend = TestBackend::new(80, 10);
     let mut terminal = Terminal::new(backend).unwrap();

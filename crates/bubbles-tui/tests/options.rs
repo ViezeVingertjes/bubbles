@@ -11,7 +11,7 @@ const GUARDED: &str = "title: A\n---\n<<declare $ok = false>>\nGo on.\n-> Enable
 
 fn advance_until_options(state: &mut AppState) {
     for _ in 0..16 {
-        state.apply(Intent::Advance).unwrap();
+        state.apply(Intent::Advance);
         if !state.options().is_empty() {
             return;
         }
@@ -37,17 +37,17 @@ fn focus_next_wraps_and_select_option_commits_by_index() {
     advance_until_options(&mut state);
 
     assert_eq!(state.focused_option(), Some(0));
-    state.apply(Intent::FocusNext).unwrap();
+    state.apply(Intent::FocusNext);
     assert_eq!(state.focused_option(), Some(1));
-    state.apply(Intent::FocusNext).unwrap();
+    state.apply(Intent::FocusNext);
     assert_eq!(state.focused_option(), Some(0), "focus should wrap");
-    state.apply(Intent::FocusPrev).unwrap();
+    state.apply(Intent::FocusPrev);
     assert_eq!(state.focused_option(), Some(1));
 
-    state.apply(Intent::SelectOption(1)).unwrap();
+    state.apply(Intent::SelectOption(1));
     assert!(state.options().is_empty());
 
-    state.apply(Intent::Advance).unwrap();
+    state.apply(Intent::Advance);
     let line = state.current_line().expect("expected line after selection");
     assert_eq!(line.speaker.as_deref(), Some("Alice"));
     assert_eq!(line.text, "right.");
@@ -58,8 +58,8 @@ fn advance_commits_the_focused_option_when_options_are_showing() {
     let mut state = AppState::from_source(BRANCH, "A").unwrap();
     advance_until_options(&mut state);
 
-    state.apply(Intent::FocusNext).unwrap(); // move focus to index 1
-    state.apply(Intent::Advance).unwrap();
+    state.apply(Intent::FocusNext); // move focus to index 1
+    state.apply(Intent::Advance);
 
     let line = state.current_line().expect("expected a line after advance");
     assert_eq!(line.text, "right.");
@@ -75,14 +75,14 @@ fn selecting_an_unavailable_option_is_a_noop() {
     assert!(!state.options()[1].available);
 
     // Try to pick the locked one: the call returns Ok and options stay up.
-    state.apply(Intent::SelectOption(1)).unwrap();
+    state.apply(Intent::SelectOption(1));
     assert_eq!(
         state.options().len(),
         2,
         "unavailable option should not advance the runner"
     );
 
-    state.apply(Intent::SelectOption(0)).unwrap();
+    state.apply(Intent::SelectOption(0));
     assert!(state.options().is_empty());
 }
 

@@ -44,8 +44,8 @@ fn runtime_errors_during_advance_populate_the_overlay() {
     assert!(state.error_overlay().is_none(), "script compiles cleanly");
 
     // Advance past the line - the next advance hits the bogus <<jump>>.
-    state.apply(Intent::Advance).unwrap(); // surfaces "Hi."
-    state.apply(Intent::Advance).unwrap(); // triggers the jump
+    state.apply(Intent::Advance); // surfaces "Hi."
+    state.apply(Intent::Advance); // triggers the jump
 
     let overlay = state
         .error_overlay()
@@ -67,12 +67,12 @@ fn reload_clears_a_transient_error_when_source_becomes_valid() {
 
     // Swap in a good source and reload.
     state.replace_source(GOOD.to_owned());
-    state.apply(Intent::Reload).unwrap();
+    state.apply(Intent::Reload);
 
     assert!(state.error_overlay().is_none());
     assert!(!state.is_errored());
 
-    state.apply(Intent::Advance).unwrap();
+    state.apply(Intent::Advance);
     assert_eq!(state.current_line().unwrap().text, "Hi.");
 }
 
@@ -81,7 +81,7 @@ fn dismiss_hides_the_overlay_without_reloading() {
     let mut state = AppState::load(BAD_IF, "A");
     assert!(state.error_overlay().is_some());
 
-    state.apply(Intent::DismissError).unwrap();
+    state.apply(Intent::DismissError);
     assert!(state.error_overlay().is_none());
     // Still errored until we successfully reload - there is no session to
     // drive.

@@ -21,7 +21,7 @@
 //! use bubbles_tui::{AppState, Intent};
 //!
 //! let mut state = AppState::from_source("title: A\n---\nHi.\n===\n", "A").unwrap();
-//! state.apply(Intent::Advance).unwrap();
+//! state.apply(Intent::Advance);
 //! assert_eq!(state.current_line().unwrap().text, "Hi.");
 //! ```
 

@@ -10,13 +10,13 @@ const TWO_NODES: &str = "title: A\n---\nA-line.\n<<jump B>>\n===\ntitle: B\n---\
 #[test]
 fn step_back_from_second_line_returns_to_first() {
     let mut state = AppState::from_source(THREE_LINES, "A").unwrap();
-    state.apply(Intent::Advance).unwrap();
+    state.apply(Intent::Advance);
     assert_eq!(state.current_line().unwrap().text, "One.");
-    state.apply(Intent::Advance).unwrap();
+    state.apply(Intent::Advance);
     assert_eq!(state.current_line().unwrap().text, "Two.");
 
     assert!(state.can_step_back());
-    state.apply(Intent::StepBack).unwrap();
+    state.apply(Intent::StepBack);
 
     assert_eq!(state.current_line().unwrap().text, "One.");
 }
@@ -24,11 +24,11 @@ fn step_back_from_second_line_returns_to_first() {
 #[test]
 fn step_back_at_the_first_line_is_a_noop() {
     let mut state = AppState::from_source(THREE_LINES, "A").unwrap();
-    state.apply(Intent::Advance).unwrap();
+    state.apply(Intent::Advance);
     assert_eq!(state.current_line().unwrap().text, "One.");
     assert!(!state.can_step_back());
 
-    state.apply(Intent::StepBack).unwrap();
+    state.apply(Intent::StepBack);
     assert_eq!(state.current_line().unwrap().text, "One.");
 }
 
@@ -39,16 +39,16 @@ fn step_back_undoes_an_option_choice_and_shows_the_prompt_again() {
         if !state.options().is_empty() {
             break;
         }
-        state.apply(Intent::Advance).unwrap();
+        state.apply(Intent::Advance);
     }
     assert!(!state.options().is_empty(), "expected option prompt");
-    state.apply(Intent::SelectOption(1)).unwrap();
-    state.apply(Intent::Advance).unwrap();
+    state.apply(Intent::SelectOption(1));
+    state.apply(Intent::Advance);
     assert_eq!(state.current_line().unwrap().text, "right.");
 
     // Two steps back: undo "advance to right line" + undo "pick option 1".
-    state.apply(Intent::StepBack).unwrap();
-    state.apply(Intent::StepBack).unwrap();
+    state.apply(Intent::StepBack);
+    state.apply(Intent::StepBack);
 
     assert_eq!(state.options().len(), 2, "options should reappear");
 }
@@ -56,25 +56,25 @@ fn step_back_undoes_an_option_choice_and_shows_the_prompt_again() {
 #[test]
 fn step_back_crosses_node_boundaries() {
     let mut state = AppState::from_source(TWO_NODES, "A").unwrap();
-    state.apply(Intent::Advance).unwrap();
+    state.apply(Intent::Advance);
     assert_eq!(state.current_line().unwrap().text, "A-line.");
-    state.apply(Intent::Advance).unwrap();
+    state.apply(Intent::Advance);
     assert_eq!(state.current_line().unwrap().text, "B-line.");
 
-    state.apply(Intent::StepBack).unwrap();
+    state.apply(Intent::StepBack);
     assert_eq!(state.current_line().unwrap().text, "A-line.");
 }
 
 #[test]
 fn step_back_also_rewinds_the_transcript() {
     let mut state = AppState::from_source(THREE_LINES, "A").unwrap();
-    state.apply(Intent::Advance).unwrap(); // One.
-    state.apply(Intent::Advance).unwrap(); // Two.
-    state.apply(Intent::Advance).unwrap(); // Three.
+    state.apply(Intent::Advance); // One.
+    state.apply(Intent::Advance); // Two.
+    state.apply(Intent::Advance); // Three.
     let before_len = state.transcript().len();
     assert!(before_len > 0);
 
-    state.apply(Intent::StepBack).unwrap();
+    state.apply(Intent::StepBack);
     assert!(state.transcript().len() < before_len);
     assert_eq!(state.current_line().unwrap().text, "Two.");
 }

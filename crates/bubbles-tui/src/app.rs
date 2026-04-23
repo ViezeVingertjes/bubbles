@@ -5,8 +5,6 @@
 //! result.  The real binary does the same thing, just with key events
 //! translated into intents upstream.
 
-use bubbles::DialogueError;
-
 use crate::display::{DisplayedLine, DisplayedOption, FocusPanel, FocusShift};
 use crate::history::HistoryStep;
 use crate::ingest::apply_event;
@@ -14,6 +12,7 @@ use crate::intent::Intent;
 use crate::overlay::ErrorOverlay;
 use crate::session::Session;
 use crate::transcript::{Transcript, TranscriptEntry};
+use bubbles::DialogueError;
 
 /// The app's complete state: owns the runtime session and whatever is
 /// currently on screen.
@@ -160,10 +159,12 @@ impl AppState {
 
     /// Applies a user intent to the state.
     ///
-    /// # Errors
-    /// Runtime errors propagated up from the runner are caught and converted
-    /// into an [`ErrorOverlay`]; the method currently never returns `Err`.
-    pub fn apply(&mut self, intent: Intent) -> Result<(), DialogueError> {
+    /// Runtime errors from the dialogue runner are caught internally and
+    /// converted into an [`ErrorOverlay`]; they are never propagated to the
+    /// caller.  Inspect [`AppState::is_errored`] or
+    /// [`AppState::error_overlay`] after this call if you need to react to
+    /// runner failures.
+    pub fn apply(&mut self, intent: Intent) {
         match intent {
             Intent::Advance => {
                 if self.options.is_empty() {
@@ -186,7 +187,6 @@ impl AppState {
             Intent::DismissError => self.error_overlay = None,
             Intent::StepBack => self.step_back(),
         }
-        Ok(())
     }
 
     fn run_advance(&mut self) {
