@@ -14,6 +14,11 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+env:
+  # Opt into the Node 24 runtime early so JavaScript actions that still
+  # bundle the Node 20 runner don't emit deprecation warnings on every run.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -50,7 +55,7 @@ jobs:
           EOF
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
@@ -63,4 +68,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
