@@ -4,26 +4,7 @@ mod common;
 
 use bubbles::{DialogueEvent, HashMapStorage, Runner, compile};
 
-fn line_texts(events: &[DialogueEvent]) -> Vec<String> {
-    events
-        .iter()
-        .filter_map(|e| {
-            if let DialogueEvent::Line { text, .. } = e {
-                Some(text.clone())
-            } else {
-                None
-            }
-        })
-        .collect()
-}
-
-fn drain(runner: &mut Runner<HashMapStorage>) -> Vec<DialogueEvent> {
-    let mut events = Vec::new();
-    while let Some(ev) = runner.next_event().unwrap() {
-        events.push(ev);
-    }
-    events
-}
+use common::{drain, line_texts};
 
 #[test]
 fn empty_node_end_to_end() {
@@ -111,17 +92,7 @@ End.
     let mut runner = Runner::new(prog, HashMapStorage::new());
     runner.start("A").unwrap();
     let events = drain(&mut runner);
-    let line_text: Vec<_> = events
-        .iter()
-        .filter_map(|e| {
-            if let DialogueEvent::Line { text, .. } = e {
-                Some(text.as_str())
-            } else {
-                None
-            }
-        })
-        .collect();
-    assert_eq!(line_text, ["End."]);
+    assert_eq!(line_texts(&events), ["End."]);
 }
 
 #[test]

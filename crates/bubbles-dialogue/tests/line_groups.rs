@@ -4,18 +4,7 @@ mod common;
 
 use bubbles::DialogueEvent;
 
-fn line_texts(events: &[DialogueEvent]) -> Vec<&str> {
-    events
-        .iter()
-        .filter_map(|e| {
-            if let DialogueEvent::Line { text, .. } = e {
-                Some(text.as_str())
-            } else {
-                None
-            }
-        })
-        .collect()
-}
+use common::line_texts;
 
 #[test]
 fn first_available_variant_selected() {

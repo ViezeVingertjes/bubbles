@@ -41,3 +41,20 @@ pub fn drain(runner: &mut Runner<HashMapStorage>) -> Vec<DialogueEvent> {
     }
     events
 }
+
+/// Extracts the text of every [`DialogueEvent::Line`] in order.
+///
+/// Returns borrowed slices into `events`; most test comparisons work with
+/// `&str` literals, making this more ergonomic than an owned-`String` variant.
+pub fn line_texts(events: &[DialogueEvent]) -> Vec<&str> {
+    events
+        .iter()
+        .filter_map(|e| {
+            if let DialogueEvent::Line { text, .. } = e {
+                Some(text.as_str())
+            } else {
+                None
+            }
+        })
+        .collect()
+}
