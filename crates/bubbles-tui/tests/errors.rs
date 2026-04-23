@@ -40,19 +40,15 @@ fn load_captures_parse_errors_with_file_and_line() {
 }
 
 #[test]
-fn runtime_errors_during_advance_populate_the_overlay() {
-    let mut state = AppState::load(BAD_JUMP, "A");
-    assert!(state.error_overlay().is_none(), "script compiles cleanly");
-
-    // Advance past the line - the next advance hits the bogus <<jump>>.
-    state.apply(Intent::Advance); // surfaces "Hi."
-    state.apply(Intent::Advance); // triggers the jump
-
+fn bad_jump_target_populates_overlay_at_load_time() {
+    // compile_validated catches unknown jump targets before playback starts,
+    // so the error appears immediately on load rather than mid-advance.
+    let state = AppState::load(BAD_JUMP, "A");
     let overlay = state
         .error_overlay()
-        .expect("runtime error should populate the overlay");
+        .expect("validation error should populate the overlay at load time");
     assert!(
-        overlay.title.to_lowercase().contains("runtime")
+        overlay.title.to_lowercase().contains("validation")
             || overlay.title.to_lowercase().contains("unknown"),
         "title was {:?}",
         overlay.title

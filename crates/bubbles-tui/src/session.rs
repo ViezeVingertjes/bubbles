@@ -5,7 +5,7 @@
 //! ignorant of pull-event details and makes it obvious where every
 //! `next_event` / `select_option` call happens.
 
-use bubbles::{DialogueError, DialogueEvent, HashMapStorage, Program, Runner, compile};
+use bubbles::{DialogueError, DialogueEvent, HashMapStorage, Runner, compile_validated};
 
 /// Wraps a compiled program and its runner.
 pub struct Session {
@@ -14,9 +14,12 @@ pub struct Session {
 }
 
 impl Session {
-    /// Compiles `source` and primes a runner on `start_node`.
+    /// Compiles and validates `source`, then primes a runner on `start_node`.
+    ///
+    /// Using `compile_validated` means typo'd `<<jump>>`/`<<detour>>` targets
+    /// are caught here instead of as a runtime error mid-playback.
     pub fn from_source(source: &str, start_node: &str) -> Result<Self, DialogueError> {
-        let program: Program = compile(source)?;
+        let program = compile_validated(source)?;
         let mut runner = Runner::new(program, HashMapStorage::new());
         runner.start(start_node)?;
         Ok(Self {
