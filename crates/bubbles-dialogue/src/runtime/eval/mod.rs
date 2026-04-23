@@ -40,7 +40,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::compiler::expr::parse_expr;
+    use crate::compiler::expr::parse_expr_at;
     use crate::value::HashMapStorage;
 
     fn no_fns(_: &str, _: Vec<Value>) -> Result<Value> {
@@ -52,7 +52,7 @@ mod tests {
 
     fn ev(src: &str) -> Value {
         let storage = HashMapStorage::new();
-        let expr = parse_expr(src).unwrap();
+        let expr = parse_expr_at(src, "<test>", 0).unwrap();
         eval(&expr, &storage, &no_fns).unwrap()
     }
 
@@ -110,7 +110,7 @@ mod tests {
     #[test]
     fn negate_non_number_errors() {
         let storage = HashMapStorage::new();
-        let expr = parse_expr(r#"-"hello""#).unwrap();
+        let expr = parse_expr_at(r#"-"hello""#, "<test>", 0).unwrap();
         let err = eval(&expr, &storage, &no_fns).unwrap_err();
         assert!(
             matches!(err, DialogueError::TypeMismatch { ref context, .. } if context.contains('-')),
@@ -121,7 +121,7 @@ mod tests {
     #[test]
     fn subtract_non_numbers_errors() {
         let storage = HashMapStorage::new();
-        let expr = parse_expr(r#""a" - 1"#).unwrap();
+        let expr = parse_expr_at(r#""a" - 1"#, "<test>", 0).unwrap();
         let err = eval(&expr, &storage, &no_fns).unwrap_err();
         assert!(
             matches!(err, DialogueError::TypeMismatch { ref context, .. } if context.contains('-')),
@@ -132,7 +132,7 @@ mod tests {
     #[test]
     fn compare_non_numbers_errors() {
         let storage = HashMapStorage::new();
-        let expr = parse_expr(r#""a" < 1"#).unwrap();
+        let expr = parse_expr_at(r#""a" < 1"#, "<test>", 0).unwrap();
         let err = eval(&expr, &storage, &no_fns).unwrap_err();
         assert!(
             matches!(err, DialogueError::TypeMismatch { ref context, .. } if context.contains('<')),
@@ -143,7 +143,7 @@ mod tests {
     #[test]
     fn modulo_by_zero_errors() {
         let storage = HashMapStorage::new();
-        let expr = parse_expr("5 % 0").unwrap();
+        let expr = parse_expr_at("5 % 0", "<test>", 0).unwrap();
         let err = eval(&expr, &storage, &no_fns).unwrap_err();
         assert!(err.to_string().contains("modulo"), "got {err}");
     }
@@ -151,7 +151,7 @@ mod tests {
     #[test]
     fn multiply_non_numbers_errors() {
         let storage = HashMapStorage::new();
-        let expr = parse_expr(r#""x" * 2"#).unwrap();
+        let expr = parse_expr_at(r#""x" * 2"#, "<test>", 0).unwrap();
         assert!(eval(&expr, &storage, &no_fns).is_err());
     }
 
@@ -174,7 +174,7 @@ mod tests {
     #[test]
     fn add_number_and_bool_is_type_error() {
         let storage = HashMapStorage::new();
-        let expr = parse_expr("1 + true").unwrap();
+        let expr = parse_expr_at("1 + true", "<test>", 0).unwrap();
         assert!(eval(&expr, &storage, &no_fns).is_err());
     }
 
@@ -193,7 +193,7 @@ mod tests {
     #[test]
     fn rem_requires_numbers() {
         let storage = HashMapStorage::new();
-        let expr = parse_expr(r#""x" % 2"#).unwrap();
+        let expr = parse_expr_at(r#""x" % 2"#, "<test>", 0).unwrap();
         assert!(eval(&expr, &storage, &no_fns).is_err());
     }
 }

@@ -1,6 +1,6 @@
 //! Property tests for the expression evaluator - arithmetic and boolean laws.
 
-use bubbles::compiler::expr::parse_expr;
+use bubbles::compiler::expr::parse_expr_at;
 use bubbles::runtime::eval as eval_fn;
 use bubbles::{DialogueError, HashMapStorage, Value, VariableStorage};
 use proptest::prelude::*;
@@ -15,13 +15,13 @@ fn no_fns(name: &str, _: Vec<Value>) -> Result<Value, DialogueError> {
 }
 
 fn eval(src: &str) -> Value {
-    let expr = parse_expr(src).unwrap();
+    let expr = parse_expr_at(src, "<test>", 0).unwrap();
     let storage = HashMapStorage::new();
     eval_fn(&expr, &storage, &no_fns).unwrap()
 }
 
 fn eval_with(src: &str, vars: &[(&str, Value)]) -> Value {
-    let expr = parse_expr(src).unwrap();
+    let expr = parse_expr_at(src, "<test>", 0).unwrap();
     let mut storage = HashMapStorage::new();
     for (k, v) in vars {
         storage.set(k, v.clone());

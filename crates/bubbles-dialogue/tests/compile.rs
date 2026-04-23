@@ -364,7 +364,7 @@ hello {1 +} world
     );
 }
 
-// ── tokenise_strict / unknown-character errors ────────────────────────────────
+// ── tokenise / unknown-character errors ──────────────────────────────────────
 
 #[test]
 fn unknown_char_in_if_expression_is_a_parse_error() {

@@ -2,22 +2,10 @@
 
 pub use crate::compiler::ast::{BinOp, Expr, UnOp};
 
-use crate::compiler::lexer::{Token, tokenise_strict};
+use crate::compiler::lexer::{Token, tokenise};
 use crate::error::{DialogueError, Result};
 
 // ── public entry point ────────────────────────────────────────────────────────
-
-/// Parses `source` as an expression, with no surrounding source context.
-///
-/// Errors surface with `file = "<expr>"` and `line = 0`.  Callers inside the
-/// compiler should prefer [`parse_expr_at`] so parse failures point at the
-/// real `.bub` line.
-///
-/// # Errors
-/// Returns [`DialogueError::Parse`] on a syntax error.
-pub fn parse_expr(source: &str) -> Result<Expr> {
-    parse_expr_at(source, "<expr>", 0)
-}
 
 /// Parses `source` as an expression, tagging any resulting parse error with
 /// `file` and `line` so the reported location matches the enclosing `.bub`
@@ -26,7 +14,7 @@ pub fn parse_expr(source: &str) -> Result<Expr> {
 /// # Errors
 /// Returns [`DialogueError::Parse`] on a syntax error.
 pub fn parse_expr_at(source: &str, file: &str, line: usize) -> Result<Expr> {
-    let tokens: Vec<Token> = tokenise_strict(source, file, line)?
+    let tokens: Vec<Token> = tokenise(source, file, line)?
         .into_iter()
         .map(|(t, _)| t)
         .collect();

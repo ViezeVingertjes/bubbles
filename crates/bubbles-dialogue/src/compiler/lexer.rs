@@ -128,20 +128,6 @@ pub enum Token {
 /// A spanned token pair.
 pub type Spanned = (Token, std::ops::Range<usize>);
 
-/// Lexes `input` into a [`Vec`] of spanned tokens, silently skipping errors.
-///
-/// Unknown characters are silently dropped. This is appropriate when the
-/// caller handles partial input (e.g. tag extraction). Use
-/// [`tokenise_strict`] inside the expression compiler so that bad
-/// characters produce clear parse errors.
-#[cfg(test)]
-pub(crate) fn tokenise(input: &str) -> Vec<Spanned> {
-    Token::lexer(input)
-        .spanned()
-        .filter_map(|(t, span)| t.ok().map(|t| (t, span)))
-        .collect()
-}
-
 /// Lexes `input` into a [`Vec`] of spanned tokens, returning an error on
 /// any character that does not match a known token.
 ///
@@ -150,7 +136,7 @@ pub(crate) fn tokenise(input: &str) -> Vec<Spanned> {
 /// Returns [`crate::error::DialogueError::Parse`] with `file` / `line` context
 /// when an unrecognised character is encountered, so the caller receives a
 /// precise pointer into the source rather than a confusing downstream failure.
-pub fn tokenise_strict(input: &str, file: &str, line: usize) -> crate::error::Result<Vec<Spanned>> {
+pub fn tokenise(input: &str, file: &str, line: usize) -> crate::error::Result<Vec<Spanned>> {
     let mut tokens = Vec::new();
     for (result, span) in Token::lexer(input).spanned() {
         if let Ok(tok) = result {
@@ -175,7 +161,11 @@ mod tests {
     use super::*;
 
     fn tokens(src: &str) -> Vec<Token> {
-        tokenise(src).into_iter().map(|(t, _)| t).collect()
+        tokenise(src, "<test>", 0)
+            .expect("tokenise failed in test")
+            .into_iter()
+            .map(|(t, _)| t)
+            .collect()
     }
 
     #[test]

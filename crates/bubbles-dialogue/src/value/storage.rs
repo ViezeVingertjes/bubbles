@@ -150,14 +150,14 @@ mod tests {
 
     #[test]
     fn eval_prefers_get_ref_over_get() {
-        use crate::compiler::expr::parse_expr;
+        use crate::compiler::expr::parse_expr_at;
         use crate::runtime::eval;
 
         let mut storage = CountingStorage::default();
         storage.set("$name", Value::Text("Hero".into()));
         storage.set("$hp", Value::Number(100.0));
 
-        let expr = parse_expr("$name + \" has \" + string($hp)").unwrap();
+        let expr = parse_expr_at("$name + \" has \" + string($hp)", "<test>", 0).unwrap();
         let _ = eval(&expr, &storage, &|name, args| {
             crate::library::FunctionLibrary::new().call(name, args)
         });
