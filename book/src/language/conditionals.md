@@ -1,6 +1,6 @@
 # Conditionals
 
-Branch on anything that evaluates to a `Bool`.
+Dialogue that plays the same every time isn't really dialogue. `<<if>>` lets you branch based on what's actually true right now - gold, quest state, reputation, whatever your game tracks.
 
 ```text
 <<if $gold >= 10>>
@@ -12,14 +12,9 @@ Branch on anything that evaluates to a `Bool`.
 <<endif>>
 ```
 
-Four directives, all required to balance:
+Four directives: `<<if condition>>` opens, `<<elseif condition>>` adds branches, `<<else>>` is the fallback, `<<endif>>` closes. All must balance.
 
-- `<<if condition>>` - opens a block.
-- `<<elseif condition>>` - any number of these.
-- `<<else>>` - at most one, always last.
-- `<<endif>>` - closes the block.
-
-Each branch is a full body - lines, options, commands, nested `<<if>>`s, all fair game.
+Each branch is a full body - lines, options, commands, nested `<<if>>`s, whatever the scene needs.
 
 ## Nested conditionals
 

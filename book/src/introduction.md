@@ -46,11 +46,22 @@ Barkeep: Evening, stranger.
 
 That is a complete, working dialogue. A speaker line, three options (one guarded by a condition), a variable assignment, and a jump. We will build this exact scene step by step in [The Harbour](./examples/harbour.md).
 
+## Jump right in
+
+Want to skip the setup and play first?
+
+```sh
+cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
+```
+
+That's the harbour example: a playable pirate dockside scene that covers most of the language in one go. Come back here when you're done.
+
 ## How to read this guide
 
 The chapters are meant to be read in order, but each one stands on its own:
 
 - **[Getting Started](./getting-started/first-dialogue.md)** - go from zero to a running dialogue in ten lines of Rust.
+- **[Tutorial](./tutorial/overview.md)** - build a real NPC scene from scratch, one feature at a time.
 - **[The .bub Language](./language/nodes-and-lines.md)** - every piece of the script format, one concept per page.
 - **[Integrating with Your Engine](./integration/runner.md)** - wiring Bubbles into your rendering, input, and save systems.
 - **[Advanced](./advanced/save-load.md)** - snapshots, multi-file projects, WebAssembly.

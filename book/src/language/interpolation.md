@@ -1,12 +1,12 @@
 # Interpolation
 
-Drop any expression into a line (or option, or command argument) with `{…}`:
+Hard-coding values into lines breaks the moment anything changes. `{...}` lets you drop any expression directly into text - variables, math, function calls, all of it substituted before the event reaches your game.
 
 ```text
 Aria: You have {$gold} gold and {$potions} potions.
 ```
 
-The expression is evaluated when the line is produced, and the result is substituted into the text before the `DialogueEvent::Line` reaches you.
+The expression is evaluated when the line is produced. By the time `DialogueEvent::Line` arrives in your game code, the text is already resolved:
 
 ```rust,ignore
 DialogueEvent::Line { text, .. } => {

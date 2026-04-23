@@ -1,6 +1,8 @@
 # Node Groups and Saliency
 
-Line groups (from the last chapter) pick a line. Node groups pick a whole *node*. Write several nodes with the same title and different `when:` conditions, and let Bubbles choose the most appropriate one for the current game state.
+Line groups pick a line. Node groups pick a whole *node*. It's the same idea, one level up: write several nodes with the same title and different `when:` conditions, and Bubbles picks the right one for the current game state.
+
+This is the pattern for NPCs that feel different depending on who you've become. The baker who hates you after you stole from her. The guard who suddenly has respect for you after the quest. The tavern that transforms on festival night.
 
 ```text
 title: GreetPlayer
@@ -68,11 +70,13 @@ runner.set_saliency(bubbles::BestLeastRecentlyViewed::new());
 
 ## When to use node groups
 
-- **Different greetings based on reputation, quest state, or time of day.**
-- **Randomised vignettes** in a hub scene - mini-scenes the player might trigger a handful of times.
-- **Gated content** where the same entry point has wildly different beats depending on who the player has become.
+If the variation is a **single line**, reach for a line group. If it's a whole scene with its own options and branches, use a node group.
 
-If the variation is a single line, use a line group. If it's a whole scene with its own options and branches, use a node group.
+Great for:
+
+- Different greetings based on reputation, quest state, or time of day
+- Randomised vignettes in a hub scene - a handful of mini-scenes the player might trigger
+- Gated content where the same entry point has wildly different beats depending on who the player has become
 
 ## A hub scene
 

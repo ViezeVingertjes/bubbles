@@ -83,9 +83,9 @@ Three nodes, six lines, one scene. Bubbles will walk them in order because each 
 
 ## Blank lines, comments, and whitespace
 
-Blank lines inside a node are ignored. Leading indentation is meaningful only for options (which we'll cover next) - otherwise it's cosmetic.
+Blank lines inside a node are ignored. Leading indentation only matters for options (coming up next) - everywhere else it's cosmetic.
 
-Bubbles does not have line-level comments. For scene notes, use **tags** on the node header (covered in [Tags and Metadata](./tags.md)) or a convention like `Narrator: [TODO: rewrite this]`.
+Bubbles doesn't have line-level comments. For scene notes, add tags to the node header (see [Tags and Metadata](./tags.md)) or use a narrator convention like `Narrator: [TODO: rewrite this]`.
 
 ## A preview of what's next
 

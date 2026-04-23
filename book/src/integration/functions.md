@@ -1,6 +1,6 @@
 # Custom Functions
 
-Bubbles has a small built-in function library (see [Expressions](../language/expressions.md)), but the real power is that *you* can add your own. Any closure that takes `Vec<Value>` and returns `Result<Value>` is fair game.
+Bubbles ships a small built-in library (see [Expressions](../language/expressions.md)), but the real power is adding your own. Any closure that takes `Vec<Value>` and returns `Result<Value>` plugs straight in - faction checks, inventory queries, distance calculations, cooldown lookups, anything your game tracks.
 
 ## Registering a function
 

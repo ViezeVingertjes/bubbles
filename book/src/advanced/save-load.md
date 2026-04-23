@@ -1,11 +1,11 @@
 # Save and Load
 
-Saving a conversation in progress is two things:
+Saving a mid-conversation means saving two things:
 
 1. The runner's internal state - current node, visit counts, which `<<once>>` blocks have fired.
 2. Your variable storage - all the `$variables` the dialogue has touched.
 
-Bubbles makes (1) serialisable through `RunnerSnapshot`. You handle (2) however you already handle game saves.
+Bubbles makes (1) serialisable through `RunnerSnapshot`. You handle (2) however your game already handles saves.
 
 Enable the `serde` feature to get snapshot serialisation:
 

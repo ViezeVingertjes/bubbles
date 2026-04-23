@@ -1,6 +1,6 @@
 # Multi-file Projects
 
-Small games fit in one `.bub` file. Real games don't. Bubbles handles this with [`compile_many`](https://docs.rs/bubbles-dialogue/latest/bubbles/fn.compile_many.html).
+Small games fit in one `.bub` file. Real ones don't. Bubbles handles this with [`compile_many`](https://docs.rs/bubbles-dialogue/latest/bubbles/fn.compile_many.html), which stitches multiple files into a single `Program` where every node can see every other node.
 
 ## The API
 

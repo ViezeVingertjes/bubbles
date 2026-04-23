@@ -1,8 +1,8 @@
 # Saliency Strategies
 
-A **saliency strategy** is the rule Bubbles uses to pick one item from a list of eligible options. It's what runs every time a [line group](../language/line-groups.md) or [node group](../language/node-groups.md) needs to choose.
+A **saliency strategy** is the rule Bubbles uses to pick one item from a list of eligible options. It fires whenever a [line group](../language/line-groups.md) or [node group](../language/node-groups.md) needs to choose.
 
-Bubbles ships three strategies. You can also write your own.
+Bubbles ships three. You can also write your own.
 
 ## `FirstAvailable` (default)
 

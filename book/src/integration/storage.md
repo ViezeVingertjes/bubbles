@@ -1,6 +1,6 @@
 # Variable Storage
 
-Every `<<declare>>` and `<<set>>` in a `.bub` script reads and writes through the runner's storage. The default - `HashMapStorage` - is fine for a lot of games. When it isn't, you implement the [`VariableStorage`](https://docs.rs/bubbles-dialogue/latest/bubbles/trait.VariableStorage.html) trait.
+Every `<<declare>>` and `<<set>>` in a `.bub` script goes through the runner's storage. The default - `HashMapStorage` - works fine for most games. When you need variables to live inside your own save system, ECS component, or database row, implement the [`VariableStorage`](https://docs.rs/bubbles-dialogue/latest/bubbles/trait.VariableStorage.html) trait.
 
 ## The trait
 

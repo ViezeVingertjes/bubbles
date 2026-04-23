@@ -65,7 +65,7 @@ DialogueEvent::Options(opts) => {
 }
 ```
 
-It's up to you whether to render unavailable options at all, grey them out, or hide them entirely. Bubbles gives you the information and steps aside.
+Whether you render locked options greyed-out, hidden, or with a tooltip is your call. Bubbles gives you the `available` field and steps aside.
 
 > **Tip:** If the player tries to `select_option` on an unavailable entry, Bubbles returns a runtime error. Filter or disable those choices in your UI.
 

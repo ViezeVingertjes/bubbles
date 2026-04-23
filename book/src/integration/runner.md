@@ -1,6 +1,6 @@
 # The Runner Lifecycle
 
-The [`Runner`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.Runner.html) is where compiled dialogue meets your game. Create one, start it on a node, pump events until it's done. That's the whole shape.
+The [`Runner`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.Runner.html) is where compiled dialogue meets your game. Create one, point it at a node, pull events until it's done. That's the whole shape.
 
 ## Create
 
@@ -41,7 +41,7 @@ runner.start("Intro")?;
 
 [`start`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.Runner.html#method.start) validates the node exists and primes the runner. Calling it a second time resets execution - handy for "replay this scene" and for restoring from a snapshot.
 
-An error at this stage is almost always a typo in the node name. Bubbles tells you which one.
+An error here is almost always a typo in the node name. Bubbles tells you which one.
 
 ## Pump events
 
@@ -63,7 +63,7 @@ while let Some(event) = runner.next_event()? {
 - Returns the next event, or
 - Returns an error (runtime type mismatch, bad option index, etc).
 
-If you hit an `Options` event and call `next_event` again without a `select_option`, you get back `DialogueError::ProtocolViolation("...")`. Bubbles refuses to guess.
+If you call `next_event` again after an `Options` event without first calling `select_option`, you get `DialogueError::ProtocolViolation`. Bubbles won't guess which option you wanted.
 
 ## Completion
 

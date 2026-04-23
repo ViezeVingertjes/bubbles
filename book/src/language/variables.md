@@ -1,18 +1,20 @@
 # Variables
 
-Bubbles variables start with a `$` and have one of three types:
+Your game has state: gold, health, quest flags, faction reputation, whether the player has already met a character. Variables let your `.bub` scripts read and write that state.
 
-| Type | Example |
+Bubbles variables start with `$` and have one of three types:
+
+| Type | Example values |
 |---|---|
 | `Number` | `42`, `3.14`, `-1` |
 | `Text` | `"Aria"`, `"Welcome!"` |
 | `Bool` | `true`, `false` |
 
-Once a variable has a type, that type is fixed. Trying to store a string into a number variable is a compile- or run-time error, not a silent coercion.
+Once a variable has a type, it's fixed. Storing a string into a number variable is an error, not a silent coercion.
 
-## Declaring a variable
+## Declaring
 
-Use `<<declare>>` at the top of a node (usually the starting one). It initialises the variable **once** - subsequent runs leave the existing value alone.
+Use `<<declare>>` (usually at the top of a starting node) to register a variable with its type and default value. It initialises the variable once - subsequent runs leave the existing value alone.
 
 ```text
 title: Tavern
@@ -25,14 +27,13 @@ Barkeep: Evening, {$name}.
 ===
 ```
 
-First visit: `$gold = 50`, `$name = "stranger"`, `$greeted = false`.
-Second visit (after a save/load or a jump back): values preserved - `<<declare>>` is a no-op if the variable already exists.
+First visit: `$gold = 50`, `$name = "stranger"`, `$greeted = false`. Second visit (after save/load or a jump back): values preserved. `<<declare>>` is a no-op if the variable already exists.
 
-> **Tip:** Prefer `<<declare>>` over `<<set>>` for initial values. It makes save/load "just work": your existing saves carry over, new variables get their defaults.
+> **Tip:** Use `<<declare>>` for anything that should persist - gold, quest flags, reputation counters. It makes save/load work automatically: old saves carry their values, new variables get their defaults.
 
 ## Assigning
 
-Use `<<set>>` anywhere in a node body:
+`<<set>>` changes a value anywhere in a node body:
 
 ```text
 <<set $gold = 100>>
@@ -41,16 +42,16 @@ Use `<<set>>` anywhere in a node body:
 <<set $name = "Aria">>
 ```
 
-The right-hand side is a full [expression](./expressions.md), so arithmetic and function calls are fair game:
+The right side is a full [expression](./expressions.md), so arithmetic, comparisons, and function calls all work:
 
 ```text
 <<set $hp = clamp($hp - $dmg, 0, 100)>>
 <<set $greeting = "Hello, " + $name>>
 ```
 
-## Reading variables
+## Reading
 
-You reference a variable by writing its name. In an expression:
+Reference a variable by name in any expression:
 
 ```text
 <<if $gold >= 10>>
@@ -58,7 +59,7 @@ You reference a variable by writing its name. In an expression:
 <<endif>>
 ```
 
-In line text, via `{…}` [interpolation](./interpolation.md):
+In line text, use `{...}` [interpolation](./interpolation.md):
 
 ```text
 Merchant: That'll be 10 gold. You have {$gold}.
@@ -66,30 +67,29 @@ Merchant: That'll be 10 gold. You have {$gold}.
 
 ## Type safety
 
-Variables are typed. Expressions that mix types the wrong way fail at compile time when possible, otherwise at runtime with a clear error.
+Types are fixed. Mixing them the wrong way fails at compile time when possible, at runtime with a clear error otherwise.
 
 ```text
 <<declare $gold = 50>>
 <<set $gold = "broke">>   # runtime error: type mismatch
 ```
 
-Concatenating strings with `+` is fine if both sides are strings:
+Concatenating strings with `+` is fine when both sides are strings:
 
 ```text
-<<set $name = "Aria">>
 <<set $greeting = "Hello, " + $name>>   # OK
 <<set $bad = "gold: " + $gold>>         # error: mix of string and number
 ```
 
-To format numbers into strings, use the built-in `string()` function (see [Expressions](./expressions.md)):
+To format a number into a string, use the built-in `string()`:
 
 ```text
-<<set $bad = "gold: " + string($gold)>>   # OK
+<<set $label = "gold: " + string($gold)>>   # OK
 ```
 
 ## Introspection
 
-Bubbles exposes declared variables through the `Program` API so you can pre-populate UI, build save migrations, or validate configs:
+The `Program` API exposes every declared variable. Useful for pre-populating UIs, building save migrations, or validating external data:
 
 ```rust,ignore
 for decl in program.variable_declarations() {
@@ -97,25 +97,23 @@ for decl in program.variable_declarations() {
 }
 ```
 
-That lists every `<<declare>>`'d variable across the whole program, with its source text.
+That lists every `<<declare>>` across the whole program, with its source text.
 
-## Smart variables: when to `declare` vs `set`
+## `declare` vs `set` - quick rule
 
-Rules of thumb:
-
-- **Declare** values that are *part of the game state*. Gold, HP, faction reputation, quest flags.
-- **Set** values when they should *always* reset - for instance, a one-shot counter inside a single scene.
+- **`<<declare>>`** for game state that should persist: gold, HP, faction rep, quest flags.
+- **`<<set>>`** when the value should always reset - a per-scene counter, a temp calculation result.
 
 ```text
 <<declare $reputation = 0>>   # persists across saves
-<<set $intro_seen = false>>   # reset each time this node starts
+<<set $tmp_roll = dice(20, 1) + $luck>>   # scratch value, fine to clobber
 ```
 
-> **Note:** Variable storage is pluggable. If `HashMapStorage` doesn't cut it - maybe you want to back it with your game's own save system - implement the [`VariableStorage`](../integration/storage.md) trait. Bubbles never touches your state except through that interface.
+> **Note:** Storage is pluggable. If `HashMapStorage` isn't enough - maybe you want variables to live in your game's save system - implement the [`VariableStorage`](../integration/storage.md) trait. Bubbles never touches your state except through those two methods.
 
 ---
 
-> **Try it:** [`examples/snippets/variables.bub`](../../examples/snippets/variables.bub): a grog shop where the price rises with each purchase, showing `<<declare>>`, `<<set>>`, arithmetic, and interpolation.
+> **Try it:** [`examples/snippets/variables.bub`](../../examples/snippets/variables.bub): a grog shop where the price rises with each purchase, showing `<<declare>>`, `<<set>>`, arithmetic, and interpolation in action.
 > ```sh
 > cargo run -p bubbles-tui -- examples/snippets/variables.bub
 > ```

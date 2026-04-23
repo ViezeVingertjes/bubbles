@@ -1,10 +1,12 @@
 # Handling Events
 
-Every event variant, what it looks like, and how to hook it into a real game.
+The runner hands you one event at a time. You handle it, call `next_event` again, and repeat. That's the whole integration surface.
+
+Here's what each event looks like in practice, and what you'll typically do with it.
 
 ## `NodeStarted(String)`
 
-Fired when execution enters a node - either from `start()`, a `<<jump>>`, or a `<<detour>>`.
+Fires when execution enters a node - from `start()`, a `<<jump>>`, or a `<<detour>>`.
 
 ```rust,ignore
 DialogueEvent::NodeStarted(name) => {
@@ -13,38 +15,45 @@ DialogueEvent::NodeStarted(name) => {
 }
 ```
 
-Use it for scene transitions, analytics, or logging.
+Good for scene transitions, analytics, or music changes tied to entering a location. Pair it with `NodeComplete` for symmetric fade in / fade out.
 
 ## `Line { speaker, text, line_id, tags }`
 
-A line ready to display. Everything's pre-substituted: interpolation is done, tags are parsed, the localised template (if any) has been resolved.
+A line ready to display. Interpolation is done, tags are parsed, and the localised template (if any) has already been resolved.
 
 ```rust,ignore
 DialogueEvent::Line { speaker, text, line_id, tags } => {
-    let voice = line_id.as_deref().and_then(|id| audio.clip(id));
-    ui.show_line(speaker.as_deref(), &text, voice, &tags);
+    // Voice-over lookup via stable id
+    if let Some(id) = &line_id {
+        audio.play_voice_over(id);
+    }
+
+    // Per-line metadata via tags
+    for tag in &tags {
+        if let Some(mood) = tag.strip_prefix("portrait ") {
+            ui.set_portrait_expression(mood);
+        }
+    }
+
+    ui.show_line(speaker.as_deref(), &text);
     wait_for_advance();
 }
 ```
 
 Fields:
 
-- `speaker: Option<String>` - the `Speaker:` prefix if present.
+- `speaker: Option<String>` - the `Speaker:` prefix, or `None` for narrator lines.
 - `text: String` - already interpolated, already localised.
-- `line_id: Option<String>` - the `#line:…` stable id if present, empty otherwise.
-- `tags: Vec<String>` - every other `#tag` on the line.
+- `line_id: Option<String>` - the `#line:...` stable id if present. Use this for VO lookups and localisation.
+- `tags: Vec<String>` - every other `#tag` on the line. Portrait cues, audio buses, subtitle styles - all yours to interpret.
 
 ## `Options(Vec<DialogueOption>)`
 
-A branching choice. Execution halts until you call `select_option(i)`.
+A branching choice. Execution halts until you call `select_option(i)`. Don't call `next_event` again before that - you'll get the same `Options` event back.
 
 ```rust,ignore
 DialogueEvent::Options(opts) => {
-    let available: Vec<_> = opts.iter().enumerate()
-        .filter(|(_, o)| o.available)
-        .collect();
-
-    let choice = ui.ask("Pick one:", &available);
+    let choice = ui.show_choice_menu(&opts);
     runner.select_option(choice)?;
 }
 ```
@@ -52,20 +61,21 @@ DialogueEvent::Options(opts) => {
 Each option has:
 
 - `text: String` - pre-interpolated option label.
-- `available: bool` - `<<if>>` guard result. `false` = locked.
-- `line_id: Option<String>` - stable id if `#line:…` is present.
+- `available: bool` - result of the `<<if>>` guard. `false` means locked.
+- `line_id: Option<String>` - stable id if `#line:...` is on the option.
 - `tags: Vec<String>` - any other tags.
 
-> **Note:** If the player tries to pick an unavailable option, Bubbles returns an error. Make your UI reject the input before calling `select_option`.
+> **Note:** Trying to select an unavailable option returns an error. Filter or disable those choices in your UI before the player can pick them.
 
 ## `Command { name, args, tags }`
 
-Everything between `<<…>>` that isn't a reserved keyword. Your code decides what it means.
+Everything between `<<...>>` that isn't a reserved keyword. Your code decides what it means.
 
 ```rust,ignore
 DialogueEvent::Command { name, args, tags } => {
     match name.as_str() {
-        "play_sound" => audio.one_shot(&args[0]),
+        "play_sfx" => audio.one_shot(&args[0]),
+        "give_item" => inventory.add(&args[0]),
         "shake" => camera.shake(args[0].parse().unwrap_or(0.1)),
         "save_checkpoint" => save::checkpoint(),
         other => log::warn!("unknown dialogue command: {other}"),
@@ -73,11 +83,11 @@ DialogueEvent::Command { name, args, tags } => {
 }
 ```
 
-Arguments are already interpolated - no `{$pitch}` surviving into your handler.
+Arguments are already interpolated - no raw `{$pitch}` surviving into your handler. Commands don't pause the dialogue, so keep pulling events after handling one.
 
 ## `NodeComplete(String)`
 
-Fired when a node finishes (either runs off the end, or `<<return>>`s from a detour). Pair with `NodeStarted` for symmetric transitions.
+Fires when a node finishes - either runs off the end, or `<<return>>`s from a detour. Pair with `NodeStarted` for symmetric transitions.
 
 ```rust,ignore
 DialogueEvent::NodeComplete(name) => {
@@ -88,7 +98,7 @@ DialogueEvent::NodeComplete(name) => {
 
 ## `DialogueComplete`
 
-The whole conversation is over. `next_event` will return `None` after this.
+The whole conversation is over. `next_event` returns `None` after this.
 
 ```rust,ignore
 DialogueEvent::DialogueComplete => {
@@ -99,30 +109,33 @@ DialogueEvent::DialogueComplete => {
 
 ## `#[non_exhaustive]`
 
-The enum is marked `#[non_exhaustive]`. Always include a `_ =>` arm so new variants (added in a minor version) won't break your match:
+`DialogueEvent` is marked `#[non_exhaustive]`. Always include a `_ =>` arm so new variants added in a minor version don't break your match:
 
 ```rust,ignore
 match event {
-    DialogueEvent::Line { .. } => { /* … */ }
-    DialogueEvent::Options(_) => { /* … */ }
-    DialogueEvent::Command { .. } => { /* … */ }
+    DialogueEvent::Line { .. } => { /* ... */ }
+    DialogueEvent::Options(_) => { /* ... */ }
+    DialogueEvent::Command { .. } => { /* ... */ }
     DialogueEvent::NodeStarted(_) | DialogueEvent::NodeComplete(_) => {}
     DialogueEvent::DialogueComplete => break,
-    _ => {} // future-proof
+    _ => {} // forward-compatible
 }
 ```
 
-## A realistic match
+## A realistic game loop
 
-Putting it all together - a minimal but honest game-loop handler:
+Putting it together - a minimal but honest frame-tick handler:
 
 ```rust,ignore
 fn tick_dialogue(runner: &mut Runner<HashMapStorage>, engine: &mut Engine) -> bool {
     loop {
         match runner.next_event() {
             Ok(Some(DialogueEvent::Line { speaker, text, line_id, tags })) => {
-                engine.ui.show_line(speaker.as_deref(), &text, line_id.as_deref(), &tags);
-                return true; // wait for input next frame
+                if let Some(id) = &line_id {
+                    engine.audio.play_voice_over(id);
+                }
+                engine.ui.show_line(speaker.as_deref(), &text, &tags);
+                return true; // wait for player input next frame
             }
             Ok(Some(DialogueEvent::Options(opts))) => {
                 engine.ui.show_options(&opts);
@@ -130,7 +143,7 @@ fn tick_dialogue(runner: &mut Runner<HashMapStorage>, engine: &mut Engine) -> bo
             }
             Ok(Some(DialogueEvent::Command { name, args, .. })) => {
                 engine.dispatch_command(&name, &args);
-                // don't yield; keep pulling events
+                // no yield - commands don't need player input
             }
             Ok(Some(DialogueEvent::NodeStarted(n))) => {
                 engine.analytics.node_started(&n);
@@ -149,7 +162,7 @@ fn tick_dialogue(runner: &mut Runner<HashMapStorage>, engine: &mut Engine) -> bo
 }
 ```
 
-Returns `true` when the dialogue is waiting on the player, `false` when it's done. Call it from your frame tick; only yield back to the caller when you've got something the player needs to respond to.
+Returns `true` when the dialogue is waiting on the player, `false` when it's done. Call from your frame tick; only yield back when there's something for the player to respond to.
 
 ---
 

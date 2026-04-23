@@ -1,47 +1,60 @@
 # The Harbour
 
-`examples/harbour/` is the main example. Two files, `harbour.bub` and `services.bub`, compile together into a single programme and cover most of Bubbles' language features in one playable scene.
-
-Run it:
+`examples/harbour/` is the main example: a two-file pirate dockside scene that puts most of Bubbles' language features together in one playable run. Go through it first, then come back and read this walkthrough.
 
 ```sh
 cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
 ```
 
-You arrive at Barnacle Bay and need a travel permit from the cantankerous harbormaster Stumpy McGee. A shady map seller lurks nearby. The map seller lives in `services.bub`, called via `<<detour>>` and returning cleanly to the harbour scene.
+You arrive at Barnacle Bay and need a travel permit from the cantankerous harbormaster Stumpy McGee. A shady map seller lurks nearby. Try to get out with a permit - or without one.
 
-## Two files, one programme
+---
 
-```text
-examples/harbour/
-  harbour.bub   - main dockside scene (Start, Options, Depart, End nodes)
-  services.bub  - shared beats (MapSeller)
-```
+## Follow along
 
-Real games split scripts by concern: one file per scene, one per character, one for shared utility nodes. `compile_many` stitches them into a single `Program` where every node is visible from every other file. See [Multi-file Projects](../advanced/multi-file.md) for the Rust API.
+The source for this walkthrough is exactly what you just played. Open `examples/harbour/harbour.bub` in your editor and follow each section below. When a section suggests a change, make it, press `r` to reload, and see what happens.
 
-## Walking through the features
+---
 
-### Node tags
+## Node tags
+
+The starting node declares what kind of place this is:
 
 ```text
-title: Harbour
+title: Start
 tags: scene docks outdoor
 ---
 ```
 
-Node tags travel with the `NodeStarted` event. Games use them to pre-load music, trigger ambient systems, or build scene lists for editors and save migrations.
+Node tags travel with the `NodeStarted` event. Your game uses them to pre-load music, trigger ambient systems, or build an editor scene list. Try adding `foggy` to the tags list, reload, and watch it appear in the TUI transcript when the node starts.
 
-### Variables
+In Rust:
+
+```rust,ignore
+DialogueEvent::NodeStarted(name) => {
+    if let Some(tags) = program.node_tags(&name) {
+        if tags.iter().any(|t| t == "outdoor") {
+            audio.load_ambience("wind_harbour");
+        }
+    }
+}
+```
+
+---
+
+## Variables
 
 ```text
 <<declare $gold = 25>>
-<<declare $has_permit = false>>
 ```
 
-`<<declare>>` registers the variables a script owns. They are typed from their default values and persist across save/load cycles when you use `RunnerSnapshot`. See [Save and Load](../advanced/save-load.md).
+`<<declare>>` registers the variable once. The second time through (after a bribe that fails or a detour to the map seller), `$gold` keeps whatever value it has - `<<declare>>` won't overwrite it.
 
-### Line groups for ambient flavour
+**Try it:** Change `25` to `9`. Press `r`. Now you can't afford the ten-doubloon permit, but you're in range for the bribe option. Then change it to `0` - all the money-gated options lock at once.
+
+---
+
+## Line groups for ambient flavour
 
 ```text
 => Dockworker: Oi, watch yer step!
@@ -50,9 +63,13 @@ Node tags travel with the `NodeStarted` event. Games use them to pre-load music,
 => Dockworker: Cap'n said the tide turns at noon. Better hurry.
 ```
 
-Each time this node runs, `BestLeastRecentlyViewed` picks whichever bark the player has seen least recently. Cycle through all four and the oldest one replays. Four lines of script, an NPC that does not repeat itself immediately.
+Four lines starting with `=>`. The runner (using `BestLeastRecentlyViewed`) picks whichever one you've heard least recently. Cycle through the Options node a few times - you'll hear all four before any repeats.
 
-### `<<once>>` for one-shot content
+**Try it:** Add a fifth bark. Reload. Now you've got five lines cycling, still with no repeat until all five have played.
+
+---
+
+## `<<once>>` for first-visit content
 
 ```text
 <<once>>
@@ -63,48 +80,91 @@ Each time this node runs, `BestLeastRecentlyViewed` picks whichever bark the pla
 <<endonce>>
 ```
 
-The first time you reach the options prompt you get the full rumour. Every return after a failed bribe or the map seller detour gets the short acknowledgement. No flag variable needed. The once-seen state is stored automatically and survives `RunnerSnapshot` round-trips.
+First time you reach the Options node: Stumpy tells the full sea creature story. After that: the short acknowledgement. No flag variable, no manual tracking.
 
-### Guarded options
+**Try it:** Press `R` (rerun) after completing the scene once. Stumpy's now in "second visit" mode - you'll hear the short version immediately. Press `r` instead to reload and confirm the long version comes back.
+
+---
+
+## Guarded options
 
 ```text
 -> Pay ten doubloons for a permit. <<if $gold >= 10>>
     <<set $gold = $gold - 10>>
     <<stamp_permit>>
-    Stumpy: You have {$gold} doubloons left.
+    Stumpy: There she is. Official seal and everything.
+    Stumpy: You have {$gold} doubloons left. Don't spend 'em all at once.
     <<jump Depart>>
--> Bribe him with everything. <<if $gold >= 1 && $gold < 10>>
+-> Bribe him with everything you've got. <<if $gold >= 1 && $gold < 10>>
+    Stumpy: Hah! {$gold} doubloons? That barely covers the ink.
+    <<jump Options>>
 ```
 
-Options with an `<<if>>` guard are shown but marked unavailable when the condition is false. The TUI renders them with a `o` marker. Your game sees the same thing via the `available` field on `DialogueOption`.
+Guards on options: `<<if $gold >= 10>>` after the option text. When the condition is false, the option shows with `available: false`. The TUI renders locked options with a distinct style. In your game:
 
-### Commands
+```rust,ignore
+DialogueEvent::Options(opts) => {
+    for opt in &opts {
+        if opt.available {
+            ui.show_option(&opt.text);
+        } else {
+            ui.show_locked_option(&opt.text);
+        }
+    }
+}
+```
+
+`{$gold}` in the option and line text is interpolation - evaluated and substituted before the event reaches you.
+
+---
+
+## Commands
 
 ```text
 <<stamp_permit>>
-<<give_map "sunken_galleon">>
 ```
 
-Commands emit `DialogueEvent::Command { name, args, tags }`. In a real game you dispatch on `name` to play audio, trigger animations, or update inventory. The TUI shows commands in the transcript pane.
+`<<stamp_permit>>` emits a `DialogueEvent::Command { name: "stamp_permit", args: [], .. }`. Your game dispatches on the name:
 
-### Cross-file detour
+```rust,ignore
+DialogueEvent::Command { name, args, .. } => match name.as_str() {
+    "stamp_permit" => {
+        player.inventory.add("travel_permit");
+        audio.play_sfx("stamp");
+    }
+    _ => {}
+},
+```
+
+The map seller in `services.bub` fires `<<give_map "sunken_galleon">>` or `<<give_map "rough_sketch">>` depending on your gold. Same pattern - `args[0]` is the map id.
+
+---
+
+## Cross-file detour
 
 ```text
 -> Ask about the map seller.
     <<detour MapSeller>>
     Stumpy: That old rogue sell ye anything useful?
+    <<jump Options>>
 ```
 
-`MapSeller` is defined in `services.bub`. `<<detour>>` jumps there and `<<return>>` brings execution back to the next line in the calling node - right back to Stumpy's follow-up. `services.bub` could be called from any number of other scenes without duplicating the script.
+`MapSeller` is defined in `services.bub`, not `harbour.bub`. `<<detour>>` jumps there, `services.bub`'s node runs and calls `<<return>>`, and execution comes back to the very next line - Stumpy's follow-up question.
+
+This is how you split dialogue by concern: one file per scene or character, cross-file detours for shared beats, no duplication.
+
+**Try it:** Open `services.bub`. Notice the `<<return>>` at the bottom of `MapSeller`. Try removing it - the detour will still return, because a node that runs off the end without `<<return>>` returns implicitly. `<<return>>` is just the explicit form.
+
+---
 
 ## Your turn
 
-The harbour is under 80 lines of `.bub` script across two files. Some things to try:
+The harbour is under 80 lines across two files. A few ideas to extend it:
 
-- Add a dockmaster's assistant in a third file with her own greeting using a node group.
-- Register a `has_item` custom function so an option unlocks when the player holds a rope.
-- Change the declared gold to `0` and reload with `r` to see all guards lock at once.
-- Add a fourth ambient bark and watch BLRV cycle through all five before repeating.
+- Add a dockmaster's assistant in a `dockmaster.bub` with her own `when:` node group that changes based on `$gold`.
+- Register a `has_item("rope")` custom function and add an option that only appears if the player carries a rope.
+- Add a `<<play_voice "stumpy_greet_01">>` command to the opening node and handle it in the `Command` event.
+- Add a fourth dock worker bark and watch BLRV cycle through all five before repeating.
 
 ---
 

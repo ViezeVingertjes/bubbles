@@ -1,8 +1,8 @@
 # WebAssembly
 
-Bubbles runs on `wasm32-unknown-unknown` out of the box. No async, no `std::thread`, no OS-specific dependencies - just the parts of `std` that WebAssembly supports.
+Bubbles runs on `wasm32-unknown-unknown` out of the box. No async, no `std::thread`, no OS-specific deps - just the parts of `std` that WebAssembly supports.
 
-Every release is built against wasm in CI (see [`scripts/check-wasm.sh`](https://github.com/ViezeVingertjes/bubbles/blob/main/scripts/check-wasm.sh)). If it ever breaks, it breaks the build.
+Every release is built against wasm in CI. If it ever breaks, it breaks the build.
 
 ## Minimum setup
 

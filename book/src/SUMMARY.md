@@ -6,6 +6,14 @@
 
 - [Your First Dialogue](./getting-started/first-dialogue.md)
 - [The Event Loop](./getting-started/event-loop.md)
+- [Using the TUI](./getting-started/tui.md)
+
+# Tutorial
+
+- [What We're Building](./tutorial/overview.md)
+- [Your First NPC](./tutorial/first-npc.md)
+- [Add State](./tutorial/add-state.md)
+- [Add Polish](./tutorial/add-polish.md)
 
 # The .bub Language
 

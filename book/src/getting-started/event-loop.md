@@ -118,4 +118,4 @@ Good. Now let's zoom into the `.bub` format itself.
 
 ---
 
-> **Next:** [Nodes and Lines](../language/nodes-and-lines.md)
+> **Next:** [Using the TUI](./tui.md)

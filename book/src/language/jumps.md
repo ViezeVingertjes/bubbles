@@ -1,6 +1,6 @@
 # Jumps and Detours
 
-Nodes don't flow into each other automatically. You decide where execution goes next - either by **jumping** (a one-way move) or **detouring** (a call that returns).
+Nodes don't flow into each other automatically. After the last line in a node, dialogue ends - unless you tell it where to go next. `<<jump>>` moves one-way to a new node. `<<detour>>` calls one and comes back.
 
 ## `<<jump>>`: one-way
 

@@ -1,6 +1,6 @@
 # Line Groups
 
-Games talk a lot. And when they repeat themselves, players notice. Line groups are Bubbles' answer: write several variants of a line, and let the runner pick which one plays.
+Players notice when an NPC says the same thing every time. Line groups let you write a handful of variants and let Bubbles pick which one plays - so your dock worker doesn't shout "Oi, watch yer step!" on every single visit.
 
 ```text
 => Barkeep: The fire crackles nearby.
@@ -8,27 +8,27 @@ Games talk a lot. And when they repeat themselves, players notice. Line groups a
 => Barkeep: The smell of roasting meat fills the air.
 ```
 
-Three lines, all starting with `=>`. When the runner reaches this block, it asks the active **saliency strategy** to pick one. That one line emits a `DialogueEvent::Line`. The other two stay quiet.
+Three lines, all starting with `=>`. When the runner reaches this block, the active **saliency strategy** picks one. That one line emits a `DialogueEvent::Line`. The others stay silent.
 
-## Saliency at a glance
-
-A [saliency strategy](../integration/saliency.md) is "the rule for picking." Bubbles ships three:
-
-| Strategy | Behaviour |
-|---|---|
-| `FirstAvailable` | Always the first eligible line (default; deterministic) |
-| `RandomAvailable` | Uniformly random (needs the `rand` feature) |
-| `BestLeastRecentlyViewed` | Prefers the one you've heard least recently |
-
-The last one - **BLRV** - is usually what you want for ambient barks. It guarantees variety: the player never hears the same line twice in a row, and every variant eventually comes up.
-
-Pick a strategy once on the runner:
+With `BestLeastRecentlyViewed` (BLRV), the player hears a different line each visit, cycling through all three before any repeats. Set it once on the runner:
 
 ```rust,ignore
 use bubbles::saliency::BestLeastRecentlyViewed;
 
 runner.set_saliency(BestLeastRecentlyViewed::new());
 ```
+
+Your game receives a normal `DialogueEvent::Line` - it doesn't know there were three variants. It just gets the chosen one.
+
+## Saliency strategies
+
+| Strategy | Behaviour |
+|---|---|
+| `FirstAvailable` | Always the first eligible line (default; deterministic) |
+| `RandomAvailable` | Uniformly random (needs the `rand` feature) |
+| `BestLeastRecentlyViewed` | Prefers the one seen least recently |
+
+`FirstAvailable` is the default. It's great for node groups where you've sorted variants by priority (see [Node Groups and Saliency](./node-groups.md)). For ambient barks, BLRV is almost always the right pick.
 
 ## Conditions on variants
 

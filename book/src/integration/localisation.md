@@ -1,15 +1,15 @@
 # Localisation
 
-Bubbles handles localisation with one trait - [`LineProvider`](https://docs.rs/bubbles-dialogue/latest/bubbles/trait.LineProvider.html) - and one convention: tag your lines with `#line:<id>`.
+Bubbles localises through one trait - [`LineProvider`](https://docs.rs/bubbles-dialogue/latest/bubbles/trait.LineProvider.html) - and one convention: tag your lines with `#line:<id>`.
 
 ## The flow
 
-1. You author in a source language (let's say English).
-2. Every line that needs translating gets a `#line:some_id` tag.
-3. At runtime, you install a `LineProvider` that maps ids to translated templates.
-4. When Bubbles processes a tagged line, it asks the provider first. If the provider returns a string, that string is used - and its own `{…}` expressions are evaluated against the current variables.
+1. Author in your source language (English, whatever).
+2. Tag every line that needs translating with `#line:some_id`.
+3. At runtime, install a `LineProvider` that maps those ids to translated templates.
+4. When Bubbles processes a tagged line, it asks the provider first. If the provider returns a string, that's the text used - and its `{...}` expressions are evaluated against the current variables.
 
-This is the "translate then format" pattern, and it means translators can reorder interpolations however their language demands.
+This is "translate then format": translators can reorder interpolations however their language demands, and the expressions still evaluate with the right values.
 
 ## Tagging your source
 
