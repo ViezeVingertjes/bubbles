@@ -3,7 +3,7 @@
 //! [`crate::runtime::eval`] module.
 
 use crate::compiler::ast::{Expr, TextSegment};
-use crate::compiler::expr::parse_expr;
+use crate::compiler::expr::parse_expr_at;
 use crate::error::{DialogueError, Result};
 use crate::runtime::eval::eval;
 use crate::value::{Value, VariableStorage};
@@ -90,7 +90,7 @@ impl<S: VariableStorage> Runner<S> {
                 message: format!("unclosed `{{` in translated template: `{template}`"),
             })?;
             let expr_src = &after[..close];
-            let expr = parse_expr(expr_src)?;
+            let expr = parse_expr_at(expr_src, "<translation>", 0)?;
             let value = self.eval_expr(&expr)?;
             out.push_str(&value.to_string());
             remaining = &after[close + 1..];

@@ -318,3 +318,50 @@ fn error_line_number_for_missing_body_delimiter_reports_source_line() {
     let err = compile(src).unwrap_err().to_string();
     assert!(err.contains(":4:"), "expected line 4 in error, got: {err}");
 }
+
+#[test]
+fn set_with_bad_expression_reports_correct_line_and_specific_detail() {
+    // The malformed expression lives on line 3. The error must report that
+    // line (not the bogus `<expr>:0` fallback) *and* include the specific
+    // parser detail (e.g. "unexpected end of expression") rather than a
+    // generic "invalid expression in …" wrapper.
+    let src = "\
+title: A
+---
+<<set $x = 1 +>>
+===
+";
+    let Err(err) = compile(src) else {
+        panic!("expected parse error");
+    };
+    let rendered = err.to_string();
+    assert!(
+        rendered.contains(":3:"),
+        "expected line 3 in error, got: {rendered}"
+    );
+    assert!(
+        !rendered.contains("<expr>"),
+        "error should not leak the `<expr>` placeholder file, got: {rendered}"
+    );
+    assert!(
+        rendered.contains("unexpected end of expression"),
+        "error should carry the specific parser detail, got: {rendered}"
+    );
+}
+
+#[test]
+fn bad_interpolation_reports_source_line_not_expr_placeholder() {
+    // The broken `{1 +}` is on line 3; the error must point there.
+    let src = "\
+title: A
+---
+hello {1 +} world
+===
+";
+    let err = compile(src).unwrap_err().to_string();
+    assert!(err.contains(":3:"), "expected line 3 in error, got: {err}");
+    assert!(
+        !err.contains("<expr>"),
+        "error should report the real file, got: {err}"
+    );
+}

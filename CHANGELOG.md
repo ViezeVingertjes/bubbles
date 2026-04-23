@@ -44,6 +44,17 @@ All notable changes are documented here (keep-a-changelog format).
   closures registered by `Runner::new` resolved first, so the observable
   behaviour is unchanged).
 
+### Fixed
+
+- Expression parse errors now report the enclosing `.bub` file and line.
+  Previously any failure raised from `src/compiler/expr.rs` surfaced as
+  `<expr>:0` and its message was masked by a generic wrapper
+  (`invalid expression in <<set>>: \`…\``).  The parser now threads
+  `(file, line)` through and surfaces the specific reason (e.g.
+  `unexpected end of expression`) alongside the real location.  New
+  public helper `bubbles::compiler::expr::parse_expr_at` exposes the
+  located entry point for tooling.
+
 ### Internal
 
 - Removed `src/runtime/interpolate.rs`, a dead module that only held a duplicate

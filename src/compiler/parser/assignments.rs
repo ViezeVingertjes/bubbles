@@ -9,17 +9,29 @@ use crate::error::{DialogueError, Result};
 use super::command::split_first_word;
 
 /// Parses an expression and wraps it in a shared pointer for the AST.
+///
+/// Parse failures surface with the enclosing statement's file/line so error
+/// messages point at the real `.bub` location rather than the `<expr>`
+/// placeholder.  The `context` hint (e.g. `"<<set>>"`, `"<<if>>"`) is
+/// prefixed onto the message so the reader knows which clause failed.
 pub(super) fn parse_expr_arc(
     src: &str,
     context: &str,
     line: usize,
     file: &str,
 ) -> Result<Arc<Expr>> {
-    crate::compiler::expr::parse_expr(src)
-        .map_err(|_| DialogueError::Parse {
-            file: file.to_owned(),
-            line,
-            message: format!("invalid expression in {context}: `{src}`"),
+    crate::compiler::expr::parse_expr_at(src, file, line)
+        .map_err(|e| match e {
+            DialogueError::Parse {
+                file: f,
+                line: l,
+                message,
+            } => DialogueError::Parse {
+                file: f,
+                line: l,
+                message: format!("in {context} `{src}`: {message}"),
+            },
+            other => other,
         })
         .map(Arc::new)
 }

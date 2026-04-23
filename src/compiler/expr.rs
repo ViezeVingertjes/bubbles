@@ -7,21 +7,37 @@ use crate::error::{DialogueError, Result};
 
 // ── public entry point ────────────────────────────────────────────────────────
 
-/// Parses `source` as an expression.
+/// Parses `source` as an expression, with no surrounding source context.
+///
+/// Errors surface with `file = "<expr>"` and `line = 0`.  Callers inside the
+/// compiler should prefer [`parse_expr_at`] so parse failures point at the
+/// real `.bub` line.
 ///
 /// # Errors
 /// Returns [`DialogueError::Parse`] on a syntax error.
 pub fn parse_expr(source: &str) -> Result<Expr> {
+    parse_expr_at(source, "<expr>", 0)
+}
+
+/// Parses `source` as an expression, tagging any resulting parse error with
+/// `file` and `line` so the reported location matches the enclosing `.bub`
+/// statement.
+///
+/// # Errors
+/// Returns [`DialogueError::Parse`] on a syntax error.
+pub fn parse_expr_at(source: &str, file: &str, line: usize) -> Result<Expr> {
     let tokens: Vec<Token> = tokenise(source).into_iter().map(|(t, _)| t).collect();
     let mut p = ExprParser {
         tokens: &tokens,
         pos: 0,
+        file,
+        line,
     };
     let expr = p.parse_or()?;
     if p.pos < p.tokens.len() {
         return Err(DialogueError::Parse {
-            file: "<expr>".into(),
-            line: 0,
+            file: file.to_owned(),
+            line,
             message: format!("unexpected token after expression: {:?}", p.tokens[p.pos]),
         });
     }
@@ -33,6 +49,8 @@ pub fn parse_expr(source: &str) -> Result<Expr> {
 struct ExprParser<'a> {
     tokens: &'a [Token],
     pos: usize,
+    file: &'a str,
+    line: usize,
 }
 
 impl ExprParser<'_> {
@@ -46,10 +64,10 @@ impl ExprParser<'_> {
         t
     }
 
-    fn err(msg: &str) -> DialogueError {
+    fn err(&self, msg: &str) -> DialogueError {
         DialogueError::Parse {
-            file: "<expr>".into(),
-            line: 0,
+            file: self.file.to_owned(),
+            line: self.line,
             message: msg.into(),
         }
     }
@@ -205,11 +223,11 @@ impl ExprParser<'_> {
                         }
                     }
                     if self.advance() != Some(&Token::RParen) {
-                        return Err(Self::err("expected `)` after function arguments"));
+                        return Err(self.err("expected `)` after function arguments"));
                     }
                     Ok(Expr::Call { name, args })
                 } else {
-                    Err(Self::err(&format!(
+                    Err(self.err(&format!(
                         "unknown identifier `{name}`; variables need a `$` prefix"
                     )))
                 }
@@ -217,12 +235,12 @@ impl ExprParser<'_> {
             Some(Token::LParen) => {
                 let expr = self.parse_or()?;
                 if self.advance() != Some(&Token::RParen) {
-                    return Err(Self::err("expected closing `)`"));
+                    return Err(self.err("expected closing `)`"));
                 }
                 Ok(expr)
             }
-            Some(t) => Err(Self::err(&format!("unexpected token `{t:?}`"))),
-            None => Err(Self::err("unexpected end of expression")),
+            Some(t) => Err(self.err(&format!("unexpected token `{t:?}`"))),
+            None => Err(self.err("unexpected end of expression")),
         }
     }
 }
