@@ -21,14 +21,14 @@ if ! cargo fmt --check 2>&1; then
   fail "rustfmt found unformatted code. Run \`cargo fmt\` and re-stage your changes."
 fi
 
-echo -e "${BOLD}pre-commit:${RESET} running clippy (all features)..."
-if ! cargo clippy --all-features --all-targets -- -D warnings 2>&1; then
+echo -e "${BOLD}pre-commit:${RESET} running clippy (workspace, all features)..."
+if ! cargo clippy --workspace --all-features --all-targets -- -D warnings 2>&1; then
   echo ""
   fail "clippy reported errors. Fix them and re-stage your changes."
 fi
 
-echo -e "${BOLD}pre-commit:${RESET} running clippy (no default features)..."
-if ! cargo clippy --no-default-features --all-targets -- -D warnings 2>&1; then
+echo -e "${BOLD}pre-commit:${RESET} running clippy (bubbles-dialogue, no default features)..."
+if ! cargo clippy -p bubbles-dialogue --no-default-features --all-targets -- -D warnings 2>&1; then
   echo ""
   fail "clippy (no default features) reported errors. Fix them and re-stage your changes."
 fi
