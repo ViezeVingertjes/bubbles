@@ -2,7 +2,7 @@
 
 pub use crate::compiler::ast::{BinOp, Expr, UnOp};
 
-use crate::compiler::lexer::{Token, tokenise};
+use crate::compiler::lexer::{Token, tokenise_strict};
 use crate::error::{DialogueError, Result};
 
 // ── public entry point ────────────────────────────────────────────────────────
@@ -26,7 +26,10 @@ pub fn parse_expr(source: &str) -> Result<Expr> {
 /// # Errors
 /// Returns [`DialogueError::Parse`] on a syntax error.
 pub fn parse_expr_at(source: &str, file: &str, line: usize) -> Result<Expr> {
-    let tokens: Vec<Token> = tokenise(source).into_iter().map(|(t, _)| t).collect();
+    let tokens: Vec<Token> = tokenise_strict(source, file, line)?
+        .into_iter()
+        .map(|(t, _)| t)
+        .collect();
     let mut p = ExprParser {
         tokens: &tokens,
         pos: 0,

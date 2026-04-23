@@ -366,6 +366,32 @@ hello {1 +} world
     );
 }
 
+// ── tokenise_strict / unknown-character errors ────────────────────────────────
+
+#[test]
+fn unknown_char_in_if_expression_is_a_parse_error() {
+    // `@` is not a valid token; it must produce a Parse error rather than
+    // being silently dropped and causing a confusing downstream failure.
+    let src = "title: A\n---\n<<if @$x>>\nHello.\n<<endif>>\n===\n";
+    let err = compile(src).unwrap_err();
+    let rendered = err.to_string();
+    assert!(
+        rendered.contains('@') || rendered.contains("unexpected character"),
+        "expected error mentioning unknown char, got: {rendered}"
+    );
+}
+
+#[test]
+fn unknown_char_in_set_expression_is_a_parse_error() {
+    let src = "title: A\n---\n<<set $x = 1 ^ 2>>\n===\n";
+    let err = compile(src).unwrap_err();
+    let rendered = err.to_string();
+    assert!(
+        rendered.contains('^') || rendered.contains("unexpected character"),
+        "expected error mentioning unknown char, got: {rendered}"
+    );
+}
+
 // ── compile_validated / compile_many_validated ────────────────────────────────
 
 #[test]

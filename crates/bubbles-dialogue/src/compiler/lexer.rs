@@ -130,13 +130,44 @@ pub type Spanned = (Token, std::ops::Range<usize>);
 
 /// Lexes `input` into a [`Vec`] of spanned tokens, silently skipping errors.
 ///
-/// Errors from unknown tokens are silently dropped; callers only see valid tokens.
+/// Unknown characters are silently dropped. This is appropriate when the
+/// caller handles partial input (e.g. tag extraction). Use
+/// [`tokenise_strict`] inside the expression compiler so that bad
+/// characters produce clear parse errors.
 #[must_use]
 pub fn tokenise(input: &str) -> Vec<Spanned> {
     Token::lexer(input)
         .spanned()
         .filter_map(|(t, span)| t.ok().map(|t| (t, span)))
         .collect()
+}
+
+/// Lexes `input` into a [`Vec`] of spanned tokens, returning an error on
+/// any character that does not match a known token.
+///
+/// # Errors
+///
+/// Returns [`crate::error::DialogueError::Parse`] with `file` / `line` context
+/// when an unrecognised character is encountered, so the caller receives a
+/// precise pointer into the source rather than a confusing downstream failure.
+pub fn tokenise_strict(input: &str, file: &str, line: usize) -> crate::error::Result<Vec<Spanned>> {
+    let mut tokens = Vec::new();
+    for (result, span) in Token::lexer(input).spanned() {
+        if let Ok(tok) = result {
+            tokens.push((tok, span));
+        } else {
+            let ch = input[span].chars().next().unwrap_or('?');
+            return Err(crate::error::DialogueError::Parse {
+                file: file.to_owned(),
+                line,
+                message: format!(
+                    "unexpected character `{ch}` in expression; \
+                     did you mean `$` for a variable?"
+                ),
+            });
+        }
+    }
+    Ok(tokens)
 }
 
 #[cfg(test)]
