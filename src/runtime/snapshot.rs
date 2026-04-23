@@ -52,7 +52,7 @@ pub struct RunnerSnapshot {
     pub current_node: Option<String>,
 
     /// How many times each node has been visited.
-    pub visits: HashMap<String, usize>,
+    pub visits: HashMap<String, u32>,
 
     /// IDs of `<<once>>` blocks (and once-line-variants) that have already
     /// fired and must not fire again.
