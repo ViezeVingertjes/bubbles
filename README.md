@@ -59,7 +59,7 @@ Add to `Cargo.toml`:
 
 ```toml
 [dependencies]
-bubbles-dialogue = "0.4"
+bubbles-dialogue = "0.5"
 ```
 
 ```rust
@@ -278,7 +278,7 @@ project with no runtime dependency, that is what Bubbles is for.
 Requires the `serde` feature (or `full`):
 
 ```toml
-bubbles-dialogue = { version = "0.4", features = ["serde"] }
+bubbles-dialogue = { version = "0.5", features = ["serde"] }
 ```
 
 Serialise **both** the snapshot and variable storage - neither is complete

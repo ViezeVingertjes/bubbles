@@ -4,17 +4,7 @@ All notable changes are documented here (keep-a-changelog format).
 
 ## [Unreleased]
 
-### Fixed
-
-- `bubbles-tui` public rustdocs no longer link to the private
-  `POLL_INTERVAL` constant, satisfying `RUSTDOCFLAGS="-D warnings"` in CI.
-
-### Changed
-
-- Pre-commit hook now runs the same `cargo doc` invocation as CI;
-  `CONTRIBUTING.md` documents the full hook behavior accurately.
-- The TUI runner chapter in the book no longer includes the ASCII
-  terminal mockup.
+## [0.5.0] - 2026-04-23
 
 ### Added
 
@@ -25,6 +15,10 @@ All notable changes are documented here (keep-a-changelog format).
   command emissions, and runtime errors.  Includes a scrollable
   transcript pane, an error overlay with file/line excerpts, and
   Backspace/`b`-driven step-back across the session history.
+- Book: four-page Tutorial section building a complete NPC scene
+  (Mira the potion seller) from scratch, one feature per page.
+- Book: dedicated "Using the TUI" page in Getting Started so readers
+  have a playground before the language reference.
 
 ### Changed
 
@@ -32,6 +26,24 @@ All notable changes are documented here (keep-a-changelog format).
   `crates/bubbles-dialogue/` and keeps the same crate name, features,
   and semantics.  Scripts and CI now use workspace-aware `cargo`
   invocations (`--workspace`, `-p bubbles-dialogue`).
+- `bubbles-tui` version aligned to `bubbles-dialogue` (both 0.5.0).
+- Pre-commit hook now runs the same `cargo doc` invocation as CI;
+  `CONTRIBUTING.md` documents the full hook behavior accurately.
+- Book: Harbour walkthrough rewritten as a follow-along with inline
+  "Try it" edits at every feature section.
+- Book: Snippets page rewritten as a proper cookbook with problem
+  statements, key code callouts, and "Remix ideas" per recipe.
+  Commands section expanded with voice-over, portrait, and audio
+  dispatch patterns.
+- Book: tone pass across all pages - game-problem-first openers,
+  contractions throughout, no spec-style hedging.
+- Book: `commands.md` and `tags.md` expanded with voice-over lookup
+  (`line_id`), per-line portrait/audio tag dispatch patterns.
+
+### Fixed
+
+- `bubbles-tui` public rustdocs no longer link to the private
+  `POLL_INTERVAL` constant, satisfying `RUSTDOCFLAGS="-D warnings"` in CI.
 
 ### Removed
 
