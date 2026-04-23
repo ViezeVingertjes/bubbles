@@ -40,10 +40,13 @@ pub(super) fn extract_cmd<'a>(t: &'a str, line: usize, file: &str) -> Result<&'a
     Ok(inner.trim())
 }
 
-pub(super) fn first_word(s: &str) -> &str {
-    s.split_whitespace().next().unwrap_or("")
-}
-
+/// Splits the first ASCII-whitespace-delimited word off `s` and returns
+/// `(word, rest)` with the remainder left-trimmed.
+///
+/// Used pervasively for picking the keyword off a `<<cmd …>>` body (e.g.
+/// `<<set $x = 1>>` → `("set", "$x = 1")`).  Callers that only need the
+/// keyword itself take `.0` on the result — there is deliberately no
+/// separate `first_word` helper so behaviour stays consistent.
 pub(super) fn split_first_word(s: &str) -> (&str, &str) {
     s.find(|c: char| c.is_ascii_whitespace())
         .map_or((s, ""), |i| (&s[..i], s[i..].trim_start()))

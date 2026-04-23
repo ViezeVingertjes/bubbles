@@ -4,7 +4,7 @@ use crate::compiler::ast::{IfBranch, Stmt};
 use crate::error::Result;
 
 use super::assignments::{parse_declare, parse_expr_arc, parse_interpolated, parse_set};
-use super::command::{extract_cmd, extract_cmd_line_tags, first_word, split_first_word};
+use super::command::{extract_cmd, extract_cmd_line_tags, split_first_word};
 use super::text::split_trailing_tags;
 use super::{Parser, into_stmt_list};
 
@@ -17,10 +17,10 @@ impl Parser<'_> {
         let (t_core, line_tags) = extract_cmd_line_tags(t);
         let inner = extract_cmd(t_core, lineno, self.file)?;
 
-        let kw = first_word(inner);
+        let (kw, rest) = split_first_word(inner);
         match kw {
-            "jump" => Ok(Stmt::Jump(inner[kw.len()..].trim().to_owned())),
-            "detour" => Ok(Stmt::Detour(inner[kw.len()..].trim().to_owned())),
+            "jump" => Ok(Stmt::Jump(rest.trim().to_owned())),
+            "detour" => Ok(Stmt::Detour(rest.trim().to_owned())),
             "return" => Ok(Stmt::Return),
             "stop" => Ok(Stmt::Stop),
             "set" => parse_set(inner, lineno, self.file),
@@ -28,13 +28,12 @@ impl Parser<'_> {
             "if" => self.parse_if(inner, lineno, cur_indent),
             "once" => self.parse_once(inner, lineno, cur_indent),
             _ => {
-                let (cmd_name, rest) = split_first_word(inner);
                 let (args_raw, inner_tags) = split_trailing_tags(rest);
                 let args = parse_interpolated(&args_raw, "command args", lineno, self.file)?;
                 let mut tags = inner_tags;
                 tags.extend(line_tags);
                 Ok(Stmt::Command {
-                    name: cmd_name.to_owned(),
+                    name: kw.to_owned(),
                     args,
                     tags,
                 })

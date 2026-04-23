@@ -57,6 +57,10 @@ All notable changes are documented here (keep-a-changelog format).
 
 ### Internal
 
+- Removed the `first_word` helper in `compiler::parser::command`; the
+  command-statement parser now reuses the existing `split_first_word`
+  for both the keyword and any remaining arguments, cutting one near-
+  duplicate helper and a redundant `split_whitespace` pass.
 - Removed `src/runtime/interpolate.rs`, a dead module that only held a duplicate
   copy of the interpolation algorithm used by its own tests.  End-to-end
   behaviour is still covered by `tests/interpolation.rs` and
