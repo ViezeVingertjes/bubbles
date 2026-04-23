@@ -4,7 +4,8 @@ use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::Paragraph;
 
-use crate::app::{AppState, FocusPanel};
+use crate::app::AppState;
+use crate::display::FocusPanel;
 
 /// Returns the footer paragraph for `state`.
 pub fn footer(state: &AppState) -> Paragraph<'_> {
@@ -16,6 +17,9 @@ pub fn footer(state: &AppState) -> Paragraph<'_> {
 }
 
 fn hint_text(state: &AppState) -> &'static str {
+    if state.error_overlay().is_some() {
+        return "  r: reload    x: dismiss    q/Esc: quit";
+    }
     if state.is_done() {
         return "  q/Esc: quit    Tab: focus transcript";
     }

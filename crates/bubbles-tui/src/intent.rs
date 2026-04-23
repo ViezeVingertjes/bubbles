@@ -27,4 +27,10 @@ pub enum Intent {
     ScrollUp,
     /// Scroll the transcript view one step toward the newest entry.
     ScrollDown,
+    /// Recompile from the stored source and restart at the stored node,
+    /// clearing any active error overlay on success.
+    Reload,
+    /// Hide the active error overlay without reloading.  The underlying
+    /// session stays as-is (i.e. still unusable if the error killed it).
+    DismissError,
 }

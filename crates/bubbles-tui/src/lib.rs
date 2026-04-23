@@ -26,13 +26,18 @@
 //! ```
 
 mod app;
+mod display;
+mod ingest;
 mod intent;
+mod overlay;
 mod session;
 pub mod terminal;
 mod transcript;
 mod ui;
 
-pub use app::{AppState, DisplayedLine, DisplayedOption, FocusPanel};
+pub use app::AppState;
+pub use display::{DisplayedLine, DisplayedOption, FocusPanel};
 pub use intent::Intent;
+pub use overlay::{ErrorLocation, ErrorOverlay};
 pub use transcript::{Transcript, TranscriptEntry};
 pub use ui::render;

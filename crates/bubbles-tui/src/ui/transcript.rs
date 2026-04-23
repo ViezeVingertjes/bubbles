@@ -6,7 +6,8 @@ use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
 
-use crate::app::{AppState, FocusPanel};
+use crate::app::AppState;
+use crate::display::FocusPanel;
 use crate::transcript::TranscriptEntry;
 
 /// Draws the transcript pane into `area`.

@@ -4,6 +4,7 @@
 //! module touches the real terminal.
 
 mod dialogue;
+mod error_overlay;
 mod footer;
 mod transcript;
 
@@ -36,4 +37,8 @@ pub fn render(state: &AppState, frame: &mut Frame<'_>) {
     dialogue::render(state, frame, panes[0]);
     transcript::render(state, frame, panes[1]);
     frame.render_widget(footer::footer(state), outer[1]);
+
+    if let Some(overlay) = state.error_overlay() {
+        error_overlay::render(overlay, frame);
+    }
 }

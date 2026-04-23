@@ -5,78 +5,77 @@
 //! result.  The real binary does the same thing, just with key events
 //! translated into intents upstream.
 
-use bubbles::{DialogueError, DialogueEvent, DialogueOption};
+use bubbles::DialogueError;
 
+use crate::display::{DisplayedLine, DisplayedOption, FocusPanel, FocusShift};
+use crate::ingest::apply_event;
 use crate::intent::Intent;
+use crate::overlay::ErrorOverlay;
 use crate::session::Session;
 use crate::transcript::{Transcript, TranscriptEntry};
-
-/// A line of dialogue ready to be drawn on screen.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct DisplayedLine {
-    /// Optional speaker prefix (the `Speaker:` part of a line).
-    pub speaker: Option<String>,
-    /// Fully interpolated line text (all `{expr}` fragments already resolved).
-    pub text: String,
-}
-
-/// An option ready to be drawn on screen.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct DisplayedOption {
-    /// Fully interpolated option text.
-    pub text: String,
-    /// Whether the option's guard currently passes; false options are
-    /// displayed but not selectable.
-    pub available: bool,
-}
-
-impl From<DialogueOption> for DisplayedOption {
-    fn from(opt: DialogueOption) -> Self {
-        Self {
-            text: opt.text,
-            available: opt.available,
-        }
-    }
-}
-
-/// Which pane currently owns the keyboard focus.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum FocusPanel {
-    /// The dialogue / options pane.
-    Dialogue,
-    /// The transcript pane.
-    Transcript,
-}
 
 /// The app's complete state: owns the runtime session and whatever is
 /// currently on screen.
 pub struct AppState {
-    session: Session,
+    session: Option<Session>,
+    source: String,
+    start_node: String,
     current_line: Option<DisplayedLine>,
     options: Vec<DisplayedOption>,
     focused_option: Option<usize>,
     transcript: Transcript,
     focus: FocusPanel,
+    error_overlay: Option<ErrorOverlay>,
     quit_requested: bool,
 }
 
 impl AppState {
-    /// Compiles `source` and starts the runner on `start_node`, returning a
-    /// fresh, idle state.  No events have been pulled yet.
+    /// Compiles `source` and starts the runner on `start_node`.
     ///
     /// # Errors
-    /// Propagates any compile or start-time runtime error from
-    /// [`bubbles::compile`] / [`bubbles::Runner::start`].
+    /// Propagates any compile or start-time runtime error.
     pub fn from_source(source: &str, start_node: &str) -> Result<Self, DialogueError> {
-        Ok(Self {
-            session: Session::from_source(source, start_node)?,
+        let session = Session::from_source(source, start_node)?;
+        Ok(Self::new(Some(session), source, start_node, None))
+    }
+
+    /// Infallible counterpart to [`Self::from_source`]: on compile error the
+    /// returned state carries an [`ErrorOverlay`] and has no active session.
+    #[must_use]
+    pub fn load(source: &str, start_node: &str) -> Self {
+        match Session::from_source(source, start_node) {
+            Ok(session) => Self::new(Some(session), source, start_node, None),
+            Err(err) => {
+                let overlay = ErrorOverlay::from_error(&err, Some(source));
+                Self::new(None, source, start_node, Some(overlay))
+            }
+        }
+    }
+
+    fn new(
+        session: Option<Session>,
+        source: &str,
+        start_node: &str,
+        error_overlay: Option<ErrorOverlay>,
+    ) -> Self {
+        Self {
+            session,
+            source: source.to_owned(),
+            start_node: start_node.to_owned(),
             current_line: None,
             options: Vec::new(),
             focused_option: None,
             transcript: Transcript::new(),
             focus: FocusPanel::Dialogue,
+            error_overlay,
             quit_requested: false,
-        })
+        }
+    }
+
+    /// Replaces the source the next [`Intent::Reload`] will use.  Does not
+    /// clear the overlay or touch the running session.
+    pub fn replace_source(&mut self, source: String) {
+        self.source = source;
     }
 
     /// The line currently awaiting the next `Intent::Advance`, if any.
@@ -104,7 +103,6 @@ impl AppState {
     }
 
     /// How many entries the transcript view is scrolled back from the tail.
-    /// Zero means "newest entry visible".
     #[must_use]
     pub const fn transcript_scroll(&self) -> usize {
         self.transcript.scroll()
@@ -122,14 +120,29 @@ impl AppState {
         self.focus
     }
 
-    /// `true` once the dialogue has finished or the user has asked to quit.
+    /// The active error overlay, when one is pending.
     #[must_use]
-    pub const fn is_done(&self) -> bool {
-        self.quit_requested || self.session.is_done()
+    pub const fn error_overlay(&self) -> Option<&ErrorOverlay> {
+        self.error_overlay.as_ref()
     }
 
-    /// `true` if the user has explicitly asked to quit (distinct from the
-    /// dialogue ending on its own).
+    /// `true` if the state is in a non-playable error state — either an
+    /// overlay is active or the runner was torn down by a failed load.
+    #[must_use]
+    pub const fn is_errored(&self) -> bool {
+        self.error_overlay.is_some() || self.session.is_none()
+    }
+
+    /// `true` once the dialogue has finished, the state is errored, or the
+    /// user has asked to quit.
+    #[must_use]
+    pub fn is_done(&self) -> bool {
+        self.quit_requested
+            || self.is_errored()
+            || self.session.as_ref().is_some_and(Session::is_done)
+    }
+
+    /// `true` if the user has explicitly asked to quit.
     #[must_use]
     pub const fn quit_requested(&self) -> bool {
         self.quit_requested
@@ -138,102 +151,69 @@ impl AppState {
     /// Applies a user intent to the state.
     ///
     /// # Errors
-    /// Any runtime error produced while pulling events from the runner is
-    /// surfaced here; the caller decides whether to recover or abort.
+    /// Runtime errors propagated up from the runner are caught and converted
+    /// into an [`ErrorOverlay`]; the method currently never returns `Err`.
     pub fn apply(&mut self, intent: Intent) -> Result<(), DialogueError> {
         match intent {
             Intent::Advance => self.advance_or_commit(),
-            Intent::Quit => {
-                self.quit_requested = true;
-                Ok(())
-            }
-            Intent::FocusNext => {
-                self.move_focus(FocusShift::Next);
-                Ok(())
-            }
-            Intent::FocusPrev => {
-                self.move_focus(FocusShift::Prev);
-                Ok(())
-            }
-            Intent::SelectOption(idx) => self.commit_option(idx),
-            Intent::ToggleFocus => {
-                self.toggle_focus();
-                Ok(())
-            }
-            Intent::ScrollUp => {
-                self.transcript.scroll_up();
-                Ok(())
-            }
-            Intent::ScrollDown => {
-                self.transcript.scroll_down();
-                Ok(())
-            }
-        }
-    }
-
-    fn advance_or_commit(&mut self) -> Result<(), DialogueError> {
-        if self.options.is_empty() {
-            return self.advance();
-        }
-        if let Some(idx) = self.focused_option {
-            self.commit_option(idx)?;
-            if self.options.is_empty() {
-                self.advance()?;
-            }
+            Intent::Quit => self.quit_requested = true,
+            Intent::FocusNext => self.move_focus(FocusShift::Next),
+            Intent::FocusPrev => self.move_focus(FocusShift::Prev),
+            Intent::SelectOption(idx) => self.guarded(|s| s.commit_option(idx)),
+            Intent::ToggleFocus => self.toggle_focus(),
+            Intent::ScrollUp => self.transcript.scroll_up(),
+            Intent::ScrollDown => self.transcript.scroll_down(),
+            Intent::Reload => self.reload(),
+            Intent::DismissError => self.error_overlay = None,
         }
         Ok(())
     }
 
+    fn guarded<F>(&mut self, f: F)
+    where
+        F: FnOnce(&mut Self) -> Result<(), DialogueError>,
+    {
+        if let Err(err) = f(self) {
+            self.error_overlay = Some(ErrorOverlay::from_error(&err, Some(&self.source)));
+            self.session = None;
+            self.current_line = None;
+            self.options.clear();
+            self.focused_option = None;
+        }
+    }
+
+    fn advance_or_commit(&mut self) {
+        self.guarded(|s| {
+            if s.options.is_empty() {
+                return s.advance();
+            }
+            if let Some(idx) = s.focused_option {
+                s.commit_option(idx)?;
+                if s.options.is_empty() {
+                    s.advance()?;
+                }
+            }
+            Ok(())
+        });
+    }
+
     fn advance(&mut self) -> Result<(), DialogueError> {
+        let Some(session) = self.session.as_mut() else {
+            return Ok(());
+        };
         self.current_line = None;
-        while let Some(event) = self.session.next_event()? {
-            if self.ingest_event(event) {
+        while let Some(event) = session.next_event()? {
+            if apply_event(
+                &mut self.transcript,
+                &mut self.current_line,
+                &mut self.options,
+                &mut self.focused_option,
+                event,
+            ) {
                 return Ok(());
             }
         }
         Ok(())
-    }
-
-    /// Records `event` in the transcript and updates derived state.  Returns
-    /// `true` when the caller should stop pulling (a line or option prompt
-    /// is now visible and awaits user input).
-    fn ingest_event(&mut self, event: DialogueEvent) -> bool {
-        match event {
-            DialogueEvent::NodeStarted(name) => {
-                self.transcript.push(TranscriptEntry::NodeStarted(name));
-                false
-            }
-            DialogueEvent::NodeComplete(name) => {
-                self.transcript.push(TranscriptEntry::NodeComplete(name));
-                false
-            }
-            DialogueEvent::Line { speaker, text, .. } => {
-                self.transcript.push(TranscriptEntry::Line {
-                    speaker: speaker.clone(),
-                    text: text.clone(),
-                });
-                self.current_line = Some(DisplayedLine { speaker, text });
-                true
-            }
-            DialogueEvent::Options(opts) => {
-                self.options = opts.into_iter().map(DisplayedOption::from).collect();
-                self.focused_option = self
-                    .options
-                    .iter()
-                    .position(|o| o.available)
-                    .or(Some(0))
-                    .filter(|_| !self.options.is_empty());
-                true
-            }
-            DialogueEvent::Command { name, args, tags } => {
-                self.transcript
-                    .push(TranscriptEntry::Command { name, args, tags });
-                false
-            }
-            // `DialogueComplete` and any future non-exhaustive variant are
-            // handled by `Session::is_done()`; nothing to record here.
-            _ => false,
-        }
     }
 
     fn move_focus(&mut self, delta: FocusShift) {
@@ -274,7 +254,11 @@ impl AppState {
             return Ok(());
         }
         let text = opt.text.clone();
-        self.session.select_option(index)?;
+        let session = self
+            .session
+            .as_mut()
+            .ok_or_else(|| DialogueError::Runtime("no active session".into()))?;
+        session.select_option(index)?;
         self.transcript
             .push(TranscriptEntry::OptionChosen { text, index });
         self.options.clear();
@@ -282,10 +266,21 @@ impl AppState {
         self.current_line = None;
         Ok(())
     }
-}
 
-#[derive(Debug, Clone, Copy)]
-enum FocusShift {
-    Next,
-    Prev,
+    fn reload(&mut self) {
+        match Session::from_source(&self.source, &self.start_node) {
+            Ok(session) => {
+                self.session = Some(session);
+                self.error_overlay = None;
+                self.transcript = Transcript::new();
+                self.current_line = None;
+                self.options.clear();
+                self.focused_option = None;
+            }
+            Err(err) => {
+                self.error_overlay = Some(ErrorOverlay::from_error(&err, Some(&self.source)));
+                self.session = None;
+            }
+        }
+    }
 }

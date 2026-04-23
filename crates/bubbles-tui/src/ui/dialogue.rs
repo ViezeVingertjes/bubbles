@@ -6,7 +6,8 @@ use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph, Wrap};
 
-use crate::app::{AppState, DisplayedLine, DisplayedOption, FocusPanel};
+use crate::app::AppState;
+use crate::display::{DisplayedLine, DisplayedOption, FocusPanel};
 
 /// Marker drawn in front of the focused option.
 const FOCUS_MARKER: &str = "> ";
