@@ -1,5 +1,5 @@
 //! Playback-model tests: drive `AppState` through `Intent`s with no terminal
-//! involved — the whole point of the model/view split.
+//! involved - the whole point of the model/view split.
 
 use bubbles_tui::{AppState, Intent};
 

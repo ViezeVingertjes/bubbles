@@ -14,12 +14,12 @@ Branch on anything that evaluates to a `Bool`.
 
 Four directives, all required to balance:
 
-- `<<if condition>>` — opens a block.
-- `<<elseif condition>>` — any number of these.
-- `<<else>>` — at most one, always last.
-- `<<endif>>` — closes the block.
+- `<<if condition>>` - opens a block.
+- `<<elseif condition>>` - any number of these.
+- `<<else>>` - at most one, always last.
+- `<<endif>>` - closes the block.
 
-Each branch is a full body — lines, options, commands, nested `<<if>>`s, all fair game.
+Each branch is a full body - lines, options, commands, nested `<<if>>`s, all fair game.
 
 ## Nested conditionals
 
@@ -63,7 +63,7 @@ Rule of thumb: if the player should *know* the option exists but isn't accessibl
 
 ## `<<once>>`: the special case
 
-If you want "run this the first time only," you don't need to manage a variable — Bubbles has a dedicated form:
+If you want "run this the first time only," you don't need to manage a variable - Bubbles has a dedicated form:
 
 ```text
 <<once>>

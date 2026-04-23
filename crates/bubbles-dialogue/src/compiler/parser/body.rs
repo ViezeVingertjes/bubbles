@@ -29,7 +29,7 @@ impl Parser<'_> {
             if min_indent == 0 && t.starts_with("title:") && t.len() > "title:".len() {
                 return Err(self.err(
                     lineno,
-                    "found `title:` inside a node body — \
+                    "found `title:` inside a node body - \
                      did you forget `===` to close the previous node?",
                 ));
             }

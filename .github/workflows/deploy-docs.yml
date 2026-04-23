@@ -30,7 +30,7 @@ jobs:
       # Enables Pages on the repo and switches its source to GitHub Actions
       # the first time this workflow runs. Without this step the deploy step
       # can appear to succeed while the repo is still serving from a branch
-      # source (or nothing at all) — which is exactly the "action is green
+      # source (or nothing at all) - which is exactly the "action is green
       # but the site 404s" failure mode.
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
@@ -45,7 +45,7 @@ jobs:
       # Run mdbook from *inside* the `book/` directory. mdBook resolves
       # `--dest-dir` relative to the current working directory, **not** the
       # positional book root, so the previous `mdbook build book --dest-dir
-      # ../site` silently wrote to `<repo>/../site` — a directory outside
+      # ../site` silently wrote to `<repo>/../site` - a directory outside
       # the workspace that the artifact upload never saw. Rustdoc alone made
       # it into the site, which is why `/api/` served but the book root 404'd.
       - name: Build the book
@@ -76,7 +76,7 @@ jobs:
           <p><a href="bubbles/index.html">Continue to the Bubbles API reference</a>.</p>
           EOF
 
-      # Opt out of Jekyll so Pages serves our rustdoc assets verbatim —
+      # Opt out of Jekyll so Pages serves our rustdoc assets verbatim - 
       # rustdoc writes to `static.files/` and (for older toolchains) paths
       # that start with `_`, which Jekyll would otherwise strip.
       - name: Disable Jekyll processing

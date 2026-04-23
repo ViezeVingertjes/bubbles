@@ -6,14 +6,15 @@
 [![docs.rs](https://docs.rs/bubbles-dialogue/badge.svg)](https://docs.rs/bubbles-dialogue)
 [![Guide](https://img.shields.io/badge/guide-github%20pages-informational)](https://viezevingertjes.github.io/bubbles/)
 [![CI](https://github.com/ViezeVingertjes/bubbles/actions/workflows/ci.yml/badge.svg)](https://github.com/ViezeVingertjes/bubbles/actions)
+[![MSRV: 1.95](https://img.shields.io/badge/rustc-1.95%2B-orange.svg)](https://blog.rust-lang.org/2025/05/15/Rust-1.95.0/)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
 
 Write branching `.bub` scripts, compile them once at startup, then drive the
 dialogue from any game loop with a simple pull-based event API.  Designed to
-integrate cleanly into Bevy, Godot, or any custom Rust engine — zero async
+integrate cleanly into Bevy, Godot, or any custom Rust engine - zero async
 primitives, zero allocations in the hot path beyond the events themselves.
 
-> **Docs:** the full guide lives at **<https://viezevingertjes.github.io/bubbles/>** — a friendly
+> **Docs:** the full guide lives at **<https://viezevingertjes.github.io/bubbles/>** - a friendly
 > walk through the `.bub` language and integration, plus the hosted rustdoc.
 > The rest of this README is the quick-reference overview.
 
@@ -103,7 +104,7 @@ Run the included examples:
 cargo run -p bubbles-dialogue --example tavern --all-features
 ```
 
-Or drop into the writer's terminal UI — play a script, watch the
+Or drop into the writer's terminal UI - play a script, watch the
 transcript, hit `b` to rewind, `r` to reload:
 
 ```bash
@@ -152,11 +153,11 @@ The count is {$count}.         # inline expression substitution
     Fires every subsequent time.
 <<endonce>>
 
-=> Line variant A.             # line group — one chosen by saliency strategy
+=> Line variant A.             # line group - one chosen by saliency strategy
 => Line variant B.
 => Line variant C.
 
-<<my_command arg1 arg2>>       # host command — surfaced as DialogueEvent::Command
+<<my_command arg1 arg2>>       # host command - surfaced as DialogueEvent::Command
 ===
 ```
 
@@ -187,7 +188,7 @@ runner.set_saliency(RandomAvailable);                 // uniform random
 use bubbles::HashMapProvider;
 
 let mut provider = HashMapProvider::new();
-// The value is a *template* — {expr} placeholders are evaluated
+// The value is a *template* - {expr} placeholders are evaluated
 // against the current variable storage AFTER the lookup.
 provider.insert("greeting_id", "Hallo {$name}!");
 runner.set_provider(provider);
@@ -195,7 +196,7 @@ runner.set_provider(provider);
 
 When a line carries `#line:greeting_id`, the provider is consulted
 **first** (translate-then-format ordering).  The returned string may
-contain `{expr}` placeholders just like the original source — they are
+contain `{expr}` placeholders just like the original source - they are
 evaluated after translation, so translators can reorder or reshape
 interpolations for their language.  If the provider returns `None`, the
 source text is used unchanged.
@@ -218,10 +219,10 @@ Encontraste {$n} {plural($n, "gema", "gemas")}.
 {select($gender, "m:He|f:She|other:They")} arrived at the tavern.
 ```
 
-`plural(count, singular, plural)` — returns the singular form when
+`plural(count, singular, plural)` - returns the singular form when
 `|count| == 1`, the plural form otherwise.
 
-`select(key, "k1:text1|k2:text2|other:fallback")` — returns the text
+`select(key, "k1:text1|k2:text2|other:fallback")` - returns the text
 for the matching key, or the `other` fallback when the key is not in the
 mapping.  The first colon on each entry is the separator, so values may
 themselves contain colons.
@@ -247,6 +248,25 @@ runner.library_mut().register("double", |args| {
 | `rand` | **on** | Enables `random()`, `random_range()`, `dice()` builtins and `RandomAvailable` saliency |
 | `serde` | off | Derives `Serialize` / `Deserialize` on `Value`, `HashMapStorage`, and `RunnerSnapshot` |
 | `full` | off | Shorthand for `rand` and `serde` together (`features = ["full"]`) |
+
+---
+
+## Prior art
+
+Bubbles sits in the same space as [Yarn Spinner](https://yarnspinner.dev) and
+[Ink](https://github.com/inkle/ink): a structured dialogue language with branching,
+variables, and conditions. The differences are in scope and integration model:
+
+- **Yarn Spinner** compiles to a binary format and ships its own Unity/Godot runtime.
+  Bubbles compiles to a Rust struct and runs wherever your Rust binary runs.
+- **Ink** has a richer expression language and a hosted editor (Inky).
+  Bubbles is narrower: no JSON story format, no divert tunnels - just a clean
+  pull-based API for a game loop.
+- **Twee / Twine** target HTML/browser story formats. Bubbles targets native Rust.
+
+If you want a battle-tested, Unity-first dialogue system, Yarn Spinner is the right
+choice. If you want something that drops cleanly into a Bevy, Godot-rust, or Macroquad
+project with no runtime dependency, that is what Bubbles is for.
 
 ---
 

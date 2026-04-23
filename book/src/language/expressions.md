@@ -1,6 +1,6 @@
 # Expressions
 
-Anywhere Bubbles expects a value — the right side of `<<set>>`, the condition of an `<<if>>`, an option guard, an interpolation like `{…}` — you can use a full expression.
+Anywhere Bubbles expects a value - the right side of `<<set>>`, the condition of an `<<if>>`, an option guard, an interpolation like `{…}` - you can use a full expression.
 
 ```text
 <<set $hp = clamp($hp - $dmg * 2, 0, 100)>>
@@ -102,7 +102,7 @@ You found {$n} {plural($n, "gem", "gems")}.
 
 ## Registering your own functions
 
-Your game probably has its own notions — a faction reputation check, a distance calculation, a cooldown lookup. Register closures with the runner's [`FunctionLibrary`](../integration/functions.md):
+Your game probably has its own notions - a faction reputation check, a distance calculation, a cooldown lookup. Register closures with the runner's [`FunctionLibrary`](../integration/functions.md):
 
 ```rust,ignore
 runner.library_mut().register("faction_at_least", |args| {
@@ -148,7 +148,7 @@ title: SkillCheck
 ===
 ```
 
-`dice`, `plural`, `<<if>>`, variables, interpolation — all working together. You can read what this node does end-to-end without once looking up an API.
+`dice`, `plural`, `<<if>>`, variables, interpolation - all working together. You can read what this node does end-to-end without once looking up an API.
 
 ---
 

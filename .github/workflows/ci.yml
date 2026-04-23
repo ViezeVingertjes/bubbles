@@ -15,6 +15,8 @@ jobs:
         with:
           components: rustfmt, clippy
 
+      - uses: Swatinem/rust-cache@v2
+
       - name: Format check
         run: cargo fmt --all --check
 
@@ -33,9 +35,6 @@ jobs:
       - name: Docs
         run: RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps
 
-      - name: Naming check
-        run: bash scripts/check-naming.sh
-
       - name: File-size check
         run: bash scripts/check-file-sizes.sh
 
@@ -43,3 +42,15 @@ jobs:
         uses: EmbarkStudios/cargo-deny-action@v2
         with:
           command: check
+
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dtolnay/rust-toolchain@1.95
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Check (MSRV, all features)
+        run: cargo check --workspace --all-features

@@ -130,7 +130,7 @@ pub type Spanned = (Token, std::ops::Range<usize>);
 
 /// Lexes `input` into a [`Vec`] of spanned tokens, silently skipping errors.
 ///
-/// This function is used by the expression parser and by tests.
+/// Errors from unknown tokens are silently dropped; callers only see valid tokens.
 #[must_use]
 pub fn tokenise(input: &str) -> Vec<Spanned> {
     Token::lexer(input)

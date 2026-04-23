@@ -1,4 +1,4 @@
-//! Recursive-descent expression parser — turns a source string into an [`Expr`] tree.
+//! Recursive-descent expression parser - turns a source string into an [`Expr`] tree.
 
 pub use crate::compiler::ast::{BinOp, Expr, UnOp};
 

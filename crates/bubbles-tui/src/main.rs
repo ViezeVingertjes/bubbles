@@ -1,4 +1,4 @@
-// Same rationale as in `lib.rs` — ratatui's transitive graph duplicates a
+// Same rationale as in `lib.rs` - ratatui's transitive graph duplicates a
 // handful of crate versions we can't de-dup from our side.
 #![allow(clippy::multiple_crate_versions)]
 

@@ -168,7 +168,7 @@ impl Parser<'_> {
                     if t == "===" {
                         return Err(self.err(
                             lineno,
-                            "found `===` where `---` body delimiter was expected — \
+                            "found `===` where `---` body delimiter was expected - \
                              is the `---` line missing?",
                         ));
                     }
@@ -217,12 +217,12 @@ impl Parser<'_> {
                     let t = l.trim();
                     let hint = if matches!(t, "<<endif>>" | "<<endonce>>") {
                         format!(
-                            " — `{t}` has no matching opening block; \
+                            " - `{t}` has no matching opening block; \
                              check indentation and that every `<<if>>` or `<<once>>` \
                              has a corresponding `{t}`"
                         )
                     } else if t == "<<else>>" || t.starts_with("<<elseif") {
-                        " — unexpected `<<else>>`/`<<elseif>>`; \
+                        " - unexpected `<<else>>`/`<<elseif>>`; \
                          check that the matching `<<if>>` is correct"
                             .to_owned()
                     } else {

@@ -27,9 +27,9 @@ Three nodes, all called `GreetPlayer`. When you `<<jump GreetPlayer>>`, Bubbles 
 
 - Every node with the same `title:` forms a group.
 - Each can have its own `when: <expression>` header.
-- A node without `when:` is always eligible — it's the fallback.
+- A node without `when:` is always eligible - it's the fallback.
 - The saliency strategy (see [Saliency Strategies](../integration/saliency.md)) picks one eligible node to run.
-- If nothing is eligible — no `when:` matches, no fallback node exists — Bubbles returns a runtime error.
+- If nothing is eligible - no `when:` matches, no fallback node exists - Bubbles returns a runtime error.
 
 > **Tip:** Always include an unconditional fallback in a group. It's a belt-and-braces guarantee that "we tried to greet the player" never turns into a runtime crash.
 
@@ -60,7 +60,7 @@ Read top to bottom, it reads like a priority list: "if all the big stuff is true
 
 ## Variety via BLRV
 
-Swap `FirstAvailable` for `BestLeastRecentlyViewed` and node groups become a proper "pick something fresh" mechanism. If two or more nodes are eligible, BLRV prefers the one you've seen least recently — great for re-usable vignettes, daily-life scenes, or barks that should feel alive without a full state machine.
+Swap `FirstAvailable` for `BestLeastRecentlyViewed` and node groups become a proper "pick something fresh" mechanism. If two or more nodes are eligible, BLRV prefers the one you've seen least recently - great for re-usable vignettes, daily-life scenes, or barks that should feel alive without a full state machine.
 
 ```rust,ignore
 runner.set_saliency(bubbles::BestLeastRecentlyViewed::new());
@@ -69,7 +69,7 @@ runner.set_saliency(bubbles::BestLeastRecentlyViewed::new());
 ## When to use node groups
 
 - **Different greetings based on reputation, quest state, or time of day.**
-- **Randomised vignettes** in a hub scene — mini-scenes the player might trigger a handful of times.
+- **Randomised vignettes** in a hub scene - mini-scenes the player might trigger a handful of times.
 - **Gated content** where the same entry point has wildly different beats depending on who the player has become.
 
 If the variation is a single line, use a line group. If it's a whole scene with its own options and branches, use a node group.

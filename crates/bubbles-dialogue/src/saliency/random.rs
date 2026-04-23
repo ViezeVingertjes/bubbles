@@ -1,4 +1,4 @@
-//! [`RandomAvailable`] — random choice among eligible candidates (`rand` feature).
+//! [`RandomAvailable`] - random choice among eligible candidates (`rand` feature).
 
 use super::candidate::{Candidate, SaliencyStrategy};
 

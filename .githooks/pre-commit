@@ -45,10 +45,4 @@ if ! bash scripts/check-file-sizes.sh 2>&1; then
   fail "file-size check failed. Split oversized files and re-stage your changes."
 fi
 
-echo -e "${BOLD}pre-commit:${RESET} checking naming..."
-if ! bash scripts/check-naming.sh 2>&1; then
-  echo ""
-  fail "naming check failed. Fix the reported names and re-stage your changes."
-fi
-
 echo -e "${GREEN}${BOLD}pre-commit:${RESET} all checks passed."

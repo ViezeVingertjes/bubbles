@@ -35,12 +35,12 @@ All notable changes are documented here (keep-a-changelog format).
 
 ### Removed
 
-- Dropped the `cli_runner` example.  Its role — interactively playing a
-  `.bub` file — is better served by the new `bubbles-tui` crate, which
+- Dropped the `cli_runner` example.  Its role - interactively playing a
+  `.bub` file - is better served by the new `bubbles-tui` crate, which
   shows the same information alongside a transcript, error overlay, and
   rewind.
 
-## [0.3.0] — 2026-04-23
+## [0.3.0] - 2026-04-23
 
 ### Added
 
@@ -65,7 +65,7 @@ All notable changes are documented here (keep-a-changelog format).
   and `OptionItem::body`.  Anyone constructing AST nodes by hand must wrap
   statement lists in `Arc::from(vec_of_stmt)`.  In return, frame pushes
   (`<<if>>`, `<<once>>`, options, detours, jumps, node-group selection) no
-  longer clone statement vectors — they bump an `Arc` refcount.
+  longer clone statement vectors - they bump an `Arc` refcount.
 - `Runner` frames now store `{ node: Arc<str>, body: Arc<[Stmt]>, ip: usize }`
   and advance a program counter instead of popping off a `VecDeque<Stmt>`;
   stepping is a simple indexed read.
@@ -104,7 +104,7 @@ All notable changes are documented here (keep-a-changelog format).
   behaviour is still covered by `tests/interpolation.rs` and
   `tests/compiled_expr_pipeline.rs`.
 
-## [0.2.0] — 2026-04-23
+## [0.2.0] - 2026-04-23
 
 ### Added
 
@@ -114,7 +114,7 @@ All notable changes are documented here (keep-a-changelog format).
   patterns.  Format: `"k1:text1|k2:text2|other:fallback"`.  The first colon per entry is the
   separator so values may contain colons.  The `other` key is required; omitting it returns an error.
 - **Translate-then-format provider ordering**: `LineProvider::get()` is now called *before*
-  `{expr}` segments are evaluated.  The returned string is itself a template — any `{expr}` it
+  `{expr}` segments are evaluated.  The returned string is itself a template - any `{expr}` it
   contains are evaluated against current variable storage after translation.  This lets translators
   reorder or reshape interpolations freely and use `plural()` / `select()` inside translated strings.
   `exec_line_group` and `exec_options` also gained provider lookup (previously only `exec_line` used it).
@@ -131,7 +131,7 @@ All notable changes are documented here (keep-a-changelog format).
 - **Breaking:** `RunnerSnapshot::visits` changed from `HashMap<String, usize>` to
   `HashMap<String, u32>`.  Existing snapshots serialised as JSON are unaffected on 64-bit targets
   (JSON numbers are untyped), but binary formats may need migration.
-- **Breaking:** `LineProvider::get()` contract changed — the returned `String` is now a *template*
+- **Breaking:** `LineProvider::get()` contract changed - the returned `String` is now a *template*
   that may contain `{expr}` syntax evaluated after translation.  Plain strings (no braces) continue
   to work unchanged.
 - **Breaking:** `DialogueEvent::Line` and `DialogueOption` have a new `line_id` field.  Update
@@ -144,7 +144,7 @@ All notable changes are documented here (keep-a-changelog format).
 - Removed all `#[allow(clippy::...)]` suppressions; the underlying code was restructured so no
   suppression is needed.
 
-## [0.1.0] — 2026-04-22
+## [0.1.0] - 2026-04-22
 
 ### Added
 
@@ -201,7 +201,7 @@ All notable changes are documented here (keep-a-changelog format).
   statement list without re-allocating shared expression trees (each
   `Stmt` holds `Arc<Expr>` where applicable, so `Stmt` clone is cheap for
   hot paths like detours and `<<if>>` branches).
-- `Runner` visit counts use `Arc<Mutex<HashMap<…>>>` instead of `RwLock` —
+- `Runner` visit counts use `Arc<Mutex<HashMap<…>>>` instead of `RwLock` - 
   the previous design only needed re-entrancy for `visited()` / `visited_count()`
   builtins; a mutex matches single-threaded game-loop use and is simpler to
   reason about.

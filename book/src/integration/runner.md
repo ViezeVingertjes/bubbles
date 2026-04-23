@@ -39,7 +39,7 @@ These all return the runner (or `&mut` to it) so you can chain or call them one 
 runner.start("Intro")?;
 ```
 
-[`start`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.Runner.html#method.start) validates the node exists and primes the runner. Calling it a second time resets execution — handy for "replay this scene" and for restoring from a snapshot.
+[`start`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.Runner.html#method.start) validates the node exists and primes the runner. Calling it a second time resets execution - handy for "replay this scene" and for restoring from a snapshot.
 
 An error at this stage is almost always a typo in the node name. Bubbles tells you which one.
 
@@ -67,7 +67,7 @@ If you hit an `Options` event and call `next_event` again without a `select_opti
 
 ## Completion
 
-You'll see `DialogueEvent::DialogueComplete` on the last meaningful step, and then `None` on the next call. Both are fine to treat as "we're done" — pick whichever fits your loop.
+You'll see `DialogueEvent::DialogueComplete` on the last meaningful step, and then `None` on the next call. Both are fine to treat as "we're done" - pick whichever fits your loop.
 
 ```rust,ignore
 match runner.next_event()? {
@@ -101,7 +101,7 @@ runner.storage_mut().set("$player_name", Value::Text(player.name.clone()));
 
 ## Threading
 
-`Runner` is `Send` when its storage is — that's true for `HashMapStorage`. Run dialogue on any thread you like; just don't share a single runner across threads without synchronisation. The pull-based API is designed to slot into whatever update scheme your engine uses (single thread, job system, task pool).
+`Runner` is `Send` when its storage is - that's true for `HashMapStorage`. Run dialogue on any thread you like; just don't share a single runner across threads without synchronisation. The pull-based API is designed to slot into whatever update scheme your engine uses (single thread, job system, task pool).
 
 ---
 

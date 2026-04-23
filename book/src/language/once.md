@@ -40,13 +40,13 @@ First time the runner reaches that block: the first branch runs. Every time afte
 <<endonce>>
 ```
 
-With `<<once if>>`, the block "consumes" its one shot the first time the condition is true. After that it never runs again — even if the condition becomes true later. If you want the block to wait for its moment, use the conditional guard, not a plain `<<if>>`.
+With `<<once if>>`, the block "consumes" its one shot the first time the condition is true. After that it never runs again - even if the condition becomes true later. If you want the block to wait for its moment, use the conditional guard, not a plain `<<if>>`.
 
 ## How "once" is tracked
 
-Each once block gets a stable id derived from the node and its position. That id lives in the runner's "seen" set, which is part of the [`RunnerSnapshot`](../advanced/save-load.md). Save and load pick up right where they left off — including which once blocks have fired.
+Each once block gets a stable id derived from the node and its position. That id lives in the runner's "seen" set, which is part of the [`RunnerSnapshot`](../advanced/save-load.md). Save and load pick up right where they left off - including which once blocks have fired.
 
-> **Tip:** Because once-ness is stored with the runner, it resets if you make a fresh `Runner`. That's usually what you want (new game, fresh first-times) — but if you're scripting a cutscene you want to replay, remember to save/restore the snapshot.
+> **Tip:** Because once-ness is stored with the runner, it resets if you make a fresh `Runner`. That's usually what you want (new game, fresh first-times) - but if you're scripting a cutscene you want to replay, remember to save/restore the snapshot.
 
 ## A little NPC
 
@@ -59,7 +59,7 @@ title: Merchant
     Merchant: Oh! A new face. Welcome to my shop.
 <<else>>
     <<once>>
-        Merchant: Back again? Good memory — I'm glad you came.
+        Merchant: Back again? Good memory - I'm glad you came.
     <<else>>
         Merchant: Hello again.
     <<endonce>>
@@ -73,7 +73,7 @@ Merchant: What can I get you?
 ===
 ```
 
-Three distinct greetings: first visit, second visit, all subsequent visits — without a single variable. The [Tavern example](../examples/tavern.md) uses the same pattern for gossip that "updates" the first time you ask about rumours.
+Three distinct greetings: first visit, second visit, all subsequent visits - without a single variable. The [Tavern example](../examples/tavern.md) uses the same pattern for gossip that "updates" the first time you ask about rumours.
 
 ## `<<once>>` vs a flag variable
 

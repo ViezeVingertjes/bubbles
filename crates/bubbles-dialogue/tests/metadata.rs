@@ -87,7 +87,7 @@ fn line_prefix_not_in_provider_keeps_interpolated_source() {
 
 #[test]
 fn provider_template_variables_interpolated() {
-    // The translated string still contains {$name} — it must be evaluated
+    // The translated string still contains {$name} - it must be evaluated
     // against current storage AFTER the translation lookup.
     let prog = compile("title: A\n---\nHi {$name}. #line:abc\n===\n").unwrap();
     let mut storage = HashMapStorage::new();

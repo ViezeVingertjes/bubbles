@@ -26,8 +26,8 @@ Aria: Your haul doubles to {double($coins)}.
 
 Quick reminder:
 
-- **Function** — synchronous, returns a value, usable in `<<if>>`, `<<set>>`, `{…}`.
-- **Command** — fire-and-forget event for your game to react to.
+- **Function** - synchronous, returns a value, usable in `<<if>>`, `<<set>>`, `{…}`.
+- **Command** - fire-and-forget event for your game to react to.
 
 If the dialogue needs the answer *before it can continue*, register a function. If it's dispatching a side effect (sound, VFX, saving), use a command.
 
@@ -93,7 +93,7 @@ The error message surfaces in `DialogueError`, so `cargo run` shows a precise co
 
 ## Shadowing built-ins
 
-You can re-register any name — `register` replaces an existing function. Handy if you want deterministic dice in tests:
+You can re-register any name - `register` replaces an existing function. Handy if you want deterministic dice in tests:
 
 ```rust,ignore
 #[cfg(test)]
@@ -104,7 +104,7 @@ Your dialogue still writes `dice(6, 3)`, but now it always yields `4`. The scrip
 
 ## A game-sized example
 
-Here's a `has_item` function that checks the player's inventory. The dialogue author doesn't need to know anything about how items work — they just ask.
+Here's a `has_item` function that checks the player's inventory. The dialogue author doesn't need to know anything about how items work - they just ask.
 
 ```rust,ignore
 let inventory = Arc::clone(&inventory_handle);
@@ -141,7 +141,7 @@ And in the dialogue:
 Merchant: {count("apple")} apples, is it? That's {count("apple") * 2} gold.
 ```
 
-The story branches, counts, and does arithmetic on live game state — all from a `.bub` file a writer can edit without touching Rust.
+The story branches, counts, and does arithmetic on live game state - all from a `.bub` file a writer can edit without touching Rust.
 
 ---
 

@@ -27,7 +27,7 @@ cargo run -p bubbles-tui -- path/to/script.bub Start
 available options, with focus and guard markers. When the script ends, the
 pane shows `[end of dialogue]`.
 
-**Transcript pane.** A running log of every event the runner has emitted —
+**Transcript pane.** A running log of every event the runner has emitted - 
 node boundaries (`[→ Name]` / `[← Name]`), lines, commands (`⚙ name args
 #tags`), and the options you picked (`→ chose [index] text`). The title
 shows the total entry count and the current scroll offset.

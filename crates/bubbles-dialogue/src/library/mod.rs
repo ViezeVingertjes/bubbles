@@ -1,4 +1,4 @@
-//! [`FunctionLibrary`] — built-in functions and host-registration API.
+//! [`FunctionLibrary`] - built-in functions and host-registration API.
 
 use std::collections::HashMap;
 

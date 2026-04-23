@@ -1,4 +1,4 @@
-//! [`Runner`] — the public entry point for executing a compiled [`Program`].
+//! [`Runner`] - the public entry point for executing a compiled [`Program`].
 
 pub(super) mod evaluation;
 pub(super) mod execute;
@@ -28,8 +28,8 @@ pub(super) enum State {
 /// A frame on the call stack.
 ///
 /// Frames reference a shared [`StmtList`] and advance a program counter.
-/// No statements are cloned when a frame is pushed — only the `Arc` is
-/// bumped — so control-flow constructs (`<<if>>`, `<<once>>`, options,
+/// No statements are cloned when a frame is pushed - only the `Arc` is
+/// bumped - so control-flow constructs (`<<if>>`, `<<once>>`, options,
 /// detours, jumps) are O(1) regardless of body size.
 #[derive(Debug, Clone)]
 pub(super) struct Frame {
@@ -172,7 +172,7 @@ impl<S: VariableStorage> Runner<S> {
 
     /// Pushes a frame whose node title matches the supplied owned string.
     ///
-    /// Used by `<<jump>>` / `<<detour>>` / `start()` — sites that already
+    /// Used by `<<jump>>` / `<<detour>>` / `start()` - sites that already
     /// know the target node title and want to install it as the top-of-stack
     /// frame in one call.
     pub(super) fn push_node_frame(&mut self, node: &str, body: StmtList) {

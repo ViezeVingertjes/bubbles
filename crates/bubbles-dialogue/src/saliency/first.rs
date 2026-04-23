@@ -1,4 +1,4 @@
-//! [`FirstAvailable`] — pick the first eligible candidate.
+//! [`FirstAvailable`] - pick the first eligible candidate.
 
 use super::candidate::{Candidate, SaliencyStrategy};
 

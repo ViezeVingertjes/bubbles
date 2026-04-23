@@ -15,7 +15,7 @@
 use bubbles::saliency::BestLeastRecentlyViewed;
 use bubbles::{DialogueEvent, HashMapStorage, Runner, Value, VariableStorage, compile_many};
 
-// Each source file is compiled together — demonstrating multi-file support.
+// Each source file is compiled together - demonstrating multi-file support.
 const TAVERN: &str = r"
 title: Tavern
 tags: scene indoor
@@ -61,7 +61,7 @@ title: Rumours
 ---
 <<once>>
     Barkeep: Word has it there's treasure north of the Ashen Pass.
-    Barkeep: Goblin activity is up though — watch yourself.
+    Barkeep: Goblin activity is up though - watch yourself.
 <<else>>
     Barkeep: Nothing new to report since last we spoke.
 <<endonce>>

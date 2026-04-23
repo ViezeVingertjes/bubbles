@@ -1,13 +1,13 @@
 # Localisation
 
-Bubbles handles localisation with one trait — [`LineProvider`](https://docs.rs/bubbles-dialogue/latest/bubbles/trait.LineProvider.html) — and one convention: tag your lines with `#line:<id>`.
+Bubbles handles localisation with one trait - [`LineProvider`](https://docs.rs/bubbles-dialogue/latest/bubbles/trait.LineProvider.html) - and one convention: tag your lines with `#line:<id>`.
 
 ## The flow
 
 1. You author in a source language (let's say English).
 2. Every line that needs translating gets a `#line:some_id` tag.
 3. At runtime, you install a `LineProvider` that maps ids to translated templates.
-4. When Bubbles processes a tagged line, it asks the provider first. If the provider returns a string, that string is used — and its own `{…}` expressions are evaluated against the current variables.
+4. When Bubbles processes a tagged line, it asks the provider first. If the provider returns a string, that string is used - and its own `{…}` expressions are evaluated against the current variables.
 
 This is the "translate then format" pattern, and it means translators can reorder interpolations however their language demands.
 
@@ -18,7 +18,7 @@ Aria: Evening, friend. #line:aria_greet_01
 Aria: You have {$gold} gold. #line:aria_gold_report
 ```
 
-`#line:aria_greet_01` is the stable id. Don't change it after translation starts — those are the keys translators rely on.
+`#line:aria_greet_01` is the stable id. Don't change it after translation starts - those are the keys translators rely on.
 
 ## The simplest provider
 
@@ -38,7 +38,7 @@ That's it. When Bubbles emits `#line:aria_greet_01`, the Spanish template wins. 
 
 ## Loading from files
 
-Most games store translations externally — JSON, YAML, CSV, a `.po` file, whatever. Wrap your loader in a `LineProvider`:
+Most games store translations externally - JSON, YAML, CSV, a `.po` file, whatever. Wrap your loader in a `LineProvider`:
 
 ```rust,ignore
 use bubbles::LineProvider;
@@ -72,8 +72,8 @@ Swap the provider whenever the player changes language. The dialogue continues; 
 
 Translation isn't just replacing words. Bubbles has two built-in functions that help:
 
-- **`plural(n, singular, plural)`** — picks the singular form when `|n| == 1`, the plural form otherwise.
-- **`select(key, "k1:text|k2:text|other:fallback")`** — picks by key, with an `other:` fallback.
+- **`plural(n, singular, plural)`** - picks the singular form when `|n| == 1`, the plural form otherwise.
+- **`select(key, "k1:text|k2:text|other:fallback")`** - picks by key, with an `other:` fallback.
 
 ```text
 # English source
@@ -92,17 +92,17 @@ Gendered pronouns:
 {select($gender, "m:He|f:She|n:They|other:They")} arrived at the tavern.
 ```
 
-Translators can reshape these expressions for their language — some languages have more than two plural forms, or different gender structures. Because the expression is evaluated *inside* the template, they have full control.
+Translators can reshape these expressions for their language - some languages have more than two plural forms, or different gender structures. Because the expression is evaluated *inside* the template, they have full control.
 
 ## Falling back gracefully
 
-If your provider returns `None` for an id, Bubbles uses the source text from the script. You won't get a crash — just untranslated text — which makes shipping partial translations painless.
+If your provider returns `None` for an id, Bubbles uses the source text from the script. You won't get a crash - just untranslated text - which makes shipping partial translations painless.
 
 > **Tip:** Start every translation pass with a "missing keys" report. Run the dialogue in your target language and log every `line_id` the provider returns `None` for. Simple, and catches every new line added to the source.
 
 ## Lines without `#line:` ids
 
-Only lines with a `#line:` tag are routed through the provider. Lines without an id always use their source text — so you can leave narrator description, debug lines, or developer-only content untranslated without any fuss.
+Only lines with a `#line:` tag are routed through the provider. Lines without an id always use their source text - so you can leave narrator description, debug lines, or developer-only content untranslated without any fuss.
 
 ## Keeping ids stable
 
@@ -111,7 +111,7 @@ Two rules to save your future self:
 1. **Never reuse an id.** Once a translator has worked on it, the id belongs to that line forever. If the line changes meaning substantially, give it a new id.
 2. **Never change an id casually.** Renaming `greeting_01` to `greet_01` invalidates every translation in flight.
 
-Keep the ids short but descriptive — `scene_speaker_variant` is a pattern that scales (`tavern_barkeep_greet_first`, `tavern_barkeep_greet_repeat`).
+Keep the ids short but descriptive - `scene_speaker_variant` is a pattern that scales (`tavern_barkeep_greet_first`, `tavern_barkeep_greet_repeat`).
 
 ---
 

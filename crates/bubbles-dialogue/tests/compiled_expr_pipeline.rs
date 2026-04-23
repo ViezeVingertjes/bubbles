@@ -3,7 +3,7 @@
 //! regressions when the AST stores parsed [`Expr`](bubbles::compiler::ast::Expr)
 //! trees and node bodies are shared via `Arc` instead of re-parsing at runtime.
 //!
-//! If this file fails, compare event output against a known-good run — the
+//! If this file fails, compare event output against a known-good run - the
 //! intent is *behavioural* parity, not a particular internal representation.
 
 use bubbles::{DialogueEvent, HashMapStorage, Runner, Value, VariableStorage, compile};

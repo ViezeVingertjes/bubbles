@@ -93,7 +93,7 @@ Narrator: Hi. I'm the narrator.
 Narrator: Let's go on an adventure.
 ```
 
-`<<jump Adventure>>` is a **command** — anything between `<<` and `>>` is a built-in directive. We'll meet more of them throughout the guide.
+`<<jump Adventure>>` is a **command** - anything between `<<` and `>>` is a built-in directive. We'll meet more of them throughout the guide.
 
 > **Tip:** You do not need newlines between nodes, but they help readability. Bubbles happily parses them smushed together.
 
@@ -112,7 +112,7 @@ Narrator: Where do you go?
 ===
 ```
 
-Running it now prints the prompt, then... nothing happens. Bubbles is politely waiting for you to pick an option. Our Rust loop only handles `Line` events — we ignore the `Options` event entirely.
+Running it now prints the prompt, then... nothing happens. Bubbles is politely waiting for you to pick an option. Our Rust loop only handles `Line` events - we ignore the `Options` event entirely.
 
 Fixing that is the next chapter.
 

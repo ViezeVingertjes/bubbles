@@ -1,4 +1,4 @@
-//! `step` and `execute_stmt` — the core statement dispatch loop.
+//! `step` and `execute_stmt` - the core statement dispatch loop.
 
 use std::sync::Arc;
 

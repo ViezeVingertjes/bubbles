@@ -1,4 +1,4 @@
-//! [`RunnerSnapshot`] — serialisable session state for save / load support.
+//! [`RunnerSnapshot`] - serialisable session state for save / load support.
 
 use std::collections::{HashMap, HashSet};
 
@@ -11,7 +11,7 @@ use std::collections::{HashMap, HashSet};
 /// - how many times each node has been visited (`visits`),
 /// - which `<<once>>` blocks have already fired (`once_seen`).
 ///
-/// **Variable storage is not included** — it is the host's responsibility to
+/// **Variable storage is not included** - it is the host's responsibility to
 /// serialise `HashMapStorage` (or their own [`VariableStorage`] impl) alongside
 /// the snapshot.  Both are `serde`-ready when the `serde` feature is enabled.
 ///

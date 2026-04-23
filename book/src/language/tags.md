@@ -1,6 +1,6 @@
 # Tags and Metadata
 
-Tags are little bits of metadata you can hang off nodes, lines, and options. They don't change behaviour — they travel with the event so *you* can act on them.
+Tags are little bits of metadata you can hang off nodes, lines, and options. They don't change behaviour - they travel with the event so *you* can act on them.
 
 ## Line tags
 
@@ -47,7 +47,7 @@ Barkeep: Evening.
 ===
 ```
 
-Multiple tags, space-separated. Useful when you want to query the program *before* running it — for example, to pre-load the right music:
+Multiple tags, space-separated. Useful when you want to query the program *before* running it - for example, to pre-load the right music:
 
 ```rust,ignore
 if let Some(tags) = program.node_tags("TavernEvening") {
@@ -90,7 +90,7 @@ Same rule as the runtime: first `line:` prefix wins, empty ids are rejected.
 
 ## Reserved tags
 
-- `line:<id>` — stable id, described above.
+- `line:<id>` - stable id, described above.
 
 That's it. Every other tag is yours to define. Bubbles promises not to grow a list of reserved names that clashes with `#combat` or `#boss`.
 

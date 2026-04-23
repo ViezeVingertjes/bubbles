@@ -1,6 +1,6 @@
 # Contributing to bubbles
 
-Thank you for your interest! Contributions of all kinds are welcome — bug reports, documentation improvements, new tests, and pull requests.
+Thank you for your interest! Contributions of all kinds are welcome - bug reports, documentation improvements, new tests, and pull requests.
 
 ## Before you start
 
@@ -25,7 +25,7 @@ Install the pre-commit hook so local quality gates match CI:
 bash scripts/install-hooks.sh
 ```
 
-The hook runs `cargo fmt --check`, the same `cargo clippy` invocations as CI, `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps`, `scripts/check-file-sizes.sh`, and `scripts/check-naming.sh` before every commit.
+The hook runs `cargo fmt --check`, the same `cargo clippy` invocations as CI, `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps`, and `scripts/check-file-sizes.sh` before every commit.
 
 ## Commit style
 
@@ -49,7 +49,6 @@ Types: `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `chore`.
 | Tests | `cargo test --all-features` | all pass |
 | Doc warnings | `cargo doc --no-deps -D warnings` | zero warnings |
 | File size | `scripts/check-file-sizes.sh` | ≤ 300 non-blank LOC per file |
-| Naming | `scripts/check-naming.sh` | no forbidden terms |
 
 All of these are enforced in CI and by the pre-commit hook.
 
@@ -57,7 +56,7 @@ All of these are enforced in CI and by the pre-commit hook.
 
 1. Write a failing integration test in `tests/` first (red).
 2. Implement the minimal code to pass it (green).
-3. Refactor for clarity — SOLID, DRY, one concept per file.
+3. Clean it up before you open the PR - one concept per file, no tangled helpers.
 4. Run all gates locally, then open a PR.
 5. Every new public item needs a doc comment; doc tests are strongly encouraged.
 

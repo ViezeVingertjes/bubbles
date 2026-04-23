@@ -57,7 +57,7 @@ fn main() -> Result<(), bubbles::DialogueError> {
 }
 ```
 
-That's it. The runner pauses on `Options` until you call [`select_option`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.Runner.html#method.select_option). Miss the call and `next_event` will keep returning the same `Options` event — Bubbles never moves forward without your say-so.
+That's it. The runner pauses on `Options` until you call [`select_option`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.Runner.html#method.select_option). Miss the call and `next_event` will keep returning the same `Options` event - Bubbles never moves forward without your say-so.
 
 ## The full event match
 
@@ -84,7 +84,7 @@ while let Some(event) = runner.next_event()? {
             }
         }
         DialogueEvent::NodeComplete(name) => {
-            // node finished — save, fade, whatever
+            // node finished - save, fade, whatever
         }
         DialogueEvent::DialogueComplete => {
             // all done
@@ -100,7 +100,7 @@ while let Some(event) = runner.next_event()? {
 
 Games run on frames. Dialogue runs on beats. A push-based callback system would either block your frame or force you to spawn threads. Pull-based means:
 
-- You poll the runner when you're ready — usually when the player presses a key.
+- You poll the runner when you're ready - usually when the player presses a key.
 - The runner never allocates on its own. The event you get back owns its data; the runner moves on.
 - Saving and loading is trivial: snapshot the runner, come back next Tuesday.
 

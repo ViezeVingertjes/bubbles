@@ -1,6 +1,6 @@
 # Jumps and Detours
 
-Nodes don't flow into each other automatically. You decide where execution goes next — either by **jumping** (a one-way move) or **detouring** (a call that returns).
+Nodes don't flow into each other automatically. You decide where execution goes next - either by **jumping** (a one-way move) or **detouring** (a call that returns).
 
 ## `<<jump>>`: one-way
 
@@ -21,7 +21,7 @@ Narrator: Here we go.
 
 Jumps clear the call stack, so you can't "return" from a jump. Use this for scene changes and story transitions.
 
-> **Tip:** If you reference a node that doesn't exist, Bubbles catches it at compile time. `compile()` returns an error pointing at the bad name — no more typos surfacing at runtime.
+> **Tip:** If you reference a node that doesn't exist, Bubbles catches it at compile time. `compile()` returns an error pointing at the bad name - no more typos surfacing at runtime.
 
 ## `<<detour>>` and `<<return>>`: call and come back
 
@@ -48,7 +48,7 @@ The flow:
 
 1. `<<detour PourAle>>` pushes the current position and jumps to `PourAle`.
 2. `PourAle` runs, finishing with `<<return>>`.
-3. Execution picks up exactly where `<<detour>>` left off — the "Anything else?" line runs next.
+3. Execution picks up exactly where `<<detour>>` left off - the "Anything else?" line runs next.
 
 You can detour from within a detour. The stack handles any depth.
 
@@ -56,7 +56,7 @@ If a detour node runs off the end without a `<<return>>`, Bubbles returns anyway
 
 ## `<<stop>>`: end the dialogue right here
 
-When you want to exit the whole dialogue — not just the current node, and not return to the caller — use `<<stop>>`.
+When you want to exit the whole dialogue - not just the current node, and not return to the caller - use `<<stop>>`.
 
 ```text
 title: Guard
@@ -75,7 +75,7 @@ Guard: Anything else?
 
 Unlike `<<return>>`, which pops one frame, `<<stop>>` clears the entire call stack and emits a single `DialogueComplete` event. Nothing after it in the current node runs, and no caller resumes.
 
-Reach for `<<stop>>` for bad-ending branches, timed interruptions, or any beat where the conversation is simply over — regardless of how deep the detour stack is.
+Reach for `<<stop>>` for bad-ending branches, timed interruptions, or any beat where the conversation is simply over - regardless of how deep the detour stack is.
 
 ## When to jump, when to detour
 
@@ -119,7 +119,7 @@ Barkeep: Safe travels.
 ===
 ```
 
-`PourDrink` is a shared beat — both the ale and wine branches detour into it, and both come back to the "Anything else?" line. No duplication, clean flow.
+`PourDrink` is a shared beat - both the ale and wine branches detour into it, and both come back to the "Anything else?" line. No duplication, clean flow.
 
 ## Infinite loops
 

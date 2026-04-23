@@ -25,7 +25,7 @@ Aria: The roll was {dice(6, 2)}.
 Aria: {select($mood, "happy:Lovely|sad:Sigh|other:Hm")}.
 ```
 
-Strings, numbers, booleans — all formatted with sensible defaults:
+Strings, numbers, booleans - all formatted with sensible defaults:
 
 - Numbers: integers as `42`, floats as `3.14` (no trailing zeros).
 - Booleans: `true` / `false`.
@@ -43,10 +43,10 @@ Aria: Gold: {string($gold)}.
 If you need a literal `{` or `}` in your text, double them:
 
 ```text
-Aria: She said "{{one}}" — I don't know what it meant.
+Aria: She said "{{one}}" - I don't know what it meant.
 ```
 
-That line arrives as: `She said "{one}" — I don't know what it meant.`
+That line arrives as: `She said "{one}" - I don't know what it meant.`
 
 > **Tip:** Curly braces outside of interpolation are rare in natural prose, so you'll almost never need this. But when you *do* (code, JSON, serialised data), `{{` and `}}` have your back.
 
@@ -79,7 +79,7 @@ title: LevelUp
     Narrator: Level up! You are now level {$lvl}.
     Narrator: {$to_next - $xp} XP until level {$lvl + 1}.
 <<else>>
-    Narrator: {$xp}/{$to_next} XP — keep going.
+    Narrator: {$xp}/{$to_next} XP - keep going.
 <<endif>>
 ===
 ```

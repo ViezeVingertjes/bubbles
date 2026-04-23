@@ -1,4 +1,4 @@
-//! Expression evaluator — walks an [`Expr`] AST and produces a [`Value`].
+//! Expression evaluator - walks an [`Expr`] AST and produces a [`Value`].
 
 use crate::compiler::expr::{BinOp, Expr, UnOp};
 use crate::error::{DialogueError, Result};

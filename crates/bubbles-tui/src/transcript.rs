@@ -62,7 +62,7 @@ impl Transcript {
         }
         self.entries.push(entry);
         // Pushing a new entry while the view is scrolled back shouldn't
-        // yank the viewport to the tail — preserve the offset, but clamp
+        // yank the viewport to the tail - preserve the offset, but clamp
         // it so it still refers to a real entry.
         let max = self.entries.len().saturating_sub(1);
         if self.scroll > max {

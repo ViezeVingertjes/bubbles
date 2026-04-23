@@ -32,7 +32,7 @@ impl fmt::Display for Value {
             Self::Number(v) => {
                 // Omit ".0" suffix so `{$n}` renders as "2" not "2.0".
                 // `{v:.0}` rounds to 0 decimal places; since `v.fract() == 0.0`
-                // the result is always exact — and no cast is needed.
+                // the result is always exact - and no cast is needed.
                 if v.fract() == 0.0 && v.abs() < 1e15 {
                     write!(f, "{v:.0}")
                 } else {

@@ -1,4 +1,4 @@
-//! AST types: node/statement types and expression tree — data only, no logic.
+//! AST types: node/statement types and expression tree - data only, no logic.
 
 use std::sync::Arc;
 
@@ -8,7 +8,7 @@ use indexmap::IndexMap;
 /// AST (node bodies, `if` branches, `once` bodies, option bodies, line groups).
 ///
 /// Stored behind an [`Arc`] so the runner can push them onto the call stack
-/// without cloning the underlying statement list — frame pushes become a
+/// without cloning the underlying statement list - frame pushes become a
 /// reference-count bump regardless of body size.
 pub type StmtList = Arc<[Stmt]>;
 
@@ -68,7 +68,7 @@ pub enum Stmt {
     Detour(String),
     /// A `<<return>>` statement.
     Return,
-    /// A `<<stop>>` statement — terminates the whole dialogue, clearing the
+    /// A `<<stop>>` statement - terminates the whole dialogue, clearing the
     /// call stack and emitting [`crate::DialogueEvent::DialogueComplete`].
     Stop,
     /// A generic host command `<<name args…>>`.

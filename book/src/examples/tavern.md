@@ -60,8 +60,8 @@ Everything from the language chapters, working together in one node:
 - Node **tags** (`scene indoor`) exposed via `program.node_tags("Tavern")`.
 - **Declare** for stateful variables so they persist across visits.
 - **Conditional** that diverges on first vs return visits.
-- **Line group** (`=>`) for ambient barks — with BLRV saliency, each visit picks a different one.
-- **Guarded option** (`<<if $gold >= 5>>`) — locked when you can't afford ale.
+- **Line group** (`=>`) for ambient barks - with BLRV saliency, each visit picks a different one.
+- **Guarded option** (`<<if $gold >= 5>>`) - locked when you can't afford ale.
 - **`<<detour>>`** into `PourAle` and come back; **`<<jump>>`** for one-way transitions.
 
 ## Reusable beats
@@ -76,14 +76,14 @@ Barkeep: Here you are. You have {$gold} gold left.
 ===
 ```
 
-`<<pour_ale>>` is a **command** — an event the Rust side can react to (play audio, animate, whatever). Then the script deducts gold, reports the new total via interpolation, and `<<return>>`s to whoever detoured in.
+`<<pour_ale>>` is a **command** - an event the Rust side can react to (play audio, animate, whatever). Then the script deducts gold, reports the new total via interpolation, and `<<return>>`s to whoever detoured in.
 
 ```text
 title: Rumours
 ---
 <<once>>
     Barkeep: Word has it there's treasure north of the Ashen Pass.
-    Barkeep: Goblin activity is up though — watch yourself.
+    Barkeep: Goblin activity is up though - watch yourself.
 <<else>>
     Barkeep: Nothing new to report since last we spoke.
 <<endonce>>

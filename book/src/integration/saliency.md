@@ -76,12 +76,12 @@ runner.set_saliency(MostImportant);
 
 That's the whole surface. Ideas worth trying:
 
-- **Weighted random** — each variant carries a weight tag like `#weight:5`.
-- **Mood-aware** — boost candidates whose tags match the current scene's mood.
-- **Player-preferring** — prefer ones tagged `#player_class_<x>` when the player is that class.
-- **Exhaustive** — walk every candidate in order, then loop.
+- **Weighted random** - each variant carries a weight tag like `#weight:5`.
+- **Mood-aware** - boost candidates whose tags match the current scene's mood.
+- **Player-preferring** - prefer ones tagged `#player_class_<x>` when the player is that class.
+- **Exhaustive** - walk every candidate in order, then loop.
 
-The strategy is called synchronously during `next_event`. Keep it fast — no network calls, no disk reads.
+The strategy is called synchronously during `next_event`. Keep it fast - no network calls, no disk reads.
 
 ## Strategy scope
 

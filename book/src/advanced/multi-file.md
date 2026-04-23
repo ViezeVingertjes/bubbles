@@ -14,7 +14,7 @@ let program = compile_many(&[
 ])?;
 ```
 
-Each entry is a `(name, source)` pair. The name only appears in error messages — it's how you'll find the file when something goes wrong. The source is the raw `.bub` text.
+Each entry is a `(name, source)` pair. The name only appears in error messages - it's how you'll find the file when something goes wrong. The source is the raw `.bub` text.
 
 `compile_many` produces a single `Program` that sees every node in every file as if they were all written in one big document.
 
@@ -53,11 +53,11 @@ Bubbles doesn't care how you split your files. Common patterns:
 - **By chapter**: `ch1_arrival.bub`, `ch2_the_king.bub`, `ch3_the_cave.bub`.
 - **By concern**: `story.bub`, `barks.bub`, `tutorial.bub`.
 
-Pick the split that makes it easy for writers to find what they need. Bubbles itself is flat — jumps and detours don't care which file the target lives in.
+Pick the split that makes it easy for writers to find what they need. Bubbles itself is flat - jumps and detours don't care which file the target lives in.
 
 ## Duplicate titles
 
-If two files define a node with the same title — and neither has a `when:` header that differentiates them — `compile_many` returns an error. That's the "you probably typed the same name twice" check.
+If two files define a node with the same title - and neither has a `when:` header that differentiates them - `compile_many` returns an error. That's the "you probably typed the same name twice" check.
 
 Intentional duplicates (node groups) need distinct `when:` conditions. Bubbles picks that up as a group and everyone is happy.
 
@@ -76,7 +76,7 @@ Baker: Morning. What'll it be?
 ===
 ```
 
-Two "Greet" nodes in the same file is fine — they form a group. Two without `when:` at all is the duplicate that trips the error.
+Two "Greet" nodes in the same file is fine - they form a group. Two without `when:` at all is the duplicate that trips the error.
 
 ## Validation
 
@@ -138,7 +138,7 @@ let mut watcher = notify::recommended_watcher(move |res| {
 watcher.watch("assets/dialogue/", RecursiveMode::Recursive)?;
 ```
 
-Writers edit a file, save, and the game picks up the new script — often without losing their current scene state if you snapshot before reloading.
+Writers edit a file, save, and the game picks up the new script - often without losing their current scene state if you snapshot before reloading.
 
 > **Tip:** In production, compile once at load time and cache the `Program`. Recompiling is fast but not *free*, and writers only need hot reload during development.
 

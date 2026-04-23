@@ -1,4 +1,4 @@
-//! [`AppState`] — the pure model the renderer and the input layer agree on.
+//! [`AppState`] - the pure model the renderer and the input layer agree on.
 //!
 //! Nothing in this module does I/O.  Tests build an `AppState` from a source
 //! string, push [`Intent`]s through [`AppState::apply`], and inspect the
@@ -136,7 +136,7 @@ impl AppState {
         self.error_overlay.as_ref()
     }
 
-    /// `true` if the state is in a non-playable error state — either an
+    /// `true` if the state is in a non-playable error state - either an
     /// overlay is active or the runner was torn down by a failed load.
     #[must_use]
     pub const fn is_errored(&self) -> bool {

@@ -27,7 +27,7 @@ The body of an option is everything indented *beneath* it:
     Aria: Cold, but clear.     <- runs only if the mountain option is chosen
 ```
 
-Use spaces or tabs — just be consistent inside a block. After the options end, execution continues with whatever comes next in the node:
+Use spaces or tabs - just be consistent inside a block. After the options end, execution continues with whatever comes next in the node:
 
 ```text
 -> Yes.
@@ -39,7 +39,7 @@ Aria: Either way, we leave at dawn.   <- runs after either branch
 
 ## Guards
 
-Options can have conditions — so the "buy a sword" choice only shows up if you can afford it.
+Options can have conditions - so the "buy a sword" choice only shows up if you can afford it.
 
 ```text
 Merchant: What'll it be?
@@ -51,7 +51,7 @@ Merchant: What'll it be?
     Merchant: Come back soon.
 ```
 
-The `<<if>>` after the option text is a **guard**. When the guard evaluates to `false`, the option is still presented — but marked `available: false` in the event:
+The `<<if>>` after the option text is a **guard**. When the guard evaluates to `false`, the option is still presented - but marked `available: false` in the event:
 
 ```rust,ignore
 DialogueEvent::Options(opts) => {
@@ -85,7 +85,7 @@ Both options land on the final line. That's a handy pattern for "gate" choices w
 
 ## A shopping example
 
-Let's make something practical — a little shop with a running gold total. This uses [variables](./variables.md) (next chapter!) but the shape is all options.
+Let's make something practical - a little shop with a running gold total. This uses [variables](./variables.md) (next chapter!) but the shape is all options.
 
 ```text
 title: Shop
@@ -104,7 +104,7 @@ Merchant: Anything else? You have {$gold} gold left.
 ===
 ```
 
-Three options, each guarded by gold, each doing its own thing. The final line runs regardless — and uses `{$gold}` [interpolation](./interpolation.md) to show the updated balance.
+Three options, each guarded by gold, each doing its own thing. The final line runs regardless - and uses `{$gold}` [interpolation](./interpolation.md) to show the updated balance.
 
 ---
 

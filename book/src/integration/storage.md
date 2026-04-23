@@ -1,6 +1,6 @@
 # Variable Storage
 
-Every `<<declare>>` and `<<set>>` in a `.bub` script reads and writes through the runner's storage. The default — `HashMapStorage` — is fine for a lot of games. When it isn't, you implement the [`VariableStorage`](https://docs.rs/bubbles-dialogue/latest/bubbles/trait.VariableStorage.html) trait.
+Every `<<declare>>` and `<<set>>` in a `.bub` script reads and writes through the runner's storage. The default - `HashMapStorage` - is fine for a lot of games. When it isn't, you implement the [`VariableStorage`](https://docs.rs/bubbles-dialogue/latest/bubbles/trait.VariableStorage.html) trait.
 
 ## The trait
 
@@ -24,7 +24,7 @@ pub trait VariableStorage {
 
 `name` is the variable name as written in the script, including the leading `$`. `Value` is a tagged enum: `Number(f64)`, `Text(String)`, or `Bool(bool)`.
 
-The expression evaluator reads variables through `get_ref`; `get` is kept as the ergonomic API hosts reach for when they actually want ownership (e.g. `runner.storage().get("$hp")`). If you can cheaply hand back a reference — most in-memory stores can — override `get_ref` and you get allocation-free `{$var}` interpolation for free.
+The expression evaluator reads variables through `get_ref`; `get` is kept as the ergonomic API hosts reach for when they actually want ownership (e.g. `runner.storage().get("$hp")`). If you can cheaply hand back a reference - most in-memory stores can - override `get_ref` and you get allocation-free `{$var}` interpolation for free.
 
 ## The default: `HashMapStorage`
 
@@ -52,7 +52,7 @@ With the `serde` feature, `HashMapStorage` derives `Serialize`/`Deserialize`, so
 
 ## Writing your own storage
 
-When you want Bubbles variables to live inside *your* data model — say, a component in your ECS, or a row in a save database — implement the trait yourself.
+When you want Bubbles variables to live inside *your* data model - say, a component in your ECS, or a row in a save database - implement the trait yourself.
 
 ```rust,ignore
 use bubbles::{Value, VariableStorage};
@@ -107,7 +107,7 @@ This is how you bridge dialogue and gameplay: set the state, start the conversat
 
 ## Checking declared variables at load time
 
-When building UIs — settings screens, debug inspectors, save-file migrations — it's often handy to know every variable the script *could* touch:
+When building UIs - settings screens, debug inspectors, save-file migrations - it's often handy to know every variable the script *could* touch:
 
 ```rust,ignore
 for decl in program.variable_declarations() {

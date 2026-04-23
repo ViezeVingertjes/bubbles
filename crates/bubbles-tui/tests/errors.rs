@@ -43,7 +43,7 @@ fn runtime_errors_during_advance_populate_the_overlay() {
     let mut state = AppState::load(BAD_JUMP, "A");
     assert!(state.error_overlay().is_none(), "script compiles cleanly");
 
-    // Advance past the line — the next advance hits the bogus <<jump>>.
+    // Advance past the line - the next advance hits the bogus <<jump>>.
     state.apply(Intent::Advance).unwrap(); // surfaces "Hi."
     state.apply(Intent::Advance).unwrap(); // triggers the jump
 
@@ -83,7 +83,7 @@ fn dismiss_hides_the_overlay_without_reloading() {
 
     state.apply(Intent::DismissError).unwrap();
     assert!(state.error_overlay().is_none());
-    // Still errored until we successfully reload — there is no session to
+    // Still errored until we successfully reload - there is no session to
     // drive.
     assert!(state.is_errored());
 }

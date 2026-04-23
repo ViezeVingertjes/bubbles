@@ -1,4 +1,4 @@
-//! [`BestLeastRecentlyViewed`] — favour content not shown for the longest time.
+//! [`BestLeastRecentlyViewed`] - favour content not shown for the longest time.
 
 use std::collections::HashMap;
 
@@ -25,13 +25,13 @@ use super::candidate::{Candidate, SaliencyStrategy};
 ///     Candidate { id: "c", available: true },
 /// ];
 ///
-/// // First call — all unseen, picks index 0.
+/// // First call - all unseen, picks index 0.
 /// assert_eq!(s.select(&candidates), Some(0));
-/// // Second call — "a" was just seen, picks "b" at index 1.
+/// // Second call - "a" was just seen, picks "b" at index 1.
 /// assert_eq!(s.select(&candidates), Some(1));
-/// // Third call — picks "c" at index 2.
+/// // Third call - picks "c" at index 2.
 /// assert_eq!(s.select(&candidates), Some(2));
-/// // Fourth call — all seen, wraps back to "a" (oldest).
+/// // Fourth call - all seen, wraps back to "a" (oldest).
 /// assert_eq!(s.select(&candidates), Some(0));
 /// ```
 #[derive(Debug, Clone, Default)]

@@ -4,7 +4,7 @@ Every event variant, what it looks like, and how to hook it into a real game.
 
 ## `NodeStarted(String)`
 
-Fired when execution enters a node — either from `start()`, a `<<jump>>`, or a `<<detour>>`.
+Fired when execution enters a node - either from `start()`, a `<<jump>>`, or a `<<detour>>`.
 
 ```rust,ignore
 DialogueEvent::NodeStarted(name) => {
@@ -29,10 +29,10 @@ DialogueEvent::Line { speaker, text, line_id, tags } => {
 
 Fields:
 
-- `speaker: Option<String>` — the `Speaker:` prefix if present.
-- `text: String` — already interpolated, already localised.
-- `line_id: Option<String>` — the `#line:…` stable id if present, empty otherwise.
-- `tags: Vec<String>` — every other `#tag` on the line.
+- `speaker: Option<String>` - the `Speaker:` prefix if present.
+- `text: String` - already interpolated, already localised.
+- `line_id: Option<String>` - the `#line:…` stable id if present, empty otherwise.
+- `tags: Vec<String>` - every other `#tag` on the line.
 
 ## `Options(Vec<DialogueOption>)`
 
@@ -51,10 +51,10 @@ DialogueEvent::Options(opts) => {
 
 Each option has:
 
-- `text: String` — pre-interpolated option label.
-- `available: bool` — `<<if>>` guard result. `false` = locked.
-- `line_id: Option<String>` — stable id if `#line:…` is present.
-- `tags: Vec<String>` — any other tags.
+- `text: String` - pre-interpolated option label.
+- `available: bool` - `<<if>>` guard result. `false` = locked.
+- `line_id: Option<String>` - stable id if `#line:…` is present.
+- `tags: Vec<String>` - any other tags.
 
 > **Note:** If the player tries to pick an unavailable option, Bubbles returns an error. Make your UI reject the input before calling `select_option`.
 
@@ -73,7 +73,7 @@ DialogueEvent::Command { name, args, tags } => {
 }
 ```
 
-Arguments are already interpolated — no `{$pitch}` surviving into your handler.
+Arguments are already interpolated - no `{$pitch}` surviving into your handler.
 
 ## `NodeComplete(String)`
 
@@ -114,7 +114,7 @@ match event {
 
 ## A realistic match
 
-Putting it all together — a minimal but honest game-loop handler:
+Putting it all together - a minimal but honest game-loop handler:
 
 ```rust,ignore
 fn tick_dialogue(runner: &mut Runner<HashMapStorage>, engine: &mut Engine) -> bool {

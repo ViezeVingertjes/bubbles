@@ -234,7 +234,7 @@ fn return_from_entry_node_ends_dialogue() {
 #[test]
 fn stop_ends_dialogue_mid_node() {
     // `<<stop>>` terminates the dialogue immediately, skipping the rest of
-    // the node body and any calling frames. No `NodeComplete` is emitted —
+    // the node body and any calling frames. No `NodeComplete` is emitted -
     // the stack is cleared and a single `DialogueComplete` closes things out.
     let prog = compile(
         "title: A\n\

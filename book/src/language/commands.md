@@ -1,6 +1,6 @@
 # Commands
 
-A command is anything between `<<…>>` that isn't a reserved keyword. Bubbles doesn't try to interpret it — it just hands the name and arguments off to your game.
+A command is anything between `<<…>>` that isn't a reserved keyword. Bubbles doesn't try to interpret it - it just hands the name and arguments off to your game.
 
 ```text
 <<play_sound bell>>
@@ -10,9 +10,9 @@ A command is anything between `<<…>>` that isn't a reserved keyword. Bubbles d
 
 Each of those triggers a `DialogueEvent::Command` with:
 
-- `name: String` — `"play_sound"`, `"shake_camera"`, `"fade_to"`
-- `args: Vec<String>` — the whitespace-separated tokens after the name
-- `tags: Vec<String>` — any trailing `#tags`
+- `name: String` - `"play_sound"`, `"shake_camera"`, `"fade_to"`
+- `args: Vec<String>` - the whitespace-separated tokens after the name
+- `tags: Vec<String>` - any trailing `#tags`
 
 ## Handling commands in Rust
 
@@ -46,14 +46,14 @@ Command arguments are text, but they support `{…}` [interpolation](./interpola
 <<play_vo aria_greet_01 {$pitch}>>
 ```
 
-By the time your handler runs, `args` is `["aria_greet_01", "1.35"]`. No escape artistry in your game code — Bubbles has already done the substitution.
+By the time your handler runs, `args` is `["aria_greet_01", "1.35"]`. No escape artistry in your game code - Bubbles has already done the substitution.
 
 ## Commands vs functions
 
 Two ways to talk to the host:
 
-- **Commands** (`<<cast_spell fireball>>`) — fire-and-forget actions. They emit an event, your code reacts. Use this for audio, VFX, animations, quest triggers.
-- **Functions** (`reputation("thieves_guild")`) — synchronous values you want back in an expression. Use these inside `<<if>>`, `<<set>>`, or `{…}`. See [Custom Functions](../integration/functions.md).
+- **Commands** (`<<cast_spell fireball>>`) - fire-and-forget actions. They emit an event, your code reacts. Use this for audio, VFX, animations, quest triggers.
+- **Functions** (`reputation("thieves_guild")`) - synchronous values you want back in an expression. Use these inside `<<if>>`, `<<set>>`, or `{…}`. See [Custom Functions](../integration/functions.md).
 
 Rule of thumb: if you need the result in a later expression, use a function. If you're kicking off something that happens elsewhere, use a command.
 
@@ -63,7 +63,7 @@ Bubbles reserves the built-in script directives. You can't use them as command n
 
 `set`, `declare`, `if`, `elseif`, `else`, `endif`, `once`, `endonce`, `jump`, `detour`, `return`.
 
-Anything else is yours. `<<save>>`, `<<pray>>`, `<<roll 2d6>>` — go wild.
+Anything else is yours. `<<save>>`, `<<pray>>`, `<<roll 2d6>>` - go wild.
 
 ## A worked example
 
@@ -109,7 +109,7 @@ fn handle(event: DialogueEvent, engine: &mut Engine) {
 }
 ```
 
-Six lines of dialogue drive camera shake, two sound effects, and a music change — with zero coupling between the script and your engine beyond the command names you agree on.
+Six lines of dialogue drive camera shake, two sound effects, and a music change - with zero coupling between the script and your engine beyond the command names you agree on.
 
 ---
 

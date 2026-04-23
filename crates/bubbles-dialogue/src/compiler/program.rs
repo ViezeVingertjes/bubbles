@@ -1,4 +1,4 @@
-//! [`Program`] — the compiled output of one or more `.bub` sources.
+//! [`Program`] - the compiled output of one or more `.bub` sources.
 
 use indexmap::IndexMap;
 

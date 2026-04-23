@@ -20,7 +20,7 @@ A [saliency strategy](../integration/saliency.md) is "the rule for picking." Bub
 | `RandomAvailable` | Uniformly random (needs the `rand` feature) |
 | `BestLeastRecentlyViewed` | Prefers the one you've heard least recently |
 
-The last one — **BLRV** — is usually what you want for ambient barks. It guarantees variety: the player never hears the same line twice in a row, and every variant eventually comes up.
+The last one - **BLRV** - is usually what you want for ambient barks. It guarantees variety: the player never hears the same line twice in a row, and every variant eventually comes up.
 
 Pick a strategy once on the runner:
 
@@ -40,7 +40,7 @@ Each `=>` line can have its own guard:
 => Barkeep: Another fine evening.
 ```
 
-The strategy only picks among variants whose guard is true. The last line has no guard, so it's always eligible — a nice "default" to keep the group from going silent.
+The strategy only picks among variants whose guard is true. The last line has no guard, so it's always eligible - a nice "default" to keep the group from going silent.
 
 ## Mixing with speaker, tags, and commands
 
@@ -80,7 +80,7 @@ Guard: Halt! ... Oh, it's you.
 ===
 ```
 
-Every time you pass the guard, you hear one of four lines — and (with BLRV) probably a different one. No scripting, no counters, no bespoke code.
+Every time you pass the guard, you hear one of four lines - and (with BLRV) probably a different one. No scripting, no counters, no bespoke code.
 
 ## Not the same as options
 

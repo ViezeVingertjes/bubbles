@@ -1,0 +1,40 @@
+name: Feature request
+description: Suggest something new for Bubbles
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Large changes (new language constructs, breaking API changes) benefit from
+        discussion before implementation. Open this issue early so we can align
+        before you invest time coding.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: >
+        Describe the game or dialogue scenario you are working on and where
+        Bubbles currently falls short. Concrete examples are more useful than
+        abstract descriptions.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: >
+        How would you like Bubbles to handle this? Include sketch `.bub` syntax
+        or API shape if you have one in mind - it does not need to be final.
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you have considered
+      description: >
+        What workarounds exist today? Why are they not good enough?
+    validations:
+      required: false

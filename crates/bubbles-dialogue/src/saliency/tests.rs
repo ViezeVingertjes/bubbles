@@ -65,18 +65,18 @@ fn random_available_none_when_empty() {
 fn blrv_cycles_through_all_candidates() {
     let mut s = BestLeastRecentlyViewed::new();
     let cs = cand(&["a", "b", "c"]);
-    assert_eq!(s.select(&cs), Some(0)); // a — unseen
-    assert_eq!(s.select(&cs), Some(1)); // b — unseen
-    assert_eq!(s.select(&cs), Some(2)); // c — unseen
-    assert_eq!(s.select(&cs), Some(0)); // a — oldest seen
+    assert_eq!(s.select(&cs), Some(0)); // a - unseen
+    assert_eq!(s.select(&cs), Some(1)); // b - unseen
+    assert_eq!(s.select(&cs), Some(2)); // c - unseen
+    assert_eq!(s.select(&cs), Some(0)); // a - oldest seen
 }
 
 #[test]
 fn blrv_skips_unavailable() {
     let mut s = BestLeastRecentlyViewed::new();
     let cs = cand_mask(&["a", "b", "c"], &[false, true, true]);
-    assert_eq!(s.select(&cs), Some(1)); // b — first available
-    assert_eq!(s.select(&cs), Some(2)); // c — next unseen
+    assert_eq!(s.select(&cs), Some(1)); // b - first available
+    assert_eq!(s.select(&cs), Some(2)); // c - next unseen
 }
 
 #[test]

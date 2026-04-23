@@ -1,6 +1,6 @@
 # Nodes and Lines
 
-Every `.bub` script is made of **nodes**. A node is a named scene — a chunk of dialogue your game can jump into. Lines live inside nodes.
+Every `.bub` script is made of **nodes**. A node is a named scene - a chunk of dialogue your game can jump into. Lines live inside nodes.
 
 Here is the smallest possible node:
 
@@ -50,13 +50,13 @@ DialogueEvent::Line { speaker, text, .. } => {
 }
 ```
 
-A narrator line has no colon-prefix and `speaker` comes through as `None`. Use whichever fits the moment — Bubbles doesn't judge.
+A narrator line has no colon-prefix and `speaker` comes through as `None`. Use whichever fits the moment - Bubbles doesn't judge.
 
 > **Note:** The speaker is everything before the *first* colon on the line. If your dialogue needs literal colons in the middle, put them after the first one and you're fine: `Aria: Tip: always carry salt.`
 
 ## A richer example
 
-Let's write a short scene with three nodes. Don't worry about the `<<jump>>` yet — we'll cover it soon.
+Let's write a short scene with three nodes. Don't worry about the `<<jump>>` yet - we'll cover it soon.
 
 ```text
 title: CampfireIntro
@@ -83,13 +83,13 @@ Three nodes, six lines, one scene. Bubbles will walk them in order because each 
 
 ## Blank lines, comments, and whitespace
 
-Blank lines inside a node are ignored. Leading indentation is meaningful only for options (which we'll cover next) — otherwise it's cosmetic.
+Blank lines inside a node are ignored. Leading indentation is meaningful only for options (which we'll cover next) - otherwise it's cosmetic.
 
 Bubbles does not have line-level comments. For scene notes, use **tags** on the node header (covered in [Tags and Metadata](./tags.md)) or a convention like `Narrator: [TODO: rewrite this]`.
 
 ## A preview of what's next
 
-Here's a node using features from later chapters. Don't panic — each piece gets its own page.
+Here's a node using features from later chapters. Don't panic - each piece gets its own page.
 
 ```text
 title: Crossroads
@@ -107,7 +107,7 @@ Aria: Which path?
 ===
 ```
 
-Options, indented bodies, jumps — we'll unpack them one by one.
+Options, indented bodies, jumps - we'll unpack them one by one.
 
 ---
 

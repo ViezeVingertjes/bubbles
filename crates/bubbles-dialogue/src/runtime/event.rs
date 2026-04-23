@@ -1,4 +1,4 @@
-//! [`DialogueEvent`] and [`DialogueOption`] — the output types of the runner.
+//! [`DialogueEvent`] and [`DialogueOption`] - the output types of the runner.
 
 /// Returns the id from a `#line:<id>` tag in `tags`, if any (first match wins).
 ///

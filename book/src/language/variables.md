@@ -12,7 +12,7 @@ Once a variable has a type, that type is fixed. Trying to store a string into a 
 
 ## Declaring a variable
 
-Use `<<declare>>` at the top of a node (usually the starting one). It initialises the variable **once** — subsequent runs leave the existing value alone.
+Use `<<declare>>` at the top of a node (usually the starting one). It initialises the variable **once** - subsequent runs leave the existing value alone.
 
 ```text
 title: Tavern
@@ -26,7 +26,7 @@ Barkeep: Evening, {$name}.
 ```
 
 First visit: `$gold = 50`, `$name = "stranger"`, `$greeted = false`.
-Second visit (after a save/load or a jump back): values preserved — `<<declare>>` is a no-op if the variable already exists.
+Second visit (after a save/load or a jump back): values preserved - `<<declare>>` is a no-op if the variable already exists.
 
 > **Tip:** Prefer `<<declare>>` over `<<set>>` for initial values. It makes save/load "just work": your existing saves carry over, new variables get their defaults.
 
@@ -104,14 +104,14 @@ That lists every `<<declare>>`'d variable across the whole program, with its sou
 Rules of thumb:
 
 - **Declare** values that are *part of the game state*. Gold, HP, faction reputation, quest flags.
-- **Set** values when they should *always* reset — for instance, a one-shot counter inside a single scene.
+- **Set** values when they should *always* reset - for instance, a one-shot counter inside a single scene.
 
 ```text
 <<declare $reputation = 0>>   # persists across saves
 <<set $intro_seen = false>>   # reset each time this node starts
 ```
 
-> **Note:** Variable storage is pluggable. If `HashMapStorage` doesn't cut it — maybe you want to back it with your game's own save system — implement the [`VariableStorage`](../integration/storage.md) trait. Bubbles never touches your state except through that interface.
+> **Note:** Variable storage is pluggable. If `HashMapStorage` doesn't cut it - maybe you want to back it with your game's own save system - implement the [`VariableStorage`](../integration/storage.md) trait. Bubbles never touches your state except through that interface.
 
 ---
 

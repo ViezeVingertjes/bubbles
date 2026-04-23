@@ -1,4 +1,4 @@
-//! Property tests for the expression evaluator — arithmetic and boolean laws.
+//! Property tests for the expression evaluator - arithmetic and boolean laws.
 
 use bubbles::compiler::expr::parse_expr;
 use bubbles::runtime::eval as eval_fn;

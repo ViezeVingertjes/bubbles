@@ -1,7 +1,7 @@
 [book]
 title = "Bubbles Dialogue"
 authors = ["ViezeVingertjes"]
-description = "A friendly guide to Bubbles — a lightweight, engine-agnostic dialogue runtime for Rust games."
+description = "A friendly guide to Bubbles - a lightweight, engine-agnostic dialogue runtime for Rust games."
 language = "en"
 src = "src"
 

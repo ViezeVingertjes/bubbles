@@ -1,4 +1,4 @@
-//! Command, if, and once statement parsing — `impl Parser` blocks for control flow.
+//! Command, if, and once statement parsing - `impl Parser` blocks for control flow.
 
 use crate::compiler::ast::{IfBranch, Stmt};
 use crate::error::Result;

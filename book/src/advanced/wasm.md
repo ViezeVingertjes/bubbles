@@ -1,6 +1,6 @@
 # WebAssembly
 
-Bubbles runs on `wasm32-unknown-unknown` out of the box. No async, no `std::thread`, no OS-specific dependencies — just the parts of `std` that WebAssembly supports.
+Bubbles runs on `wasm32-unknown-unknown` out of the box. No async, no `std::thread`, no OS-specific dependencies - just the parts of `std` that WebAssembly supports.
 
 Every release is built against wasm in CI (see [`scripts/check-wasm.sh`](https://github.com/ViezeVingertjes/bubbles/blob/main/scripts/check-wasm.sh)). If it ever breaks, it breaks the build.
 
@@ -107,7 +107,7 @@ function step() {
 step();
 ```
 
-Identical in shape to the Rust version — just a different presentation layer.
+Identical in shape to the Rust version - just a different presentation layer.
 
 ## Randomness on wasm
 
@@ -133,7 +133,7 @@ If binary size matters:
 - Run `wasm-opt -Oz` as a post-build step (included with `wasm-pack`).
 - Compile with `lto = "fat"` and `codegen-units = 1` in your release profile.
 
-On a stripped, optimised build, a Bubbles runtime plus a small `.bub` script tends to weigh well under 100 KB gzipped — comfortable for a web game.
+On a stripped, optimised build, a Bubbles runtime plus a small `.bub` script tends to weigh well under 100 KB gzipped - comfortable for a web game.
 
 ---
 

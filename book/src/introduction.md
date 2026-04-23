@@ -1,6 +1,6 @@
 # Introduction
 
-Welcome to **Bubbles** — a small, friendly dialogue runtime for Rust games.
+Welcome to **Bubbles** - a small, friendly dialogue runtime for Rust games.
 
 You write branching dialogue in `.bub` scripts. Bubbles compiles them once at startup and hands you a simple loop: ask for the next event, show it on screen, select an option, repeat. That is the whole API.
 
@@ -10,7 +10,7 @@ while let Some(event) = runner.next_event()? {
 }
 ```
 
-No async. No global state. No engine lock-in. Bubbles runs wherever Rust runs — Bevy, Godot, Macroquad, a custom engine, the web via WebAssembly, even a terminal.
+No async. No global state. No engine lock-in. Bubbles runs wherever Rust runs - Bevy, Godot, Macroquad, a custom engine, the web via WebAssembly, even a terminal.
 
 ## What Bubbles gives you
 
@@ -50,12 +50,12 @@ That is a complete, working dialogue. A speaker line, three options (one guarded
 
 The chapters are meant to be read in order, but each one stands on its own:
 
-- **[Getting Started](./getting-started/first-dialogue.md)** — go from zero to a running dialogue in ten lines of Rust.
-- **[The .bub Language](./language/nodes-and-lines.md)** — every piece of the script format, one concept per page.
-- **[Integrating with Your Engine](./integration/runner.md)** — wiring Bubbles into your rendering, input, and save systems.
-- **[Advanced](./advanced/save-load.md)** — snapshots, multi-file projects, WebAssembly.
-- **[Examples](./examples/tui-runner.md)** — annotated walkthroughs of the demos shipped with the crate.
-- **[API Reference](./api-reference.md)** — the full rustdoc, generated fresh for every release.
+- **[Getting Started](./getting-started/first-dialogue.md)** - go from zero to a running dialogue in ten lines of Rust.
+- **[The .bub Language](./language/nodes-and-lines.md)** - every piece of the script format, one concept per page.
+- **[Integrating with Your Engine](./integration/runner.md)** - wiring Bubbles into your rendering, input, and save systems.
+- **[Advanced](./advanced/save-load.md)** - snapshots, multi-file projects, WebAssembly.
+- **[Examples](./examples/tui-runner.md)** - annotated walkthroughs of the demos shipped with the crate.
+- **[API Reference](./api-reference.md)** - the full rustdoc, generated fresh for every release.
 
 Ready? Let's write a dialogue.
 
