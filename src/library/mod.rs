@@ -112,34 +112,30 @@ impl FunctionLibrary {
             [Value::Text(key), Value::Text(mapping)] => {
                 let mut fallback: Option<&str> = None;
                 for entry in mapping.split('|') {
-                    let (k, v) = entry.split_once(':').ok_or_else(|| {
-                        DialogueError::Function {
+                    let (k, v) = entry
+                        .split_once(':')
+                        .ok_or_else(|| DialogueError::Function {
                             name: "select".into(),
-                            message: format!(
-                                "mapping entry {entry:?} has no ':' separator"
-                            ),
-                        }
-                    })?;
+                            message: format!("mapping entry {entry:?} has no ':' separator"),
+                        })?;
                     if k == "other" {
                         fallback = Some(v);
                     } else if k == key.as_str() {
                         return Ok(Value::Text(v.to_owned()));
                     }
                 }
-                fallback.map(|v| Value::Text(v.to_owned())).ok_or_else(|| {
-                    DialogueError::Function {
+                fallback
+                    .map(|v| Value::Text(v.to_owned()))
+                    .ok_or_else(|| DialogueError::Function {
                         name: "select".into(),
                         message: format!(
                             "no match for key {key:?} and no 'other' fallback in mapping"
                         ),
-                    }
-                })
+                    })
             }
             _ => Err(DialogueError::Function {
                 name: "select".into(),
-                message: format!(
-                    "expected (string, string), got {args:?}"
-                ),
+                message: format!("expected (string, string), got {args:?}"),
             }),
         });
         self.register("plural", |args| match args.as_slice() {
@@ -154,9 +150,7 @@ impl FunctionLibrary {
             }
             _ => Err(DialogueError::Function {
                 name: "plural".into(),
-                message: format!(
-                    "expected (number, string, string), got {args:?}"
-                ),
+                message: format!("expected (number, string, string), got {args:?}"),
             }),
         });
     }

@@ -115,7 +115,10 @@ fn provider_template_with_plural_builtin() {
     let mut runner = Runner::new(prog, storage);
     let mut provider = HashMapProvider::new();
     // Spanish translation uses plural() to pick the right noun form
-    provider.insert("fruit", "Tienes {$n} {plural($n, \"manzana\", \"manzanas\")}.");
+    provider.insert(
+        "fruit",
+        "Tienes {$n} {plural($n, \"manzana\", \"manzanas\")}.",
+    );
     runner.set_provider(provider);
     runner.start("A").unwrap();
     let mut line = None;

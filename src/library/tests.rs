@@ -185,11 +185,8 @@ fn random_range_lo_gt_hi_errors() {
 fn random_range_fractional_arg_errors() {
     let lib = FunctionLibrary::new();
     assert!(
-        lib.call(
-            "random_range",
-            vec![Value::Number(1.5), Value::Number(6.0)]
-        )
-        .is_err()
+        lib.call("random_range", vec![Value::Number(1.5), Value::Number(6.0)])
+            .is_err()
     );
 }
 
@@ -310,12 +307,17 @@ fn plural_negative_one_is_singular() {
 #[test]
 fn plural_bad_args_errors() {
     let lib = FunctionLibrary::new();
-    assert!(lib
-        .call(
+    assert!(
+        lib.call(
             "plural",
-            vec![Value::Text("x".into()), Value::Text("a".into()), Value::Text("b".into())]
+            vec![
+                Value::Text("x".into()),
+                Value::Text("a".into()),
+                Value::Text("b".into())
+            ]
         )
-        .is_err());
+        .is_err()
+    );
     assert!(lib.call("plural", vec![Value::Number(1.0)]).is_err());
 }
 
@@ -375,10 +377,7 @@ fn select_missing_other_key_errors() {
     assert!(
         lib.call(
             "select",
-            vec![
-                Value::Text("x".into()),
-                Value::Text("m:He|f:She".into())
-            ]
+            vec![Value::Text("x".into()), Value::Text("m:He|f:She".into())]
         )
         .is_err()
     );
@@ -404,13 +403,18 @@ fn select_malformed_entry_errors() {
 fn select_bad_args_errors() {
     let lib = FunctionLibrary::new();
     // first arg must be a string
-    assert!(lib
-        .call("select", vec![Value::Number(1.0), Value::Text("a:A|other:B".into())])
-        .is_err());
+    assert!(
+        lib.call(
+            "select",
+            vec![Value::Number(1.0), Value::Text("a:A|other:B".into())]
+        )
+        .is_err()
+    );
     // second arg must be a string
-    assert!(lib
-        .call("select", vec![Value::Text("a".into()), Value::Number(1.0)])
-        .is_err());
+    assert!(
+        lib.call("select", vec![Value::Text("a".into()), Value::Number(1.0)])
+            .is_err()
+    );
 }
 
 #[test]
