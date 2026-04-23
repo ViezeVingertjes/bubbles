@@ -6,6 +6,20 @@ All notable changes are documented here (keep-a-changelog format).
 
 ### Changed
 
+- **Breaking (AST):** every statement-body field in the AST is now
+  `Arc<[Stmt]>` (re-exported as `bubbles::compiler::ast::StmtList`) instead
+  of `Vec<Stmt>` / `Arc<Vec<Stmt>>`.  This covers `Node::body`,
+  `IfBranch::body`, `Stmt::If { else_body }`, `Stmt::Once { body, else_body }`,
+  and `OptionItem::body`.  Anyone constructing AST nodes by hand must wrap
+  statement lists in `Arc::from(vec_of_stmt)`.  In return, frame pushes
+  (`<<if>>`, `<<once>>`, options, detours, jumps, node-group selection) no
+  longer clone statement vectors — they bump an `Arc` refcount.
+- `Runner` frames now store `{ node: Arc<str>, body: Arc<[Stmt]>, ip: usize }`
+  and advance a program counter instead of popping off a `VecDeque<Stmt>`;
+  stepping is a simple indexed read.
+- `exec_jump` / `exec_detour` / `Runner::start` share a new
+  `enter_node(target, replace_stack)` helper, removing three copies of the
+  "resolve body, bump visits, push frame, emit `NodeStarted`" idiom.
 - `Runner` now stores visit counts as a plain `HashMap<String, u32>` instead of
   `Arc<Mutex<HashMap<...>>>`.  The `visited()` and `visited_count()` builtins
   are intercepted by the evaluator directly, removing the Mutex, the lock

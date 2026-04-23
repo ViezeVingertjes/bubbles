@@ -4,6 +4,14 @@ use std::sync::Arc;
 
 use indexmap::IndexMap;
 
+/// A shared, read-only slice of [`Stmt`]s used for every body throughout the
+/// AST (node bodies, `if` branches, `once` bodies, option bodies, line groups).
+///
+/// Stored behind an [`Arc`] so the runner can push them onto the call stack
+/// without cloning the underlying statement list — frame pushes become a
+/// reference-count bump regardless of body size.
+pub type StmtList = Arc<[Stmt]>;
+
 /// A complete parsed node from a `.bub` script.
 #[derive(Debug, Clone)]
 pub struct Node {
@@ -15,8 +23,8 @@ pub struct Node {
     pub headers: IndexMap<String, String>,
     /// Optional `when:` condition for node-group selection (parsed at compile time).
     pub when: Option<Arc<Expr>>,
-    /// The statements making up the node body (shared [`Arc`] so pickers can clone cheaply).
-    pub body: Arc<Vec<Stmt>>,
+    /// The statements making up the node body.
+    pub body: StmtList,
 }
 
 /// One branch of an `<<if>>` chain: condition AST + body statements.
@@ -25,7 +33,7 @@ pub struct IfBranch {
     /// Parsed condition (same as would be produced from the source string at compile time).
     pub cond: Arc<Expr>,
     /// Statements when this branch is taken.
-    pub body: Vec<Stmt>,
+    pub body: StmtList,
 }
 
 /// A statement in a node body.
@@ -52,7 +60,7 @@ pub enum Stmt {
         /// `if` / `elseif` branches in order.
         branches: Vec<IfBranch>,
         /// `else` body.
-        else_body: Vec<Self>,
+        else_body: StmtList,
     },
     /// A `<<jump NodeTitle>>` statement.
     Jump(String),
@@ -76,9 +84,9 @@ pub enum Stmt {
         /// Optional condition for `<<once if …>>` (parsed at compile time).
         cond: Option<Arc<Expr>>,
         /// Body that runs the first time.
-        body: Vec<Self>,
+        body: StmtList,
         /// Body that runs after the first time.
-        else_body: Vec<Self>,
+        else_body: StmtList,
     },
     /// A `<<declare $var = expr>>` smart-variable declaration.
     Declare {
@@ -109,7 +117,7 @@ pub struct OptionItem {
     /// Trailing tags.
     pub tags: Vec<String>,
     /// Indented body statements executed after selection.
-    pub body: Vec<Stmt>,
+    pub body: StmtList,
 }
 
 /// A line variant inside a `=>` line-group.

@@ -5,10 +5,10 @@
 use crate::compiler::ast::{LineVariant, OptionItem, Stmt};
 use crate::error::Result;
 
-use super::Parser;
 use super::assignments::{parse_expr_arc, parse_interpolated};
 use super::stmt::parse_option_text;
 use super::text::{leading_spaces, parse_line_stmt, split_speaker, split_trailing_tags};
+use super::{Parser, into_stmt_list};
 
 impl Parser<'_> {
     /// Parses body statements at or deeper than `min_indent`.
@@ -100,7 +100,7 @@ impl Parser<'_> {
                 cond,
                 once,
                 tags,
-                body,
+                body: into_stmt_list(body),
             });
         }
         Ok(Stmt::Options(items))

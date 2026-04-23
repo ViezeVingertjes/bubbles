@@ -2,6 +2,19 @@
 
 use bubbles::{DialogueEvent, HashMapStorage, Runner, compile};
 
+fn line_texts(events: &[DialogueEvent]) -> Vec<String> {
+    events
+        .iter()
+        .filter_map(|e| {
+            if let DialogueEvent::Line { text, .. } = e {
+                Some(text.clone())
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
 fn drain(runner: &mut Runner<HashMapStorage>) -> Vec<DialogueEvent> {
     let mut events = Vec::new();
     while let Some(ev) = runner.next_event().unwrap() {
@@ -214,4 +227,32 @@ fn return_from_entry_node_ends_dialogue() {
         }
     }
     assert!(saw_complete);
+}
+
+#[test]
+fn detour_reenters_same_body_twice_without_mutation() {
+    // Two detours to the same node must replay the same lines both times.
+    // If bodies were mutated in-place through a shared `Arc`, the second
+    // detour would observe missing statements.
+    let src = "\
+title: Start
+---
+<<detour Sub>>
+<<detour Sub>>
+Done.
+===
+title: Sub
+---
+alpha
+beta
+===
+";
+    let prog = compile(src).unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("Start").unwrap();
+    let events = drain(&mut runner);
+    assert_eq!(
+        line_texts(&events),
+        ["alpha", "beta", "alpha", "beta", "Done."]
+    );
 }

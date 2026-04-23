@@ -3,7 +3,7 @@
 //!
 //! [`SaliencyStrategy`]: crate::saliency::SaliencyStrategy
 
-use crate::compiler::ast::Stmt;
+use crate::compiler::ast::StmtList;
 use crate::error::{DialogueError, Result};
 use crate::saliency::Candidate;
 use crate::value::VariableStorage;
@@ -17,40 +17,44 @@ impl<S: VariableStorage> Runner<S> {
     /// directly.  For node groups each variant's `when:` condition is evaluated and
     /// the active [`SaliencyStrategy`] selects among the eligible candidates.
     ///
+    /// Bodies are shared via [`StmtList`] (i.e. `Arc<[Stmt]>`), so the return
+    /// value is a cheap reference-count bump rather than a deep copy.
+    ///
     /// [`SaliencyStrategy`]: crate::saliency::SaliencyStrategy
-    pub(super) fn pick_node_body(&mut self, title: &str) -> Result<Vec<Stmt>> {
+    pub(super) fn pick_node_body(&mut self, title: &str) -> Result<StmtList> {
         let Some(group) = self.program.node_group(title) else {
             return Err(DialogueError::UnknownNode(title.to_owned()));
         };
 
         let has_when = group.iter().any(|n| n.when.is_some());
         if !has_when {
-            return Ok(group[0].body.as_ref().clone());
+            return Ok(StmtList::clone(&group[0].body));
         }
 
-        // Collect candidate metadata into owned data so we can borrow `self.saliency`
-        // mutably afterwards without a conflict with the `&self.program` borrow.
-        let candidate_info: Vec<(String, bool, Vec<Stmt>)> = group
+        // Snapshot candidate metadata so the `&self.program` borrow can be
+        // released before we mutably borrow `self.saliency`.  Each body is
+        // cloned as an `Arc` so this loop is O(group_len) regardless of body
+        // size.
+        let candidate_info: Vec<(String, bool, StmtList)> = group
             .iter()
             .map(|n| {
                 let available = n
                     .when
                     .as_ref()
                     .is_none_or(|e| self.eval_expr(e.as_ref()).is_ok_and(|v| v.is_truthy()));
-                (n.title.clone(), available, n.body.as_ref().clone())
+                (n.title.clone(), available, StmtList::clone(&n.body))
             })
             .collect();
 
-        // Build candidate IDs that are unique within the group.
-        // Nodes share the same title, so we append the index to make IDs stable
-        // across calls (required for BestLeastRecentlyViewed to track history).
+        // Candidate IDs must be unique within the group.  Nodes in a group
+        // share the same title, so we append the index to make IDs stable
+        // across calls (`BestLeastRecentlyViewed` uses them as history keys).
         let candidate_ids: Vec<String> = candidate_info
             .iter()
             .enumerate()
             .map(|(i, (t, _, _))| format!("{t}#{i}"))
             .collect();
 
-        // Candidates now reference local data, not `self.program`.
         let candidates: Vec<Candidate<'_>> = candidate_ids
             .iter()
             .zip(candidate_info.iter())

@@ -10,13 +10,20 @@ use std::sync::Arc;
 
 use indexmap::IndexMap;
 
-use crate::compiler::ast::{Expr, Node};
+use crate::compiler::ast::{Expr, Node, Stmt};
 use crate::error::{DialogueError, Result};
 
 type HeaderMap = IndexMap<String, String>;
 type WhenExpr = Option<Arc<Expr>>;
 
 use self::assignments::parse_expr_arc;
+
+/// Convenience wrapper: collapses a freshly-parsed `Vec<Stmt>` into the
+/// [`crate::compiler::ast::StmtList`] alias used by every body field in the
+/// AST.  Kept in one place so the `Arc::from` boundary is obvious.
+pub(super) fn into_stmt_list(body: Vec<Stmt>) -> crate::compiler::ast::StmtList {
+    Arc::from(body)
+}
 
 // ── public entry point ────────────────────────────────────────────────────────
 
@@ -141,7 +148,7 @@ impl Parser<'_> {
             tags,
             headers: extra,
             when,
-            body: Arc::new(body),
+            body: into_stmt_list(body),
         })
     }
 

@@ -5,9 +5,10 @@ pub(super) mod execute;
 pub(super) mod node_body;
 
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::sync::Arc;
 
 use crate::compiler::Program;
-use crate::compiler::ast::Stmt;
+use crate::compiler::ast::StmtList;
 use crate::error::{DialogueError, Result};
 use crate::library::FunctionLibrary;
 use crate::runtime::event::DialogueEvent;
@@ -25,23 +26,26 @@ pub(super) enum State {
 }
 
 /// A frame on the call stack.
+///
+/// Frames reference a shared [`StmtList`] and advance a program counter.
+/// No statements are cloned when a frame is pushed — only the `Arc` is
+/// bumped — so control-flow constructs (`<<if>>`, `<<once>>`, options,
+/// detours, jumps) are O(1) regardless of body size.
 #[derive(Debug, Clone)]
 pub(super) struct Frame {
-    pub(super) node: String,
-    pub(super) stmts: VecDeque<Stmt>,
+    pub(super) node: Arc<str>,
+    pub(super) body: StmtList,
+    pub(super) ip: usize,
 }
 
 impl Frame {
-    pub(super) fn new(node: String, body: Vec<Stmt>) -> Self {
-        Self {
-            node,
-            stmts: VecDeque::from(body),
-        }
+    pub(super) const fn new(node: Arc<str>, body: StmtList) -> Self {
+        Self { node, body, ip: 0 }
     }
 }
 
 /// Option bodies held during `AwaitingOption` state.
-type OptionBodies = Vec<Vec<Stmt>>;
+type OptionBodies = Vec<StmtList>;
 
 /// Drives execution of a compiled [`Program`], yielding [`DialogueEvent`]s one at a time.
 ///
@@ -91,8 +95,9 @@ impl<S: VariableStorage> Runner<S> {
             return Err(DialogueError::UnknownNode(node.to_owned()));
         }
         let body = self.pick_node_body(node)?;
+        let title: Arc<str> = Arc::from(node);
         self.stack.clear();
-        self.stack.push(Frame::new(node.to_owned(), body));
+        self.stack.push(Frame::new(title, body));
         self.state = State::Running;
         *self.visits.entry(node.to_owned()).or_insert(0) += 1;
         self.pending
@@ -154,16 +159,24 @@ impl<S: VariableStorage> Runner<S> {
     /// current frame's node title. No-op when `body` is empty.
     ///
     /// Used by `<<if>>`, `<<once>>`, and option-body execution.
-    pub(super) fn push_inline_frame(&mut self, body: Vec<Stmt>) {
+    pub(super) fn push_inline_frame(&mut self, body: StmtList) {
         if body.is_empty() {
             return;
         }
         let title = self
             .stack
             .last()
-            .map(|f| f.node.clone())
-            .unwrap_or_default();
+            .map_or_else(|| Arc::from(""), |f| Arc::clone(&f.node));
         self.stack.push(Frame::new(title, body));
+    }
+
+    /// Pushes a frame whose node title matches the supplied owned string.
+    ///
+    /// Used by `<<jump>>` / `<<detour>>` / `start()` — sites that already
+    /// know the target node title and want to install it as the top-of-stack
+    /// frame in one call.
+    pub(super) fn push_node_frame(&mut self, node: &str, body: StmtList) {
+        self.stack.push(Frame::new(Arc::from(node), body));
     }
 
     /// Returns a shared reference to the variable storage.
@@ -208,7 +221,7 @@ impl<S: VariableStorage> Runner<S> {
     #[must_use]
     pub fn snapshot(&self) -> crate::runtime::RunnerSnapshot {
         crate::runtime::RunnerSnapshot {
-            current_node: self.stack.last().map(|f| f.node.clone()),
+            current_node: self.stack.last().map(|f| f.node.as_ref().to_owned()),
             visits: self.visits.clone(),
             once_seen: self.once_seen.clone(),
         }

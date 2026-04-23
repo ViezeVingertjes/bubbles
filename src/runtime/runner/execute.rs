@@ -2,13 +2,13 @@
 
 use std::sync::Arc;
 
-use crate::compiler::ast::{Expr, IfBranch, Stmt, TextSegment};
+use crate::compiler::ast::{Expr, IfBranch, Stmt, StmtList, TextSegment};
 use crate::error::{DialogueError, Result};
 use crate::runtime::event::{DialogueEvent, DialogueOption, line_id_from_tags};
 use crate::saliency::Candidate;
 use crate::value::VariableStorage;
 
-use super::{Frame, Runner, State};
+use super::{Runner, State};
 
 impl<S: VariableStorage> Runner<S> {
     pub(super) fn step(&mut self) -> Result<Option<DialogueEvent>> {
@@ -17,10 +17,12 @@ impl<S: VariableStorage> Runner<S> {
                 self.state = State::Done;
                 return Ok(Some(DialogueEvent::DialogueComplete));
             };
-            if let Some(s) = frame.stmts.pop_front() {
+            if frame.ip < frame.body.len() {
+                let s = frame.body[frame.ip].clone();
+                frame.ip += 1;
                 break s;
             }
-            let finished_node = frame.node.clone();
+            let finished_node = frame.node.as_ref().to_owned();
             self.stack.pop();
             if self.stack.is_empty() {
                 self.state = State::Done;
@@ -63,8 +65,8 @@ impl<S: VariableStorage> Runner<S> {
                 body,
                 else_body,
             } => self.exec_once(block_id, cond.as_ref(), body, else_body),
-            Stmt::Jump(target) => self.exec_jump(target),
-            Stmt::Detour(target) => self.exec_detour(target),
+            Stmt::Jump(target) => self.exec_jump(&target),
+            Stmt::Detour(target) => self.exec_detour(&target),
             Stmt::Return => {
                 self.stack.pop();
                 Ok(None)
@@ -161,9 +163,9 @@ impl<S: VariableStorage> Runner<S> {
     fn exec_if(
         &mut self,
         branches: Vec<IfBranch>,
-        else_body: Vec<Stmt>,
+        else_body: StmtList,
     ) -> Result<Option<DialogueEvent>> {
-        let mut chosen = None;
+        let mut chosen: Option<StmtList> = None;
         for b in branches {
             if self.eval_expr(b.cond.as_ref())?.is_truthy() {
                 chosen = Some(b.body);
@@ -178,8 +180,8 @@ impl<S: VariableStorage> Runner<S> {
         &mut self,
         block_id: String,
         cond: Option<&Arc<Expr>>,
-        body: Vec<Stmt>,
-        else_body: Vec<Stmt>,
+        body: StmtList,
+        else_body: StmtList,
     ) -> Result<Option<DialogueEvent>> {
         let cond_ok = match cond {
             None => true,
@@ -194,26 +196,32 @@ impl<S: VariableStorage> Runner<S> {
         Ok(None)
     }
 
-    fn exec_jump(&mut self, target: String) -> Result<Option<DialogueEvent>> {
-        if !self.program.node_exists(&target) {
-            return Err(DialogueError::UnknownNode(target));
-        }
-        let body = self.pick_node_body(&target)?;
-        self.stack.clear();
-        self.stack.push(Frame::new(target.clone(), body));
-        *self.visits.entry(target.clone()).or_insert(0) += 1;
-        self.pending.push_front(DialogueEvent::NodeStarted(target));
-        Ok(None)
+    fn exec_jump(&mut self, target: &str) -> Result<Option<DialogueEvent>> {
+        self.enter_node(target, true)
     }
 
-    fn exec_detour(&mut self, target: String) -> Result<Option<DialogueEvent>> {
-        if !self.program.node_exists(&target) {
-            return Err(DialogueError::UnknownNode(target));
+    fn exec_detour(&mut self, target: &str) -> Result<Option<DialogueEvent>> {
+        self.enter_node(target, false)
+    }
+
+    /// Common plumbing for `<<jump>>` / `<<detour>>`: resolve the node body,
+    /// bump the visit counter, push a frame, and enqueue `NodeStarted`.
+    ///
+    /// When `replace_stack` is `true` the entire stack is cleared first
+    /// (`<<jump>>` semantics); otherwise the new frame is pushed on top
+    /// (`<<detour>>` semantics).
+    fn enter_node(&mut self, target: &str, replace_stack: bool) -> Result<Option<DialogueEvent>> {
+        if !self.program.node_exists(target) {
+            return Err(DialogueError::UnknownNode(target.to_owned()));
         }
-        let body = self.pick_node_body(&target)?;
-        *self.visits.entry(target.clone()).or_insert(0) += 1;
-        self.stack.push(Frame::new(target.clone(), body));
-        self.pending.push_front(DialogueEvent::NodeStarted(target));
+        let body = self.pick_node_body(target)?;
+        if replace_stack {
+            self.stack.clear();
+        }
+        *self.visits.entry(target.to_owned()).or_insert(0) += 1;
+        self.push_node_frame(target, body);
+        self.pending
+            .push_front(DialogueEvent::NodeStarted(target.to_owned()));
         Ok(None)
     }
 }

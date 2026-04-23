@@ -3,10 +3,10 @@
 use crate::compiler::ast::{IfBranch, Stmt};
 use crate::error::Result;
 
-use super::Parser;
 use super::assignments::{parse_declare, parse_expr_arc, parse_interpolated, parse_set};
 use super::command::{extract_cmd, extract_cmd_line_tags, first_word, split_first_word};
 use super::text::split_trailing_tags;
+use super::{Parser, into_stmt_list};
 
 impl Parser<'_> {
     pub(super) fn parse_command_stmt(&mut self, lineno: usize, cur_indent: usize) -> Result<Stmt> {
@@ -45,8 +45,11 @@ impl Parser<'_> {
         let cond_src = first_cond[2..].trim();
         let cond0 = parse_expr_arc(cond_src, "<<if>>", if_lineno, self.file)?;
         let body = self.parse_body(cur_indent + 1)?;
-        let mut branches: Vec<IfBranch> = vec![IfBranch { cond: cond0, body }];
-        let mut else_body = Vec::new();
+        let mut branches: Vec<IfBranch> = vec![IfBranch {
+            cond: cond0,
+            body: into_stmt_list(body),
+        }];
+        let mut else_body: Vec<Stmt> = Vec::new();
 
         loop {
             match self.peek() {
@@ -60,7 +63,7 @@ impl Parser<'_> {
                     let b = self.parse_body(cur_indent + 1)?;
                     branches.push(IfBranch {
                         cond: cond2,
-                        body: b,
+                        body: into_stmt_list(b),
                     });
                 }
                 Some((_, l)) if l.trim() == "<<else>>" => {
@@ -78,7 +81,7 @@ impl Parser<'_> {
         }
         Ok(Stmt::If {
             branches,
-            else_body,
+            else_body: into_stmt_list(else_body),
         })
     }
 
@@ -109,8 +112,8 @@ impl Parser<'_> {
         Ok(Stmt::Once {
             block_id,
             cond,
-            body,
-            else_body,
+            body: into_stmt_list(body),
+            else_body: into_stmt_list(else_body),
         })
     }
 }
