@@ -21,22 +21,23 @@ pub enum Intent {
     /// Commit option `index` directly.  No-op when no options are showing or
     /// the index is out of range / unavailable.
     SelectOption(usize),
-    /// Swap keyboard focus between the dialogue pane and the transcript.
+    /// Swap keyboard focus between the options list and the transcript.
     ToggleFocus,
     /// Scroll the transcript view one step toward older entries.
     ScrollUp,
     /// Scroll the transcript view one step toward the newest entry.
     ScrollDown,
-    /// Recompile from the stored source and restart at the stored node,
-    /// clearing any active error overlay on success.
+    /// Re-read the source files from disk, recompile, and start fresh at the
+    /// stored node.  All runtime state (variables, once-seen flags, history)
+    /// is wiped.  Use this after editing a `.bub` file to pick up your changes.
     Reload,
     /// Hide the active error overlay without reloading.  The underlying
     /// session stays as-is (i.e. still unusable if the error killed it).
     DismissError,
     /// Rewind one visible step by replaying the input history.
     StepBack,
-    /// Restart execution from the start node without clearing variables or
-    /// once-seen state.  Use this to see second-visit dialogue variants after
-    /// running through the script at least once.
-    Restart,
+    /// Run again from the start node while keeping all runtime state
+    /// (variables, once-seen flags).  Use this to reach second-visit lines
+    /// and other paths that only appear after the script has run at least once.
+    Rerun,
 }

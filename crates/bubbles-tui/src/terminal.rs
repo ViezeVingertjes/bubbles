@@ -79,7 +79,7 @@ const fn key_to_intent(key: KeyEvent) -> Option<Intent> {
         KeyCode::PageUp => Some(Intent::ScrollUp),
         KeyCode::PageDown => Some(Intent::ScrollDown),
         KeyCode::Char('r') => Some(Intent::Reload),
-        KeyCode::Char('R') => Some(Intent::Restart),
+        KeyCode::Char('R') => Some(Intent::Rerun),
         KeyCode::Char('x' | 'X') => Some(Intent::DismissError),
         KeyCode::Backspace | KeyCode::Char('b' | 'B') => Some(Intent::StepBack),
         KeyCode::Char(c @ '1'..='9') => Some(Intent::SelectOption((c as usize) - ('1' as usize))),

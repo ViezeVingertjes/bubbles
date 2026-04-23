@@ -93,7 +93,7 @@ You *could* write:
 
 ---
 
-> **Try it:** [`examples/snippets/once.bub`](../../examples/snippets/once.bub): Barnacle Pete's kraken tale, epic on first visit and acknowledged on every repeat. Use `b` to step back and watch the `<<else>>` branches fire.
+> **Try it:** [`examples/snippets/once.bub`](../../examples/snippets/once.bub): Barnacle Pete's kraken tale, epic on first visit and acknowledged on every repeat. Run to the end, then press `R` (rerun) to see the second-visit lines without losing the once history. Press `b` to step back through individual events.
 > ```sh
 > cargo run -p bubbles-tui -- examples/snippets/once.bub
 > ```

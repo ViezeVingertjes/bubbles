@@ -1,4 +1,4 @@
-//! Restart tests: re-running from the start node while keeping runtime state.
+//! Rerun tests: re-running from the start node while keeping runtime state.
 
 use bubbles_tui::{AppState, Intent};
 
@@ -8,40 +8,40 @@ const WITH_VAR: &str =
     "title: Start\n---\n<<declare $n = 0>>\n<<set $n = $n + 1>>\nCount {$n}\n===\n";
 
 #[test]
-fn restart_preserves_once_seen_state() {
+fn rerun_preserves_once_seen_state() {
     let mut state = AppState::from_source(WITH_ONCE, "Start").unwrap();
     state.apply(Intent::Advance);
     assert_eq!(state.current_line().unwrap().text, "First time here.");
 
     state.apply(Intent::Advance); // finish
-    state.apply(Intent::Restart);
+    state.apply(Intent::Rerun);
     state.apply(Intent::Advance);
 
     assert_eq!(state.current_line().unwrap().text, "Back again.");
 }
 
 #[test]
-fn restart_preserves_variables() {
+fn rerun_preserves_variables() {
     let mut state = AppState::from_source(WITH_VAR, "Start").unwrap();
     state.apply(Intent::Advance);
     assert_eq!(state.current_line().unwrap().text, "Count 1");
 
     state.apply(Intent::Advance); // finish
-    state.apply(Intent::Restart);
+    state.apply(Intent::Rerun);
     state.apply(Intent::Advance);
 
     assert_eq!(state.current_line().unwrap().text, "Count 2");
 }
 
 #[test]
-fn restart_clears_transcript_and_history() {
+fn rerun_clears_transcript_and_history() {
     let mut state = AppState::from_source(WITH_ONCE, "Start").unwrap();
     state.apply(Intent::Advance); // line 1
     state.apply(Intent::Advance); // finish
     assert!(!state.transcript().is_empty());
     assert!(state.can_step_back());
 
-    state.apply(Intent::Restart);
+    state.apply(Intent::Rerun);
 
     assert!(state.transcript().is_empty());
     assert!(!state.can_step_back());

@@ -8,7 +8,7 @@ Small scripts for answering "can Bubbles do X?" Each one is 30-50 lines, runs in
 cargo run -p bubbles-tui -- examples/snippets/<name>.bub
 ```
 
-Press `r` to reload after editing, `b` to step back through the session history.
+Press `r` to reload (re-reads from disk, resets everything) after editing, `R` to rerun from the start keeping variables and `<<once>>` history, `b` to step back.
 
 ## The snippets
 
@@ -74,7 +74,7 @@ cargo run -p bubbles-tui -- examples/snippets/once.bub
 
 Old Barnacle Pete has a legendary kraken story. The first visit plays the full account. Every later visit plays the short acknowledgement. No flag variable needed.
 
-Shows `<<once>>` / `<<else>>` / `<<endonce>>` with multiple independent once sequences in the same script. Use `b` to step back and watch the `<<else>>` branches fire.
+Shows `<<once>>` / `<<else>>` / `<<endonce>>` with multiple independent once sequences in the same script. Run through to the end, then press `R` to rerun - Pete's opening line and the kraken story both switch to their second-visit versions. Press `r` instead to reload and confirm the first-visit lines come back.
 
 See [Once Blocks](../language/once.md).
 

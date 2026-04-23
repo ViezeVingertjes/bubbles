@@ -150,7 +150,7 @@ impl AppState {
             Intent::ScrollUp => self.transcript.scroll_up(),
             Intent::ScrollDown => self.transcript.scroll_down(),
             Intent::Reload => self.reload(),
-            Intent::Restart => self.do_restart(),
+            Intent::Rerun => self.do_rerun(),
             Intent::DismissError => self.error_overlay = None,
             Intent::StepBack => self.step_back(),
         }
@@ -296,8 +296,8 @@ impl AppState {
         self.history.clear();
     }
 
-    fn do_restart(&mut self) {
-        let result = self.session.as_mut().map(|s| s.restart(&self.start_node));
+    fn do_rerun(&mut self) {
+        let result = self.session.as_mut().map(|s| s.rerun(&self.start_node));
 
         match result {
             Some(Ok(())) => self.error_overlay = None,
