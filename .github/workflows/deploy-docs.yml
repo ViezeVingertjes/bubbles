@@ -27,6 +27,16 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      # Enables Pages on the repo and switches its source to GitHub Actions
+      # the first time this workflow runs. Without this step the deploy step
+      # can appear to succeed while the repo is still serving from a branch
+      # source (or nothing at all) — which is exactly the "action is green
+      # but the site 404s" failure mode.
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
       - name: Install mdBook
         uses: peaceiris/actions-mdbook@v2
         with:
@@ -53,6 +63,12 @@ jobs:
           <link rel="canonical" href="bubbles/index.html">
           <p><a href="bubbles/index.html">Continue to the Bubbles API reference</a>.</p>
           EOF
+
+      # Opt out of Jekyll so Pages serves our rustdoc assets verbatim —
+      # rustdoc writes to `static.files/` and (for older toolchains) paths
+      # that start with `_`, which Jekyll would otherwise strip.
+      - name: Disable Jekyll processing
+        run: touch site/.nojekyll
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
