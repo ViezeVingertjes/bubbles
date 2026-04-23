@@ -108,4 +108,11 @@ Three options, each guarded by gold, each doing its own thing. The final line ru
 
 ---
 
+> **Try it:** [`examples/snippets/options.bub`](../../examples/snippets/options.bub): an insult sword-fight duel showing guarded options and an `<<elseif>>` skill chain.
+> ```sh
+> cargo run -p bubbles-tui -- examples/snippets/options.bub
+> ```
+
+---
+
 > **Next:** [Tags and Metadata](./tags.md)

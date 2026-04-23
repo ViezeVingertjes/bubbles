@@ -115,4 +115,11 @@ Rules of thumb:
 
 ---
 
+> **Try it:** [`examples/snippets/variables.bub`](../../examples/snippets/variables.bub): a grog shop where the price rises with each purchase, showing `<<declare>>`, `<<set>>`, arithmetic, and interpolation.
+> ```sh
+> cargo run -p bubbles-tui -- examples/snippets/variables.bub
+> ```
+
+---
+
 > **Next:** [Expressions](./expressions.md)

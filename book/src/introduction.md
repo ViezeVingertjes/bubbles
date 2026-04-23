@@ -44,7 +44,7 @@ Barkeep: Evening, stranger.
 ===
 ```
 
-That is a complete, working dialogue. A speaker line, three options (one guarded by a condition), a variable assignment, and a jump. We will build this exact scene step by step in [The Tavern](./examples/tavern.md).
+That is a complete, working dialogue. A speaker line, three options (one guarded by a condition), a variable assignment, and a jump. We will build this exact scene step by step in [The Harbour](./examples/harbour.md).
 
 ## How to read this guide
 

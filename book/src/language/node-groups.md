@@ -111,4 +111,11 @@ Four variants, ranked from most specific to fallback. Every `<<jump TavernEntry>
 
 ---
 
+> **Try it:** [`examples/snippets/saliency.bub`](../../examples/snippets/saliency.bub): a storyteller NPC with four `Storyteller` nodes where `when: $time_of_day == "..."` picks the right one. Change the `<<declare>>` value and press `r` to reload.
+> ```sh
+> cargo run -p bubbles-tui -- examples/snippets/saliency.bub
+> ```
+
+---
+
 > **Next:** [The Runner Lifecycle](../integration/runner.md)

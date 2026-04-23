@@ -6,11 +6,29 @@ transcript, and step back through the session while iterating on content.
 
 ## Run it
 
+Run the harbour showcase (two files compiled together):
+
 ```sh
-cargo run -p bubbles-tui -- path/to/script.bub Start
+cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
 ```
 
-`Start` is optional; the binary falls back to the `Start` node by default.
+Or run any single `.bub` file:
+
+```sh
+cargo run -p bubbles-tui -- path/to/script.bub
+```
+
+An optional trailing argument picks the start node (defaults to `Start`):
+
+```sh
+cargo run -p bubbles-tui -- path/to/script.bub MyNode
+```
+
+Multiple files are compiled into one programme, so cross-file jumps and detours work across all of them:
+
+```sh
+cargo run -p bubbles-tui -- scene.bub characters.bub shared/barks.bub
+```
 
 ## Keybindings
 

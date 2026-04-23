@@ -96,4 +96,11 @@ Easy to confuse at first. Quick table:
 
 ---
 
+> **Try it:** [`examples/snippets/saliency.bub`](../../examples/snippets/saliency.bub): five ambient dock worker barks cycling with BLRV so the same line never plays twice in a row.
+> ```sh
+> cargo run -p bubbles-tui -- examples/snippets/saliency.bub
+> ```
+
+---
+
 > **Next:** [Node Groups and Saliency](./node-groups.md)

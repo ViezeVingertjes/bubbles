@@ -96,4 +96,11 @@ That's it. Every other tag is yours to define. Bubbles promises not to grow a li
 
 ---
 
+> **Try it:** [`examples/snippets/commands.bub`](../../examples/snippets/commands.bub): see line tags (`#dramatic`, `#sfx`, `#eerie`) alongside `<<command>>` calls as they appear in the transcript pane.
+> ```sh
+> cargo run -p bubbles-tui -- examples/snippets/commands.bub
+> ```
+
+---
+
 > **Next:** [Variables](./variables.md)

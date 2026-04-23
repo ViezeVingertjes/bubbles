@@ -73,7 +73,7 @@ Merchant: What can I get you?
 ===
 ```
 
-Three distinct greetings: first visit, second visit, all subsequent visits - without a single variable. The [Tavern example](../examples/tavern.md) uses the same pattern for gossip that "updates" the first time you ask about rumours.
+Three distinct greetings: first visit, second visit, all subsequent visits - without a single variable. The [harbour example](../examples/harbour.md) uses the same pattern for rumours that play out in full on first ask and are briefly acknowledged on return.
 
 ## `<<once>>` vs a flag variable
 
@@ -90,6 +90,13 @@ You *could* write:
 ```
 
 ...and it works. But `<<once>>` is shorter, harder to mess up (no forgetting the `<<set>>`), and the state is saved for you automatically. Reach for a variable when you need to *read* the flag elsewhere. Reach for `<<once>>` when you just need a one-shot.
+
+---
+
+> **Try it:** [`examples/snippets/once.bub`](../../examples/snippets/once.bub): Barnacle Pete's kraken tale, epic on first visit and acknowledged on every repeat. Use `b` to step back and watch the `<<else>>` branches fire.
+> ```sh
+> cargo run -p bubbles-tui -- examples/snippets/once.bub
+> ```
 
 ---
 

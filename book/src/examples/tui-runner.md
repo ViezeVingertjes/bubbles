@@ -2,8 +2,35 @@
 
 The [`bubbles-tui`](https://github.com/ViezeVingertjes/bubbles/tree/main/crates/bubbles-tui) crate is a writer-focused terminal UI for iterating on `.bub` scripts. It drives the same `Runner` you would in a game and shows exactly what a real integration would see: node markers, speaker lines, option prompts, command emissions, and runtime errors.
 
+## Quick start
+
+Run the harbour showcase, a two-file pirate scene covering most language features:
+
 ```sh
-cargo run -p bubbles-tui -- path/to/script.bub Start
+cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
+```
+
+Or jump straight to any of the focused snippets:
+
+```sh
+cargo run -p bubbles-tui -- examples/snippets/variables.bub
+cargo run -p bubbles-tui -- examples/snippets/once.bub
+cargo run -p bubbles-tui -- examples/snippets/saliency.bub
+```
+
+Then read [The Harbour](./harbour.md) for a feature-by-feature walkthrough, or [Snippets](./snippets.md) for a complete index.
+
+## Running your own scripts
+
+```sh
+# single file
+cargo run -p bubbles-tui -- path/to/script.bub
+
+# multiple files compiled together (cross-file jumps and detours work)
+cargo run -p bubbles-tui -- main.bub services.bub shared/barks.bub
+
+# explicit start node (defaults to "Start" if omitted)
+cargo run -p bubbles-tui -- path/to/script.bub MyStartNode
 ```
 
 ## Keybindings
@@ -58,4 +85,4 @@ compatible with any dialogue the runner can run.
 
 ---
 
-> **Next:** [The Tavern](./tavern.md)
+> **Next:** [The Harbour](./harbour.md)

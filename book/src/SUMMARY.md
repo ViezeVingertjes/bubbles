@@ -40,7 +40,8 @@
 # Examples
 
 - [TUI Runner](./examples/tui-runner.md)
-- [The Tavern](./examples/tavern.md)
+- [The Harbour](./examples/harbour.md)
+- [Snippets](./examples/snippets.md)
 
 ---
 
