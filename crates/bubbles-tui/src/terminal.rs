@@ -73,8 +73,11 @@ const fn key_to_intent(key: KeyEvent) -> Option<Intent> {
     match key.code {
         KeyCode::Enter | KeyCode::Char(' ') => Some(Intent::Advance),
         KeyCode::Esc | KeyCode::Char('q' | 'Q') => Some(Intent::Quit),
+        KeyCode::Tab => Some(Intent::ToggleFocus),
         KeyCode::Down | KeyCode::Char('j' | 'J') => Some(Intent::FocusNext),
         KeyCode::Up | KeyCode::Char('k' | 'K') => Some(Intent::FocusPrev),
+        KeyCode::PageUp => Some(Intent::ScrollUp),
+        KeyCode::PageDown => Some(Intent::ScrollDown),
         KeyCode::Char(c @ '1'..='9') => Some(Intent::SelectOption((c as usize) - ('1' as usize))),
         _ => None,
     }

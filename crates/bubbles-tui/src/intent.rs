@@ -14,11 +14,17 @@ pub enum Intent {
     Advance,
     /// Quit the application (the binary exits; no-op in tests).
     Quit,
-    /// Move option focus down, wrapping to the top at the end.
+    /// Move option focus (or transcript view) down, wrapping at the end.
     FocusNext,
-    /// Move option focus up, wrapping to the bottom at the start.
+    /// Move option focus (or transcript view) up, wrapping at the start.
     FocusPrev,
     /// Commit option `index` directly.  No-op when no options are showing or
     /// the index is out of range / unavailable.
     SelectOption(usize),
+    /// Swap keyboard focus between the dialogue pane and the transcript.
+    ToggleFocus,
+    /// Scroll the transcript view one step toward older entries.
+    ScrollUp,
+    /// Scroll the transcript view one step toward the newest entry.
+    ScrollDown,
 }

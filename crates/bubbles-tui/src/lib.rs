@@ -29,8 +29,10 @@ mod app;
 mod intent;
 mod session;
 pub mod terminal;
+mod transcript;
 mod ui;
 
-pub use app::{AppState, DisplayedLine, DisplayedOption};
+pub use app::{AppState, DisplayedLine, DisplayedOption, FocusPanel};
 pub use intent::Intent;
+pub use transcript::{Transcript, TranscriptEntry};
 pub use ui::render;

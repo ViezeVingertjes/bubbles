@@ -1,15 +1,12 @@
-//! Rendering: pure functions from [`AppState`] to a ratatui frame.
-//!
-//! Every test uses `ratatui::backend::TestBackend`, so no function in this
-//! module touches the real terminal.
+//! Dialogue + options pane rendering.
 
 use ratatui::Frame;
-use ratatui::layout::{Constraint, Direction, Layout};
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph, Wrap};
 
-use crate::app::{AppState, DisplayedLine, DisplayedOption};
+use crate::app::{AppState, DisplayedLine, DisplayedOption, FocusPanel};
 
 /// Marker drawn in front of the focused option.
 const FOCUS_MARKER: &str = "> ";
@@ -19,34 +16,22 @@ const UNFOCUSED_MARKER: &str = "  ";
 /// Marker drawn next to unavailable (guard-locked) options.
 const LOCKED_MARKER: &str = " \u{2717}";
 
-/// Draws the current [`AppState`] into `frame`.
-///
-/// The layout is a stacked dialogue pane + options pane + one-line footer.
-/// Later milestones add side panes by extending the top-level layout.
-pub fn render(state: &AppState, frame: &mut Frame<'_>) {
-    let show_options = !state.options().is_empty();
-    let constraints: &[Constraint] = if show_options {
-        &[
-            Constraint::Min(3),
-            Constraint::Length(options_height(state)),
-            Constraint::Length(1),
-        ]
-    } else {
-        &[Constraint::Min(1), Constraint::Length(1)]
-    };
+/// Renders the dialogue pane (and options, when active) into `area`.
+pub fn render(state: &AppState, frame: &mut Frame<'_>, area: Rect) {
+    if state.options().is_empty() {
+        frame.render_widget(dialogue_paragraph(state), area);
+        return;
+    }
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints(constraints)
-        .split(frame.area());
-
+        .constraints([
+            Constraint::Min(3),
+            Constraint::Length(options_height(state)),
+        ])
+        .split(area);
     frame.render_widget(dialogue_paragraph(state), chunks[0]);
-    if show_options {
-        frame.render_widget(options_list(state), chunks[1]);
-        frame.render_widget(footer(state), chunks[2]);
-    } else {
-        frame.render_widget(footer(state), chunks[1]);
-    }
+    frame.render_widget(options_list(state), chunks[1]);
 }
 
 fn options_height(state: &AppState) -> u16 {
@@ -71,8 +56,25 @@ fn dialogue_paragraph(state: &AppState) -> Paragraph<'_> {
     };
 
     Paragraph::new(lines)
-        .block(Block::default().borders(Borders::ALL).title(" dialogue "))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(title_with_focus(" dialogue ", state)),
+        )
         .wrap(Wrap { trim: false })
+}
+
+fn title_with_focus(text: &'static str, state: &AppState) -> &'static str {
+    if matches!(state.focus(), FocusPanel::Dialogue) {
+        // Subtle focus cue: prefix the title with a bullet. We keep it as a
+        // 'static str so widgets stay `'static`-friendly.
+        match text {
+            " dialogue " => "• dialogue ",
+            other => other,
+        }
+    } else {
+        text
+    }
 }
 
 fn line_to_spans(line: &DisplayedLine) -> Vec<Line<'_>> {
@@ -125,18 +127,4 @@ fn option_item(index: usize, opt: &DisplayedOption, focused: bool) -> ListItem<'
         Style::default().add_modifier(Modifier::DIM)
     };
     ListItem::new(Line::from(spans)).style(style)
-}
-
-fn footer(state: &AppState) -> Paragraph<'_> {
-    let text = if state.is_done() {
-        "  q/Esc: quit"
-    } else if state.options().is_empty() {
-        "  Enter: advance    q/Esc: quit"
-    } else {
-        "  \u{2191}/\u{2193}: focus    Enter: choose    1-9: pick    q/Esc: quit"
-    };
-    Paragraph::new(Line::from(Span::styled(
-        text,
-        Style::default().add_modifier(Modifier::DIM),
-    )))
 }
