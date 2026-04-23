@@ -33,6 +33,12 @@ if ! cargo clippy -p bubbles-dialogue --no-default-features --all-targets -- -D 
   fail "clippy (no default features) reported errors. Fix them and re-stage your changes."
 fi
 
+echo -e "${BOLD}pre-commit:${RESET} running rustdoc (workspace)..."
+if ! RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps 2>&1; then
+  echo ""
+  fail "rustdoc reported errors. Fix them and re-stage your changes."
+fi
+
 echo -e "${BOLD}pre-commit:${RESET} checking file sizes..."
 if ! bash scripts/check-file-sizes.sh 2>&1; then
   echo ""

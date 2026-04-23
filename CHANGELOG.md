@@ -4,6 +4,18 @@ All notable changes are documented here (keep-a-changelog format).
 
 ## [Unreleased]
 
+### Fixed
+
+- `bubbles-tui` public rustdocs no longer link to the private
+  `POLL_INTERVAL` constant, satisfying `RUSTDOCFLAGS="-D warnings"` in CI.
+
+### Changed
+
+- Pre-commit hook now runs the same `cargo doc` invocation as CI;
+  `CONTRIBUTING.md` documents the full hook behavior accurately.
+- The TUI runner chapter in the book no longer includes the ASCII
+  terminal mockup.
+
 ### Added
 
 - New `bubbles-tui` crate: a ratatui-based writer's terminal UI that

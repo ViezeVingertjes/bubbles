@@ -51,8 +51,8 @@ pub fn restore() -> io::Result<()> {
     Ok(())
 }
 
-/// Polls `crossterm` for up to [`POLL_INTERVAL`] and maps any key press
-/// into an [`Intent`].
+/// Polls `crossterm` for up to 100ms and maps any key press into an
+/// [`Intent`].
 ///
 /// Returns `Ok(None)` when the poll timed out with no actionable input so
 /// the event loop can do periodic work (e.g. future hot-reload checks).

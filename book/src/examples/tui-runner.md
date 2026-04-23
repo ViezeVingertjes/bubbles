@@ -6,18 +6,6 @@ The [`bubbles-tui`](https://github.com/ViezeVingertjes/bubbles/tree/main/crates/
 cargo run -p bubbles-tui -- path/to/script.bub Start
 ```
 
-```text
-┌• dialogue ─────────────────────────┐┌ transcript (7) ───────────────────┐
-│ Alice: Did you bring the key?      ││ [→ Intro]                          │
-│                                    ││ Alice: Hi!                         │
-└────────────────────────────────────┘│ ⚙ play_sfx door #open              │
-┌ options ───────────────────────────┐│ Alice: Did you bring the key?      │
-│> 1. Yes, right here.               │└────────────────────────────────────┘
-│  2. Not yet. ✗                     │
-└────────────────────────────────────┘
-  ↑/↓: focus    Enter: choose    1-9: pick    b: back    q/Esc: quit
-```
-
 ## Keybindings
 
 | Key                | Action                                                |
