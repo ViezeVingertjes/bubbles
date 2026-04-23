@@ -76,8 +76,6 @@ All of these are enforced in CI and by the pre-commit hook.
 - [ ] New behaviour has integration test(s) in `tests/`
 - [ ] New public items have doc comments (and doc tests where sensible)
 - [ ] No file exceeds ~300 LOC
-- [ ] `CHANGELOG.md` updated for user-visible changes (under the current or upcoming version)
-
 ## Reporting bugs
 
 Please include:

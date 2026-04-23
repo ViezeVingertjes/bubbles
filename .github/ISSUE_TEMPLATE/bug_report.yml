@@ -6,7 +6,6 @@ body:
     attributes:
       value: |
         Before filing, check the [open issues](https://github.com/ViezeVingertjes/bubbles/issues)
-        and the [CHANGELOG](https://github.com/ViezeVingertjes/bubbles/blob/main/CHANGELOG.md)
         to see if this is already known.
 
   - type: textarea
