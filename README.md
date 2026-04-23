@@ -156,7 +156,7 @@ The count is {$count}.         # inline expression substitution
 
 | Trait / Type | Purpose |
 |---|---|
-| `VariableStorage` | Pluggable variable store (default: `HashMapStorage`) |
+| `VariableStorage` | Pluggable variable store (default: `HashMapStorage`). Override `get_ref` to return a borrowed `Cow<Value>` and skip allocating on every `$var` read. |
 | `SaliencyStrategy` | Line / node group selection policy |
 | `LineProvider` | Localisation lookup for `#line:id`-tagged lines |
 | `line_id_from_tags` | Same id rule as events: parse `#line:` from a tag slice (e.g. custom UI) |

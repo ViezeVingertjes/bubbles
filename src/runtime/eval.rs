@@ -21,7 +21,8 @@ where
         Expr::Text(s) => Ok(Value::Text(s.clone())),
         Expr::Bool(b) => Ok(Value::Bool(*b)),
         Expr::Var(name) => storage
-            .get(name)
+            .get_ref(name)
+            .map(std::borrow::Cow::into_owned)
             .ok_or_else(|| DialogueError::UndefinedVariable(name.clone())),
         Expr::Call { name, args } => {
             let evaluated: Result<Vec<Value>> =

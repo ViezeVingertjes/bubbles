@@ -4,6 +4,15 @@ All notable changes are documented here (keep-a-changelog format).
 
 ## [Unreleased]
 
+### Added
+
+- `VariableStorage::get_ref(&self, name) -> Option<Cow<'_, Value>>`: an
+  optional, borrow-friendly read path the expression evaluator prefers.
+  The default implementation forwards to `get` (so existing storages keep
+  working untouched); override it to return `Cow::Borrowed` and
+  `{$text}` interpolation evaluates without cloning the string.
+  `HashMapStorage` overrides it accordingly.
+
 ### Changed
 
 - **Breaking (AST):** every statement-body field in the AST is now

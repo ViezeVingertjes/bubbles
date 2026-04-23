@@ -4,16 +4,27 @@ Every `<<declare>>` and `<<set>>` in a `.bub` script reads and writes through th
 
 ## The trait
 
-It's two methods:
+The core is two methods, plus an optional borrow-friendly variant the runner prefers on the hot expression-evaluation path:
 
 ```rust,ignore
+use std::borrow::Cow;
+
 pub trait VariableStorage {
     fn get(&self, name: &str) -> Option<Value>;
     fn set(&mut self, name: &str, value: Value);
+
+    /// Default: forwards to `get` and wraps the result in `Cow::Owned`.
+    /// Override to return `Cow::Borrowed` when you already own the value,
+    /// so `{$text}` reads don't clone on every evaluation.
+    fn get_ref(&self, name: &str) -> Option<Cow<'_, Value>> {
+        self.get(name).map(Cow::Owned)
+    }
 }
 ```
 
 `name` is the variable name as written in the script, including the leading `$`. `Value` is a tagged enum: `Number(f64)`, `Text(String)`, or `Bool(bool)`.
+
+The expression evaluator reads variables through `get_ref`; `get` is kept as the ergonomic API hosts reach for when they actually want ownership (e.g. `runner.storage().get("$hp")`). If you can cheaply hand back a reference — most in-memory stores can — override `get_ref` and you get allocation-free `{$var}` interpolation for free.
 
 ## The default: `HashMapStorage`
 
