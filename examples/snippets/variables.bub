@@ -1,0 +1,34 @@
+// Snippet: Variables
+// Pattern: grog shop transaction — price rises each round (running gag)
+// Features: <<declare>>, <<set>>, arithmetic expressions, {$variable} interpolation,
+//            <<if>> / <<else>> conditionals driven by variable state
+// Run: cargo run -p bubbles-tui -- examples/snippets/variables.bub
+
+title: Start
+---
+<<declare $doubloons = 12>>
+<<declare $grogs_bought = 0>>
+<<declare $price = 3>>
+
+GrogVendor: Welcome to Griselda's Grog Shack. Finest grog in Barnacle Bay.
+GrogVendor: Today's price is {$price} doubloons a mug. Supply and demand, as they say.
+
+-> Buy a mug. <<if $doubloons >= $price>>
+    <<set $doubloons = $doubloons - $price>>
+    <<set $grogs_bought = $grogs_bought + 1>>
+    <<set $price = $price + 2>>
+    GrogVendor: Pleasure! That'll be {$price} for the next one. Inflation, ye understand.
+    You: I have {$doubloons} doubloons left and {$grogs_bought} mug(s) in hand.
+    <<jump Start>>
+-> Ask about the price hike.
+    GrogVendor: Each mug sold creates demand. It's economics!
+    GrogVendor: Learned it from a travelling merchant. Suspicious fellow.
+    <<jump Start>>
+-> Leave.
+    <<if $grogs_bought > 0>>
+        GrogVendor: Come back when yer thirsty again. And richer.
+        You: Spent {$doubloons} doubloons on {$grogs_bought} mug(s). Worth it.
+    <<else>>
+        GrogVendor: Not even one mug? Suit yerself.
+    <<endif>>
+===

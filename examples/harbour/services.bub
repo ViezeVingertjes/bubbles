@@ -1,0 +1,43 @@
+// Barnacle Bay — Shared Beats
+//
+// Reusable nodes called via <<detour>> from harbour.bub.
+// Demonstrates the multi-file split: the map seller lives here so this beat
+// could be reused from any number of scenes without duplicating the script.
+//
+// This file is compiled together with harbour.bub:
+//   cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
+//
+// Features demonstrated in this file:
+//   - <<detour>> target node (called from harbour.bub, returns to caller)
+//   - Multi-node file (MapSeller node)
+//   - <<if>> / <<elseif>> / <<else>> conditional chain
+
+title: MapSeller
+---
+MapSeller: Psst. Charts, maps, treasure coordinates — all freshly forged.
+
+<<if $gold >= 15>>
+    MapSeller: For fifteen doubloons I'll sell ye a map to the Sunken Galleon.
+    MapSeller: Rumour has it the hold's still full of cursed gold.
+    -> Buy the map for fifteen doubloons.
+        <<set $gold = $gold - 15>>
+        <<give_map "sunken_galleon">>
+        MapSeller: Pleasure doing business. Don't say I never warned ye about the curse.
+    -> Decline.
+        MapSeller: Suit yerself. Offer won't stand forever.
+<<elseif $gold >= 5>>
+    MapSeller: Can't afford the good stuff, but I've a rough sketch for five doubloons.
+    MapSeller: Might be accurate. Might not.
+    -> Buy the sketch for five doubloons.
+        <<set $gold = $gold - 5>>
+        <<give_map "rough_sketch">>
+        MapSeller: There ye go. Best of luck interpreting me handwriting.
+    -> Decline.
+        MapSeller: No shame in it. Come back when yer pockets are heavier.
+<<else>>
+    MapSeller: Ha! Not a doubloon to yer name, have ye?
+    MapSeller: Come back when ye've got coin, friend.
+<<endif>>
+
+<<return>>
+===

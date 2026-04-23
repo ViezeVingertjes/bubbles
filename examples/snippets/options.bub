@@ -1,0 +1,43 @@
+// Snippet: Options
+// Pattern: insult sword-fight duel (classic pirate banter)
+// Features: options, <<if>> / <<elseif>> / <<else>>, guarded options ($sword_skill),
+//            <<jump>> for one-way transitions
+// Run: cargo run -p bubbles-tui -- examples/snippets/options.bub
+
+title: Start
+---
+<<declare $sword_skill = 2>>
+
+Duelist: I challenge you to a duel of wits and blades, stranger!
+Duelist: Let's see if your tongue is as sharp as your cutlass.
+
+-> Deliver a devastating insult. <<if $sword_skill >= 3>>
+    You: Your sword arm is as weak as a soggy biscuit!
+    Duelist: ...
+    Duelist: I have no response to that. Well played.
+    <<jump Victory>>
+-> Stall for time.
+    You: Before we begin — did you know your boots are on the wrong feet?
+    Duelist: They are not— wait, are they?
+    <<jump Escaped>>
+-> Surrender immediately.
+    You: I yield! Take whatever you want.
+    Duelist: Hm. That was... disappointingly easy.
+    <<jump Defeated>>
+===
+
+title: Victory
+---
+Bystander: That was the quickest duel I've ever seen.
+===
+
+title: Escaped
+---
+Bystander: Smart move. That fellow never wins a duel either way.
+===
+
+title: Defeated
+---
+Duelist: I shall take your hat as a trophy.
+You: Not the hat.
+===

@@ -1,0 +1,67 @@
+// Snippet: Saliency
+// Pattern: dockside chatter + a storyteller NPC who adapts to time of day
+// Features: line groups (=>) with BestLeastRecentlyViewed saliency (ambient barks),
+//            node groups with `when:` conditions (context-sensitive NPC behaviour)
+// Run: cargo run -p bubbles-tui -- examples/snippets/saliency.bub
+//
+// Line groups: the => lines pick a different bark each visit, cycling through
+// all options before repeating (BestLeastRecentlyViewed is the default strategy).
+//
+// Node groups: multiple nodes share the title "Storyteller". Bubbles selects the
+// most appropriate one based on the `when:` condition. The $time_of_day variable
+// controls which node fires; try changing its <<declare>> value and reloading (r).
+
+title: Start
+---
+<<declare $time_of_day = "evening">>
+
+=> Dockworker: Watch yer step on those wet planks!
+=> Dockworker: Tide's coming in. Move them crates!
+=> Dockworker: I've unloaded seventeen ships today. Seventeen!
+=> Dockworker: Cap'n said we're done at sundown. Sundown was an hour ago.
+=> Dockworker: Me back's killing me. Should've been a blacksmith.
+
+-> Approach the storyteller.
+    <<jump Storyteller>>
+-> Listen to the dockworkers some more.
+    <<jump Start>>
+-> Leave the docks.
+===
+
+title: Storyteller
+when: $time_of_day == "morning"
+---
+Storyteller: Ah, a fresh morning at the docks! Best time for a tale.
+Storyteller: Did ye hear about the captain who sailed east to find the west?
+Storyteller: Never came back. Presumably found it.
+-> [Leave]
+    <<jump Start>>
+===
+
+title: Storyteller
+when: $time_of_day == "afternoon"
+---
+Storyteller: Afternoon on the docks. The heat makes the stories longer, I find.
+Storyteller: There was a merchant who traded ice to a snow giant.
+Storyteller: Clever man. Retired wealthy. The giant was less impressed.
+-> [Leave]
+    <<jump Start>>
+===
+
+title: Storyteller
+when: $time_of_day == "evening"
+---
+Storyteller: Evening tide brings the best stories, they say.
+Storyteller: A ghost ship drifted into this very harbour last Midsummer.
+Storyteller: The crew played cards with the dockworkers all night.
+Storyteller: Left owing twelve doubloons. Still hasn't paid up.
+-> [Leave]
+    <<jump Start>>
+===
+
+title: Storyteller
+---
+Storyteller: Hmm. Can't think of a story right now. Come back later.
+-> [Leave]
+    <<jump Start>>
+===

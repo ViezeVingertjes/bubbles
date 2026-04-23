@@ -1,0 +1,50 @@
+// Snippet: Once Blocks
+// Pattern: old sea dog with a legendary tale — first telling is epic,
+//           subsequent visits are gracefully acknowledged without a flag variable
+// Features: <<once>> / <<else>> / <<endonce>> for non-repeating NPC content,
+//            multiple once blocks in sequence
+// Run: cargo run -p bubbles-tui -- examples/snippets/once.bub
+//
+// Tip: use the 'b' key (step back) to rewind and observe the <<else>> branches.
+
+title: Start
+---
+Pete: Ahoy there, young sailor. Pull up a barrel.
+
+<<once>>
+    Pete: Thirty years ago I wrestled a kraken with me bare hands.
+    Pete: Eight tentacles, each one thicker than a ship's mast.
+    Pete: I bit off the tip of the seventh one. Still got it somewhere.
+    Pete: The kraken wept. Haven't seen one since.
+<<else>>
+    Pete: As I told ye before — wrestled a kraken, bit its tentacle, it wept.
+    Pete: The details don't change in the repeating.
+<<endonce>>
+
+<<once>>
+    Pete: Oh, and I once sailed through a storm for forty days straight.
+    Pete: Lost the mainsail on day twelve. Used me hat instead.
+    Pete: Finest hat I ever owned.
+<<else>>
+    Pete: And the forty-day storm. Hat. You know the rest.
+<<endonce>>
+
+-> Hear another tale.
+    <<jump AnotherTale>>
+-> Leave Pete to his memories.
+===
+
+title: AnotherTale
+---
+<<once>>
+    Pete: Did I mention the time I navigated by the stars with one eye closed?
+    Pete: The other eye was swollen shut from a jellyfish incident.
+    Pete: Arrived exactly on time. Best navigation of me career.
+<<else>>
+    Pete: The jellyfish navigation story. Aye, I told ye that one too.
+    Pete: Memory's long when ye've got nothing better to do.
+<<endonce>>
+
+-> Back to the main tales.
+    <<jump Start>>
+===

@@ -1,0 +1,41 @@
+// Snippet: Commands
+// Pattern: prying open a treasure chest — trigger host-side events
+// Features: <<command>> dispatch with arguments, line tags (#dramatic, #sfx),
+//            node tags, tagged lines
+// Run: cargo run -p bubbles-tui -- examples/snippets/commands.bub
+//
+// Note: commands like <<play_fanfare>> and <<unlock_chest>> are emitted as
+// DialogueEvent::Command events. In a real game your engine handles them
+// (play audio, spawn particles, unlock doors, etc.). The TUI runner shows
+// them in the transcript pane as "command_name args".
+
+title: Start
+tags: scene dungeon
+---
+You discover a barnacle-crusted chest half-buried in the sand. #atmospheric
+
+-> Try the lid.
+    <<creak_sound "chest_lid">>
+    The lid grinds open with a sound like a drowning accordion. #sfx
+    <<jump ContentsRevealed>>
+-> Leave it alone.
+    You: Last time you opened a chest it bit you. Not making that mistake again.
+===
+
+title: ContentsRevealed
+---
+Gold coins spill across the sand, glittering in the torchlight. #dramatic
+<<play_fanfare "treasure_found">>
+<<spawn_particles "gold_coins" 50>>
+
+You: There must be three hundred doubloons here!
+Ghostly Voice: That treasure is CURSED, ye fool! #eerie
+<<play_sound "ghost_moan" 0.8>>
+
+-> Take the gold anyway.
+    <<give_gold 300>>
+    <<apply_curse "greedy_pirate">>
+    You: Worth it.
+-> Back away slowly.
+    You: On reflection, "cursed" is a dealbreaker.
+===

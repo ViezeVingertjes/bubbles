@@ -1,0 +1,79 @@
+// Barnacle Bay — Harbour Showcase
+//
+// A two-file example that exercises most of Bubbles' language features in one
+// playable scene.  harbour.bub contains the main dockside scene; services.bub
+// holds the shared beats it detoures into.
+//
+// Run:
+//   cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
+//
+// Features demonstrated in this file:
+//   - Node tags (scene / location metadata)
+//   - <<declare>> typed variables
+//   - <<if>> / <<else>> conditionals based on a visit flag
+//   - Guarded options with <<if>> (gold >= threshold)
+//   - <<detour>> into a cross-file node and <<return>>
+//   - <<once>> / <<else>> / <<endonce>> for one-off content
+//   - Line groups (=>) with BestLeastRecentlyViewed saliency for ambient barks
+//   - Inline {$variable} interpolation
+//   - <<command>> dispatch (<<stamp_permit>>)
+//   - <<jump>> for a one-way transition
+
+title: Harbour
+tags: scene docks outdoor
+---
+<<declare $gold = 25>>
+<<declare $has_permit = false>>
+<<declare $met_stumpy = false>>
+
+=> Dockworker: Oi, watch yer step!
+=> Dockworker: These crates won't unload themselves, ye know.
+=> Dockworker: Smells like low tide and regret out here.
+=> Dockworker: Cap'n said the tide turns at noon. Better hurry.
+
+<<if $met_stumpy>>
+    Stumpy: You again. Permit still costs ten doubloons.
+<<else>>
+    Stumpy: Name's McGee. Stumpy McGee, Harbormaster.
+    Stumpy: Ye can't sail from Barnacle Bay without a travel permit.
+    <<set $met_stumpy = true>>
+<<endif>>
+
+<<once>>
+    Stumpy: Word is there's a three-headed sea creature lurking past Dead Man's Reef.
+    Stumpy: Whole fleet turned back. Brave sailors, every one of 'em.
+<<else>>
+    Stumpy: Aye, same tale about the sea creature. Nothing new to report.
+<<endonce>>
+
+Stumpy: So. What'll it be?
+
+-> Pay ten doubloons for a permit. <<if $gold >= 10>>
+    <<set $gold = $gold - 10>>
+    <<set $has_permit = true>>
+    <<stamp_permit>>
+    Stumpy: There she is. Official seal and everything.
+    Stumpy: You have {$gold} doubloons left. Don't spend 'em all at once.
+    <<jump Depart>>
+-> Bribe him with everything you've got. <<if $gold >= 1 and $gold < 10>>
+    Stumpy: Hah! {$gold} doubloons? That barely covers the ink for the stamp.
+    Stumpy: Come back when ye've got more coin.
+-> Ask about the map seller.
+    <<detour MapSeller>>
+    Stumpy: That old rogue sell ye anything useful?
+-> Nothing. Just passing through.
+    Stumpy: Then pass through somewhere else. This dock's busy.
+    <<jump End>>
+===
+
+title: Depart
+tags: scene transition
+---
+Stumpy: Safe sailing. And watch out for that sea creature.
+<<jump End>>
+===
+
+title: End
+tags: scene end
+---
+===

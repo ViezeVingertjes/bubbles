@@ -11,13 +11,8 @@ license.workspace      = true
 repository.workspace   = true
 homepage.workspace     = true
 rust-version.workspace = true
-autoexamples = false
-
 [lib]
 name = "bubbles"
-
-[[example]]
-name = "tavern"
 
 [features]
 default = ["rand"]
