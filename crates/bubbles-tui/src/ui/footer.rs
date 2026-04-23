@@ -21,7 +21,7 @@ fn hint_text(state: &AppState) -> &'static str {
         return "  r: reload    R: restart    x: dismiss    q/Esc: quit";
     }
     if state.is_done() {
-        return "  r: reload    R: restart    q/Esc: quit";
+        return "  b: back    r: reload    R: restart    Tab: scroll transcript    q/Esc: quit";
     }
     match state.focus() {
         FocusPanel::Options if state.options().is_empty() => {
