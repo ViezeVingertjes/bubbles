@@ -1,0 +1,45 @@
+//! Thin wrapper around [`bubbles::Runner`] that exposes exactly the slice
+//! of runtime behaviour the TUI needs.
+//!
+//! Keeping the `Runner` behind `Session` lets the rest of the crate stay
+//! ignorant of pull-event details and makes it obvious where every
+//! `next_event` / `select_option` call happens.
+
+use bubbles::{DialogueError, DialogueEvent, HashMapStorage, Program, Runner, compile};
+
+/// Wraps a compiled program and its runner.
+pub struct Session {
+    runner: Runner<HashMapStorage>,
+    done: bool,
+}
+
+impl Session {
+    /// Compiles `source` and primes a runner on `start_node`.
+    pub fn from_source(source: &str, start_node: &str) -> Result<Self, DialogueError> {
+        let program: Program = compile(source)?;
+        let mut runner = Runner::new(program, HashMapStorage::new());
+        runner.start(start_node)?;
+        Ok(Self {
+            runner,
+            done: false,
+        })
+    }
+
+    /// Returns `true` once the underlying dialogue has fully completed.
+    pub const fn is_done(&self) -> bool {
+        self.done
+    }
+
+    /// Pulls the next event from the runner, marking the session done on
+    /// `DialogueComplete` or `None`.
+    pub fn next_event(&mut self) -> Result<Option<DialogueEvent>, DialogueError> {
+        if self.done {
+            return Ok(None);
+        }
+        let event = self.runner.next_event()?;
+        if matches!(event, None | Some(DialogueEvent::DialogueComplete)) {
+            self.done = true;
+        }
+        Ok(event)
+    }
+}

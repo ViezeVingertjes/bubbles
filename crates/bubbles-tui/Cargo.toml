@@ -18,6 +18,8 @@ path = "src/main.rs"
 
 [dependencies]
 bubbles-dialogue = { path = "../bubbles-dialogue", features = ["full"] }
+crossterm = "0.29.0"
+ratatui = "0.30.0"
 
 [lints]
 workspace = true
