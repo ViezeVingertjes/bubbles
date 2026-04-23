@@ -31,6 +31,6 @@ mod session;
 pub mod terminal;
 mod ui;
 
-pub use app::{AppState, DisplayedLine};
+pub use app::{AppState, DisplayedLine, DisplayedOption};
 pub use intent::Intent;
 pub use ui::render;

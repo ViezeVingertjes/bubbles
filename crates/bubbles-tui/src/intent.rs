@@ -9,8 +9,16 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum Intent {
-    /// Advance to the next line, option set, command, or node boundary.
+    /// Advance to the next line.  When an option set is currently showing,
+    /// this commits the focused option instead.
     Advance,
     /// Quit the application (the binary exits; no-op in tests).
     Quit,
+    /// Move option focus down, wrapping to the top at the end.
+    FocusNext,
+    /// Move option focus up, wrapping to the bottom at the start.
+    FocusPrev,
+    /// Commit option `index` directly.  No-op when no options are showing or
+    /// the index is out of range / unavailable.
+    SelectOption(usize),
 }

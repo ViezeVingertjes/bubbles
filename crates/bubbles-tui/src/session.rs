@@ -42,4 +42,13 @@ impl Session {
         }
         Ok(event)
     }
+
+    /// Commits an option choice to the runner.
+    ///
+    /// # Errors
+    /// Forwards any runtime error produced by [`Runner::select_option`]
+    /// (e.g. out-of-range index).
+    pub fn select_option(&mut self, index: usize) -> Result<(), DialogueError> {
+        self.runner.select_option(index)
+    }
 }
