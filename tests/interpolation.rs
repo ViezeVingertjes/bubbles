@@ -75,3 +75,45 @@ title: Start
     let events = common::play(src, "Start");
     assert_eq!(lines_from(&events), ["items remaining."]);
 }
+
+// ── select() / gendered grammar ───────────────────────────────────────────────
+
+#[test]
+fn select_gendered_pronoun() {
+    let src = "\
+title: Start
+---
+<<declare $gender = \"f\">>
+{select($gender, \"m:He|f:She|other:They\")} went to the store.
+===
+";
+    let events = common::play(src, "Start");
+    assert_eq!(lines_from(&events), ["She went to the store."]);
+}
+
+#[test]
+fn select_uses_other_fallback() {
+    let src = "\
+title: Start
+---
+<<declare $gender = \"nb\">>
+{select($gender, \"m:He|f:She|other:They\")} arrived.
+===
+";
+    let events = common::play(src, "Start");
+    assert_eq!(lines_from(&events), ["They arrived."]);
+}
+
+#[test]
+fn select_combined_with_plural() {
+    let src = "\
+title: Start
+---
+<<declare $gender = \"m\">>
+<<declare $n = 1>>
+{select($gender, \"m:He|f:She|other:They\")} found {$n} {plural($n, \"coin\", \"coins\")}.
+===
+";
+    let events = common::play(src, "Start");
+    assert_eq!(lines_from(&events), ["He found 1 coin."]);
+}
