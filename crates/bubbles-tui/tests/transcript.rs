@@ -109,6 +109,59 @@ fn transcript_appears_in_rendered_buffer() {
     );
 }
 
+// ── rendered-buffer checks for NodeComplete and OptionChosen ─────────────────
+//
+// These exercise the format_entry arms in ui/transcript.rs that were not
+// previously hit by any render test.
+
+fn render_transcript(state: &AppState) -> String {
+    let backend = TestBackend::new(120, 24);
+    let mut terminal = Terminal::new(backend).unwrap();
+    terminal.draw(|f| render(state, f)).unwrap();
+    terminal
+        .backend()
+        .buffer()
+        .content()
+        .iter()
+        .map(ratatui::buffer::Cell::symbol)
+        .collect()
+}
+
+#[test]
+fn node_complete_marker_appears_in_rendered_buffer() {
+    let mut state = AppState::from_source(THREE_LINES_AND_A_COMMAND, "A").unwrap();
+    advance_until_done(&mut state, 16);
+    assert!(state.is_done(), "expected dialogue to be done");
+
+    let content = render_transcript(&state);
+    // NodeComplete is rendered as "← A" (left-arrow + node name).
+    assert!(
+        content.contains('\u{2190}'),
+        "NodeComplete left-arrow marker missing from rendered buffer"
+    );
+}
+
+#[test]
+fn option_chosen_marker_appears_in_rendered_buffer() {
+    let mut state = AppState::from_source(BRANCH, "A").unwrap();
+    // Advance until we reach the option prompt.
+    for _ in 0..8 {
+        if !state.options().is_empty() {
+            break;
+        }
+        state.apply(Intent::Advance);
+    }
+    state.apply(Intent::SelectOption(0));
+    advance_until_done(&mut state, 8);
+
+    let content = render_transcript(&state);
+    // OptionChosen is rendered as "→ chose [0] …" (right-arrow marker).
+    assert!(
+        content.contains("chose"),
+        "OptionChosen 'chose' text missing from rendered buffer: {content:?}"
+    );
+}
+
 #[test]
 fn toggle_focus_and_scroll_up_shows_older_entries() {
     let mut state = AppState::from_source(THREE_LINES_AND_A_COMMAND, "A").unwrap();
