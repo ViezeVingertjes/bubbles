@@ -9,7 +9,11 @@
 
 title: Start
 ---
-Pete: Ahoy there, young sailor. Pull up a barrel.
+<<once>>
+    Pete: Ahoy there, young sailor. Pull up a barrel.
+<<else>>
+    Pete: You again. Good. Plenty more stories where those came from.
+<<endonce>>
 
 <<once>>
     Pete: Thirty years ago I wrestled a kraken with me bare hands.
