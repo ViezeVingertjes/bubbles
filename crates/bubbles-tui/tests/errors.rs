@@ -1,7 +1,8 @@
 //! Error-overlay tests: compile errors, runtime errors, and the dismiss/reload
 //! flow.
 
-use bubbles_tui::{AppState, Intent, render};
+use bubbles::{DialogueError, HashMapStorage, Runner, compile};
+use bubbles_tui::{AppState, ErrorOverlay, Intent, render};
 use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 
@@ -111,5 +112,195 @@ fn error_overlay_is_drawn_on_top_of_the_dialogue_pane() {
     assert!(
         content.contains(":3"),
         "rendered buffer should include the :line location: {content:?}"
+    );
+}
+
+// ── ErrorOverlay::from_error — one test per DialogueError variant ─────────────
+//
+// These drive the overlay directly from constructed errors so every match arm
+// in overlay.rs is exercised even when a particular error path is hard to
+// trigger end-to-end.
+
+fn overlay(err: &DialogueError) -> ErrorOverlay {
+    ErrorOverlay::from_error(err, None)
+}
+
+#[test]
+fn from_error_duplicate_node() {
+    let o = overlay(&DialogueError::DuplicateNode("Foo".into()));
+    assert!(
+        o.title.to_lowercase().contains("duplicate"),
+        "got {:?}",
+        o.title
+    );
+    assert!(o.message.contains("Foo"));
+    assert!(o.location.is_none());
+}
+
+#[test]
+fn from_error_validation() {
+    let o = overlay(&DialogueError::Validation("jump target missing".into()));
+    assert!(
+        o.title.to_lowercase().contains("validation"),
+        "got {:?}",
+        o.title
+    );
+    assert!(o.message.contains("jump target missing"));
+}
+
+#[test]
+fn from_error_runtime() {
+    let o = overlay(&DialogueError::Runtime("something went wrong".into()));
+    assert!(
+        o.title.to_lowercase().contains("runtime"),
+        "got {:?}",
+        o.title
+    );
+    assert!(o.message.contains("something went wrong"));
+}
+
+#[test]
+fn from_error_type() {
+    let o = overlay(&DialogueError::Type("cannot add".into()));
+    assert!(o.title.to_lowercase().contains("type"), "got {:?}", o.title);
+    assert!(o.message.contains("cannot add"));
+}
+
+#[test]
+fn from_error_undefined_variable() {
+    let o = overlay(&DialogueError::UndefinedVariable("$hp".into()));
+    assert!(
+        o.title.to_lowercase().contains("undefined") || o.title.to_lowercase().contains("variable"),
+        "got {:?}",
+        o.title
+    );
+    assert!(o.message.contains("$hp"));
+}
+
+#[test]
+fn from_error_function() {
+    let o = overlay(&DialogueError::Function {
+        name: "roll".into(),
+        message: "bad args".into(),
+    });
+    assert!(
+        o.title.to_lowercase().contains("function"),
+        "got {:?}",
+        o.title
+    );
+    assert!(o.message.contains("roll"));
+    assert!(o.message.contains("bad args"));
+}
+
+#[test]
+fn from_error_protocol_violation() {
+    let o = overlay(&DialogueError::ProtocolViolation(
+        "call select_option first".into(),
+    ));
+    assert!(
+        o.title.to_lowercase().contains("protocol"),
+        "got {:?}",
+        o.title
+    );
+    assert!(o.message.contains("select_option"));
+}
+
+#[test]
+fn from_error_type_mismatch() {
+    let o = overlay(&DialogueError::TypeMismatch {
+        expected: "number".into(),
+        got: "string".into(),
+        context: "operator `+`".into(),
+    });
+    assert!(
+        o.title.to_lowercase().contains("type") || o.title.to_lowercase().contains("mismatch"),
+        "got {:?}",
+        o.title
+    );
+    assert!(o.message.contains("number"));
+    assert!(o.message.contains("string"));
+}
+
+#[test]
+fn from_error_parse_with_source_attaches_excerpt() {
+    let source = "title: A\n---\n<<if>>\n===\n";
+    let err = DialogueError::Parse {
+        file: "<source>".into(),
+        line: 3,
+        message: "unexpected token".into(),
+    };
+    let o = ErrorOverlay::from_error(&err, Some(source));
+    assert!(
+        o.excerpt.is_some(),
+        "expected excerpt for a parse error with source"
+    );
+    assert_eq!(o.excerpt.as_deref(), Some("<<if>>"));
+}
+
+#[test]
+fn from_error_parse_without_source_has_no_excerpt() {
+    let err = DialogueError::Parse {
+        file: "<source>".into(),
+        line: 3,
+        message: "unexpected token".into(),
+    };
+    let o = ErrorOverlay::from_error(&err, None);
+    assert!(o.excerpt.is_none());
+}
+
+#[test]
+fn location_string_formats_file_and_line() {
+    let err = DialogueError::Parse {
+        file: "dialogue.bub".into(),
+        line: 7,
+        message: "oops".into(),
+    };
+    let o = ErrorOverlay::from_error(&err, None);
+    assert_eq!(o.location_string().as_deref(), Some("dialogue.bub:7"));
+}
+
+// ── runtime trigger: type mismatch populates overlay ─────────────────────────
+
+#[test]
+fn type_mismatch_in_runner_populates_overlay() {
+    // Adding a number to a string at runtime → TypeMismatch → overlay.
+    let src = "title: A\n---\n<<set $x = 1 + \"oops\">>\n===\n";
+    let mut state = AppState::load(src, "A");
+    assert!(state.error_overlay().is_none(), "should compile cleanly");
+
+    state.apply(Intent::Advance); // NodeStarted
+    state.apply(Intent::Advance); // triggers the set → type mismatch
+
+    let overlay = state
+        .error_overlay()
+        .expect("expected TypeMismatch overlay");
+    assert!(
+        overlay.title.to_lowercase().contains("type"),
+        "got {:?}",
+        overlay.title
+    );
+}
+
+#[test]
+fn protocol_violation_in_runner_populates_overlay() {
+    // Call next_event while awaiting option → ProtocolViolation → overlay.
+    let src = "title: A\n---\n-> Only option\n===\n";
+    let prog = compile(src).unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("A").unwrap();
+    runner.next_event().unwrap(); // NodeStarted
+    runner.next_event().unwrap(); // Options — now awaiting
+
+    // Build a DialogueError directly from what we know the runner produces.
+    let err = runner.next_event().unwrap_err();
+    assert!(
+        matches!(err, DialogueError::ProtocolViolation(_)),
+        "expected ProtocolViolation, got: {err:?}"
+    );
+    let o = ErrorOverlay::from_error(&err, None);
+    assert!(
+        o.title.to_lowercase().contains("protocol"),
+        "got {:?}",
+        o.title
     );
 }

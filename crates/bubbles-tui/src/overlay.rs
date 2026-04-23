@@ -88,6 +88,22 @@ impl ErrorOverlay {
                 location: None,
                 excerpt: None,
             },
+            DialogueError::ProtocolViolation(msg) => Self {
+                title: "Protocol violation".to_owned(),
+                message: msg.clone(),
+                location: None,
+                excerpt: None,
+            },
+            DialogueError::TypeMismatch {
+                expected,
+                got,
+                context,
+            } => Self {
+                title: "Type mismatch".to_owned(),
+                message: format!("in {context}: expected {expected}, got {got}"),
+                location: None,
+                excerpt: None,
+            },
             // Forward-compatible fallback for future variants.
             _ => Self {
                 title: "Error".to_owned(),
