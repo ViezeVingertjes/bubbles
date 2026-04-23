@@ -5,7 +5,9 @@
 //! ignorant of pull-event details and makes it obvious where every
 //! `next_event` / `select_option` call happens.
 
-use bubbles::{DialogueError, DialogueEvent, HashMapStorage, Runner, compile};
+use bubbles::{DialogueError, DialogueEvent, HashMapStorage, Runner, compile_many};
+
+use crate::source_set::SourceSet;
 
 /// Wraps a compiled program and its runner.
 pub struct Session {
@@ -14,12 +16,14 @@ pub struct Session {
 }
 
 impl Session {
-    /// Compiles `source`, then primes a runner on `start_node`.
+    /// Compiles all files in `sources` together via `compile_many` and primes
+    /// a runner on `start_node`.
     ///
-    /// Typo'd `<<jump>>`/`<<detour>>` targets are caught here as
-    /// [`DialogueError::Validation`] errors — `compile` always validates.
-    pub fn from_source(source: &str, start_node: &str) -> Result<Self, DialogueError> {
-        let program = compile(source)?;
+    /// Typo'd `<<jump>>`/`<<detour>>` targets that cross file boundaries are
+    /// caught here as [`DialogueError::Validation`] errors.
+    pub fn from_source_set(sources: &SourceSet, start_node: &str) -> Result<Self, DialogueError> {
+        let slices = sources.as_named_slices();
+        let program = compile_many(&slices)?;
         let mut runner = Runner::new(program, HashMapStorage::new());
         runner.start(start_node)?;
         Ok(Self {

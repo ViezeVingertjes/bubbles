@@ -7,14 +7,18 @@
 //! Usage:
 //!
 //! ```text
-//! bubbles-tui <file.bub> [StartNode]
+//! bubbles-tui <file.bub> [<file2.bub> …] [StartNode]
 //! ```
+//!
+//! One or more `.bub` files are compiled together into a single programme.
+//! An optional trailing argument that does not end in `.bub` is treated as
+//! the start node (defaults to `"Start"`).
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::ExitCode;
 use std::{fs, io};
 
-use bubbles_tui::{AppState, Intent, render, terminal};
+use bubbles_tui::{AppState, Intent, SourceSet, render, terminal};
 
 fn main() -> ExitCode {
     match run() {
@@ -29,10 +33,16 @@ fn main() -> ExitCode {
 
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args = parse_args()?;
-    let source = fs::read_to_string(&args.path)
-        .map_err(|e| format!("cannot read `{}`: {e}", args.path.display()))?;
 
-    let mut state = AppState::from_source(&source, &args.start_node)?;
+    let mut files: Vec<(String, String)> = Vec::new();
+    for path in &args.paths {
+        let name = path.display().to_string();
+        let source = fs::read_to_string(path).map_err(|e| format!("cannot read `{name}`: {e}"))?;
+        files.push((name, source));
+    }
+
+    let source_set = SourceSet::many(files.iter().map(|(n, s)| (n.as_str(), s.as_str())));
+    let mut state = AppState::from_source_set(source_set, &args.start_node)?;
     let mut tui = terminal::init()?;
 
     let loop_result = event_loop(&mut state, &mut tui);
@@ -57,18 +67,32 @@ fn event_loop(state: &mut AppState, tui: &mut terminal::Tui) -> io::Result<()> {
 }
 
 struct Args {
-    path: PathBuf,
+    paths: Vec<PathBuf>,
     start_node: String,
 }
 
 fn parse_args() -> Result<Args, String> {
-    let mut iter = std::env::args().skip(1);
-    let path = iter
-        .next()
-        .ok_or_else(|| "usage: bubbles-tui <file.bub> [StartNode]".to_owned())?;
-    let start_node = iter.next().unwrap_or_else(|| "Start".to_owned());
-    Ok(Args {
-        path: Path::new(&path).to_path_buf(),
-        start_node,
-    })
+    let raw: Vec<String> = std::env::args().skip(1).collect();
+    if raw.is_empty() {
+        return Err("usage: bubbles-tui <file.bub> [<file2.bub> …] [StartNode]".to_owned());
+    }
+
+    // The optional trailing start-node argument does not have a .bub extension.
+    let (start_node, file_args) = if raw.last().is_some_and(|s| {
+        !std::path::Path::new(s)
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("bub"))
+    }) {
+        let node = raw.last().unwrap().clone();
+        (node, &raw[..raw.len() - 1])
+    } else {
+        ("Start".to_owned(), raw.as_slice())
+    };
+
+    if file_args.is_empty() {
+        return Err("usage: bubbles-tui <file.bub> [<file2.bub> …] [StartNode]".to_owned());
+    }
+
+    let paths = file_args.iter().map(PathBuf::from).collect();
+    Ok(Args { paths, start_node })
 }

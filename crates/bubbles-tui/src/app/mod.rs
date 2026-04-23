@@ -5,86 +5,52 @@
 //! result.  The real binary does the same thing, just with key events
 //! translated into intents upstream.
 
+mod build;
+
 use crate::display::{DisplayedLine, DisplayedOption, FocusPanel, FocusShift};
 use crate::history::HistoryStep;
 use crate::ingest::apply_event;
 use crate::intent::Intent;
 use crate::overlay::ErrorOverlay;
 use crate::session::Session;
+use crate::source_set::SourceSet;
 use crate::transcript::{Transcript, TranscriptEntry};
 use bubbles::DialogueError;
 
 /// The app's complete state: owns the runtime session and whatever is
 /// currently on screen.
 pub struct AppState {
-    session: Option<Session>,
-    source: String,
-    start_node: String,
-    current_line: Option<DisplayedLine>,
-    options: Vec<DisplayedOption>,
-    focused_option: Option<usize>,
-    transcript: Transcript,
-    focus: FocusPanel,
-    error_overlay: Option<ErrorOverlay>,
-    history: Vec<HistoryStep>,
-    recording: bool,
-    quit_requested: bool,
+    pub(super) session: Option<Session>,
+    pub(super) sources: SourceSet,
+    pub(super) start_node: String,
+    pub(super) current_line: Option<DisplayedLine>,
+    pub(super) options: Vec<DisplayedOption>,
+    pub(super) focused_option: Option<usize>,
+    pub(super) transcript: Transcript,
+    pub(super) focus: FocusPanel,
+    pub(super) error_overlay: Option<ErrorOverlay>,
+    pub(super) history: Vec<HistoryStep>,
+    pub(super) recording: bool,
+    pub(super) quit_requested: bool,
 }
 
 impl AppState {
-    /// Compiles `source` and starts the runner on `start_node`.
-    ///
-    /// # Errors
-    /// Propagates any compile or start-time runtime error.
-    pub fn from_source(source: &str, start_node: &str) -> Result<Self, DialogueError> {
-        let session = Session::from_source(source, start_node)?;
-        Ok(Self::new(Some(session), source, start_node, None))
-    }
-
-    /// Infallible counterpart to [`Self::from_source`]: on compile error the
-    /// returned state carries an [`ErrorOverlay`] and has no active session.
-    #[must_use]
-    pub fn load(source: &str, start_node: &str) -> Self {
-        match Session::from_source(source, start_node) {
-            Ok(session) => Self::new(Some(session), source, start_node, None),
-            Err(err) => {
-                let overlay = ErrorOverlay::from_error(&err, Some(source));
-                Self::new(None, source, start_node, Some(overlay))
-            }
-        }
-    }
-
-    fn new(
-        session: Option<Session>,
-        source: &str,
-        start_node: &str,
-        error_overlay: Option<ErrorOverlay>,
-    ) -> Self {
-        Self {
-            session,
-            source: source.to_owned(),
-            start_node: start_node.to_owned(),
-            current_line: None,
-            options: Vec::new(),
-            focused_option: None,
-            transcript: Transcript::new(),
-            focus: FocusPanel::Dialogue,
-            error_overlay,
-            history: Vec::new(),
-            recording: true,
-            quit_requested: false,
-        }
-    }
-
     /// `true` when there is a previous visible step to rewind to.
     #[must_use]
     pub const fn can_step_back(&self) -> bool {
         self.history.len() > 1
     }
 
-    /// Replaces the source the next [`Intent::Reload`] will use.
+    /// Replaces the single source the next [`Intent::Reload`] will use.
+    ///
+    /// For multi-file workflows use [`Self::replace_sources`].
     pub fn replace_source(&mut self, source: String) {
-        self.source = source;
+        self.sources = SourceSet::single("<source>", source);
+    }
+
+    /// Replaces the full source set the next [`Intent::Reload`] will use.
+    pub fn replace_sources(&mut self, sources: SourceSet) {
+        self.sources = sources;
     }
 
     /// The line currently awaiting the next `Intent::Advance`, if any.
@@ -223,13 +189,14 @@ impl AppState {
     }
 
     fn reset_runtime_state(&mut self) {
-        match Session::from_source(&self.source, &self.start_node) {
+        match Session::from_source_set(&self.sources, &self.start_node) {
             Ok(session) => {
                 self.session = Some(session);
                 self.error_overlay = None;
             }
             Err(err) => {
-                self.error_overlay = Some(ErrorOverlay::from_error(&err, Some(&self.source)));
+                let excerpt = self.sources.source_for_error(&err);
+                self.error_overlay = Some(ErrorOverlay::from_error(&err, excerpt));
                 self.session = None;
             }
         }
@@ -244,7 +211,8 @@ impl AppState {
         F: FnOnce(&mut Self) -> Result<(), DialogueError>,
     {
         if let Err(err) = f(self) {
-            self.error_overlay = Some(ErrorOverlay::from_error(&err, Some(&self.source)));
+            let excerpt = self.sources.source_for_error(&err);
+            self.error_overlay = Some(ErrorOverlay::from_error(&err, excerpt));
             self.session = None;
             self.current_line = None;
             self.options.clear();
