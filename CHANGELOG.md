@@ -22,6 +22,8 @@ All notable changes are documented here (keep-a-changelog format).
 
 ### Changed
 
+- **MSRV lowered to 1.94** (from 1.95). The codebase does not use any
+  1.95-specific features; the previous floor was set conservatively.
 - Repository converted to a Cargo workspace.  `bubbles-dialogue` lives in
   `crates/bubbles-dialogue/` and keeps the same crate name, features,
   and semantics.  Scripts and CI now use workspace-aware `cargo`
@@ -198,7 +200,7 @@ All notable changes are documented here (keep-a-changelog format).
 
 ### Changed
 
-- **MSRV** is **1.95** (was 1.85); CI uses `actions/checkout@v6` and read-only
+- **MSRV** is **1.94** (was 1.85); CI uses `actions/checkout@v6` and read-only
   `permissions: contents: read` for the default `GITHUB_TOKEN`.
 - `helpers.rs` files in `src/compiler/parser/` and `src/runtime/runner/` split
   into concept-focused modules (`text`, `command`, `assignments`, `body` /

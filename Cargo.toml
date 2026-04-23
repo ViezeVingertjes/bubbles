@@ -10,7 +10,7 @@ edition       = "2024"
 license       = "MIT OR Apache-2.0"
 repository    = "https://github.com/ViezeVingertjes/bubbles"
 homepage      = "https://github.com/ViezeVingertjes/bubbles"
-rust-version  = "1.95"
+rust-version  = "1.94"
 
 [workspace.lints.rust]
 missing_docs     = "deny"

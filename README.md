@@ -6,7 +6,7 @@
 [![docs.rs](https://docs.rs/bubbles-dialogue/badge.svg)](https://docs.rs/bubbles-dialogue)
 [![Guide](https://img.shields.io/badge/guide-github%20pages-informational)](https://viezevingertjes.github.io/bubbles/)
 [![CI](https://github.com/ViezeVingertjes/bubbles/actions/workflows/ci.yml/badge.svg)](https://github.com/ViezeVingertjes/bubbles/actions)
-[![MSRV: 1.95](https://img.shields.io/badge/rustc-1.95%2B-orange.svg)](https://blog.rust-lang.org/2025/05/15/Rust-1.95.0/)
+[![MSRV: 1.94](https://img.shields.io/badge/rustc-1.94%2B-orange.svg)](https://blog.rust-lang.org/2026/03/27/Rust-1.94.0/)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
 
 Write branching `.bub` scripts, compile them once at startup, then drive the
@@ -18,7 +18,7 @@ primitives, zero allocations in the hot path beyond the events themselves.
 > walk through the `.bub` language and integration, plus the hosted rustdoc.
 > The rest of this README is the quick-reference overview.
 
-**Requirements:** Rust **1.95** or later (see `rust-version` in `Cargo.toml`).
+**Requirements:** Rust **1.94** or later (see `rust-version` in `Cargo.toml`).
 
 ---
 

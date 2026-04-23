@@ -17,7 +17,7 @@ Or by hand:
 bubbles-dialogue = "0.5"
 ```
 
-> **Requires Rust 1.95 or later.** Bubbles targets a recent stable toolchain so it can lean on modern features without `unsafe`.
+> **Requires Rust 1.94 or later.** Bubbles targets a recent stable toolchain so it can lean on modern features without `unsafe`.
 
 ## Write a dialogue
 
