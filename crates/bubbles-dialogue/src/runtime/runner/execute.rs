@@ -12,15 +12,21 @@ use super::{Runner, State};
 
 impl<S: VariableStorage> Runner<S> {
     pub(super) fn step(&mut self) -> Result<Option<DialogueEvent>> {
-        let stmt = loop {
+        // Clone the StmtList (Arc bump, O(1)) to obtain independent ownership of the
+        // body slice. This releases the mutable borrow of self.stack before we call
+        // execute_stmt, which needs &mut self.  The individual Stmt is then borrowed
+        // from our locally-owned Arc rather than from the stack frame, so the borrow
+        // checker is satisfied without cloning the Stmt itself.
+        let (body, ip) = loop {
             let Some(frame) = self.stack.last_mut() else {
                 self.state = State::Done;
                 return Ok(Some(DialogueEvent::DialogueComplete));
             };
             if frame.ip < frame.body.len() {
-                let s = frame.body[frame.ip].clone();
+                let body = frame.body.clone(); // O(1) Arc reference-count bump
+                let ip = frame.ip;
                 frame.ip += 1;
-                break s;
+                break (body, ip);
             }
             let finished_node = frame.node.as_ref().to_owned();
             self.stack.pop();
@@ -31,29 +37,29 @@ impl<S: VariableStorage> Runner<S> {
             }
         };
 
-        self.execute_stmt(stmt)
+        self.execute_stmt(&body[ip])
     }
 
-    pub(super) fn execute_stmt(&mut self, stmt: Stmt) -> Result<Option<DialogueEvent>> {
+    pub(super) fn execute_stmt(&mut self, stmt: &Stmt) -> Result<Option<DialogueEvent>> {
         match stmt {
             Stmt::Line {
                 speaker,
                 text,
                 tags,
-            } => self.exec_line(speaker, &text, tags),
+            } => self.exec_line(speaker.clone(), text, tags.clone()),
             Stmt::Set { name, expr } => {
                 let value = self.eval_expr(expr.as_ref())?;
-                self.storage.set(&name, value);
+                self.storage.set(name, value);
                 Ok(None)
             }
             Stmt::Declare { name, expr, .. } => {
-                if self.storage.get(&name).is_none() {
+                if self.storage.get(name).is_none() {
                     let value = self.eval_expr(expr.as_ref())?;
-                    self.storage.set(&name, value);
+                    self.storage.set(name, value);
                 }
                 Ok(None)
             }
-            Stmt::LineGroup(variants) => self.exec_line_group(&variants),
+            Stmt::LineGroup(variants) => self.exec_line_group(variants),
             Stmt::Options(items) => self.exec_options(items),
             Stmt::If {
                 branches,
@@ -65,8 +71,8 @@ impl<S: VariableStorage> Runner<S> {
                 body,
                 else_body,
             } => self.exec_once(block_id, cond.as_ref(), body, else_body),
-            Stmt::Jump(target) => self.exec_jump(&target),
-            Stmt::Detour(target) => self.exec_detour(&target),
+            Stmt::Jump(target) => self.exec_jump(target),
+            Stmt::Detour(target) => self.exec_detour(target),
             Stmt::Return => {
                 self.stack.pop();
                 Ok(None)
@@ -79,8 +85,12 @@ impl<S: VariableStorage> Runner<S> {
                 Ok(Some(DialogueEvent::DialogueComplete))
             }
             Stmt::Command { name, args, tags } => {
-                let args = self.eval_segments_as_args(&args)?;
-                Ok(Some(DialogueEvent::Command { name, args, tags }))
+                let args = self.eval_segments_as_args(args)?;
+                Ok(Some(DialogueEvent::Command {
+                    name: name.clone(),
+                    args,
+                    tags: tags.clone(),
+                }))
             }
         }
     }
@@ -143,7 +153,7 @@ impl<S: VariableStorage> Runner<S> {
 
     fn exec_options(
         &mut self,
-        items: Vec<crate::compiler::ast::OptionItem>,
+        items: &[crate::compiler::ast::OptionItem],
     ) -> Result<Option<DialogueEvent>> {
         let mut options = Vec::with_capacity(items.len());
         let mut bodies = Vec::with_capacity(items.len());
@@ -160,7 +170,7 @@ impl<S: VariableStorage> Runner<S> {
                 line_id,
                 tags: item.tags.clone(),
             });
-            bodies.push(item.body);
+            bodies.push(item.body.clone()); // Arc<[Stmt]> — O(1) reference-count bump
         }
         self.option_bodies = bodies;
         self.state = State::AwaitingOption;
@@ -169,37 +179,42 @@ impl<S: VariableStorage> Runner<S> {
 
     fn exec_if(
         &mut self,
-        branches: Vec<IfBranch>,
-        else_body: StmtList,
+        branches: &[IfBranch],
+        else_body: &StmtList,
     ) -> Result<Option<DialogueEvent>> {
         let mut chosen: Option<StmtList> = None;
         for b in branches {
             if self.eval_expr(b.cond.as_ref())?.is_truthy() {
-                chosen = Some(b.body);
+                chosen = Some(b.body.clone()); // Arc<[Stmt]> — O(1) reference-count bump
                 break;
             }
         }
-        self.push_inline_frame(chosen.unwrap_or(else_body));
+        self.push_inline_frame(chosen.unwrap_or_else(|| else_body.clone()));
         Ok(None)
     }
 
     fn exec_once(
         &mut self,
-        block_id: String,
+        block_id: &str,
         cond: Option<&Arc<Expr>>,
-        body: StmtList,
-        else_body: StmtList,
+        body: &StmtList,
+        else_body: &StmtList,
     ) -> Result<Option<DialogueEvent>> {
         let cond_ok = match cond {
             None => true,
             Some(e) => self.eval_expr(e.as_ref())?.is_truthy(),
         };
-        let first_time = !self.once_seen.contains(&block_id);
+        let first_time = !self.once_seen.contains(block_id);
         let run_body = cond_ok && first_time;
         if run_body {
-            self.once_seen.insert(block_id);
+            self.once_seen.insert(block_id.to_owned());
         }
-        self.push_inline_frame(if run_body { body } else { else_body });
+        // Arc<[Stmt]> clones are O(1) reference-count bumps
+        self.push_inline_frame(if run_body {
+            body.clone()
+        } else {
+            else_body.clone()
+        });
         Ok(None)
     }
 
