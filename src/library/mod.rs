@@ -221,6 +221,7 @@ fn require_two_numbers(name: &str, args: &[Value]) -> Result<(f64, f64)> {
 
 /// Converts a `f64` dialogue number to `i32`, returning an error if the value
 /// is non-finite, has a fractional part, or falls outside `i32` range.
+#[cfg(feature = "rand")]
 fn number_to_i32(fn_name: &str, v: f64, param: &str) -> Result<i32> {
     if !v.is_finite() || v.fract() != 0.0 {
         return Err(DialogueError::Function {
@@ -239,6 +240,7 @@ fn number_to_i32(fn_name: &str, v: f64, param: &str) -> Result<i32> {
 
 /// Converts a `f64` dialogue number to `u32`, returning an error if the value
 /// is non-finite, negative, has a fractional part, or falls outside `u32` range.
+#[cfg(feature = "rand")]
 fn number_to_u32(fn_name: &str, v: f64, param: &str) -> Result<u32> {
     if !v.is_finite() || v.fract() != 0.0 || v < 0.0 {
         return Err(DialogueError::Function {
