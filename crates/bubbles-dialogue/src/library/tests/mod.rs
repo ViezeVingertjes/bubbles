@@ -56,7 +56,10 @@ fn custom_function_registered() {
         if let [Value::Number(n)] = args.as_slice() {
             Ok(Value::Number(n * 2.0))
         } else {
-            Err(DialogueError::Runtime("double expects one number".into()))
+            Err(DialogueError::Function {
+                name: "double".into(),
+                message: "expected one number".into(),
+            })
         }
     });
     assert_eq!(

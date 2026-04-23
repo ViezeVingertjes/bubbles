@@ -312,7 +312,7 @@ impl AppState {
         let session = self
             .session
             .as_mut()
-            .ok_or_else(|| DialogueError::Runtime("no active session".into()))?;
+            .ok_or_else(|| DialogueError::ProtocolViolation("no active session".into()))?;
         session.select_option(index)?;
         self.transcript
             .push(TranscriptEntry::OptionChosen { text, index });

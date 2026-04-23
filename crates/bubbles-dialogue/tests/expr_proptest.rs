@@ -7,8 +7,11 @@ use proptest::prelude::*;
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
-fn no_fns(_: &str, _: Vec<Value>) -> Result<Value, DialogueError> {
-    Err(DialogueError::Runtime("no functions in proptest".into()))
+fn no_fns(name: &str, _: Vec<Value>) -> Result<Value, DialogueError> {
+    Err(DialogueError::Function {
+        name: name.to_owned(),
+        message: "no functions in proptest".into(),
+    })
 }
 
 fn eval(src: &str) -> Value {

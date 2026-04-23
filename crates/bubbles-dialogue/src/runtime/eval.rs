@@ -114,10 +114,10 @@ fn num_op(left: Value, right: Value, op: &str, calc: impl Fn(f64, f64) -> f64) -
     match (left, right) {
         (Value::Number(a), Value::Number(b)) => {
             if op == "/" && b == 0.0 {
-                return Err(DialogueError::Runtime("division by zero".into()));
+                return Err(DialogueError::ProtocolViolation("division by zero".into()));
             }
             if op == "%" && b == 0.0 {
-                return Err(DialogueError::Runtime("modulo by zero".into()));
+                return Err(DialogueError::ProtocolViolation("modulo by zero".into()));
             }
             Ok(Value::Number(calc(a, b)))
         }
@@ -147,7 +147,10 @@ mod tests {
     use crate::value::HashMapStorage;
 
     fn no_fns(_: &str, _: Vec<Value>) -> Result<Value> {
-        Err(DialogueError::Runtime("no functions registered".into()))
+        Err(DialogueError::Function {
+            name: "<none>".into(),
+            message: "no functions registered".into(),
+        })
     }
 
     fn ev(src: &str) -> Value {

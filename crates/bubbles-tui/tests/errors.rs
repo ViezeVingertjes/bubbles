@@ -145,6 +145,7 @@ fn from_error_validation() {
 }
 
 #[test]
+#[allow(deprecated)]
 fn from_error_runtime() {
     let o = overlay(&DialogueError::Runtime("something went wrong".into()));
     assert!(
@@ -156,6 +157,7 @@ fn from_error_runtime() {
 }
 
 #[test]
+#[allow(deprecated)]
 fn from_error_type() {
     let o = overlay(&DialogueError::Type("cannot add".into()));
     assert!(o.title.to_lowercase().contains("type"), "got {:?}", o.title);

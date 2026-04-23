@@ -234,7 +234,10 @@ runner.library_mut().register("double", |args| {
     if let Some(bubbles::Value::Number(n)) = args.first() {
         Ok(bubbles::Value::Number(n * 2.0))
     } else {
-        Err(bubbles::DialogueError::Runtime("expected number".into()))
+        Err(bubbles::DialogueError::Function {
+            name: "double".into(),
+            message: "expected one number argument".into(),
+        })
     }
 });
 ```

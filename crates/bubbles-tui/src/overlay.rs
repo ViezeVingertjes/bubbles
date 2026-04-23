@@ -31,6 +31,7 @@ impl ErrorOverlay {
     /// [`DialogueError::Parse`] and `source` is provided, the offending line
     /// is attached as an excerpt.
     #[must_use]
+    #[allow(deprecated)]
     pub fn from_error(error: &DialogueError, source: Option<&str>) -> Self {
         match error {
             DialogueError::Parse {
