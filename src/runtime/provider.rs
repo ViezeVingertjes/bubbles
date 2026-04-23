@@ -2,12 +2,23 @@
 
 /// Supplies localised (or otherwise substituted) text for a line.
 ///
-/// When a line carries a `#line:<id>` tag, the runner queries the provider with that id.
-/// The same id is also exposed on [`crate::DialogueEvent::Line`] as `line_id` (see [`line_id_from_tags`](crate::line_id_from_tags)).
-/// If the provider returns `Some(text)`, that replaces the original line text in the event.
-/// If it returns `None`, the original source text is used as-is.
+/// When a line carries a `#line:<id>` tag the runner queries the provider with
+/// that id **before** evaluating any `{expr}` placeholders (translate-then-format
+/// ordering).  The returned string is itself a template: any `{expr}` it
+/// contains are evaluated against the current variable storage, so translators
+/// can reorder or reshape interpolations however their language requires.
+///
+/// The same id is also exposed on [`crate::DialogueEvent::Line`] as `line_id`
+/// (see [`crate::line_id_from_tags`]).
+///
+/// If the provider returns `None`, the original source text (with its own
+/// `{expr}` segments) is used unchanged.
 pub trait LineProvider: Send + Sync + 'static {
-    /// Returns localised text for `line_id`, or `None` to use the source text.
+    /// Returns a localised template for `line_id`, or `None` to fall back to
+    /// the source text.
+    ///
+    /// The returned string may contain `{expr}` placeholders; they will be
+    /// evaluated after translation.
     fn get(&self, line_id: &str) -> Option<String>;
 }
 

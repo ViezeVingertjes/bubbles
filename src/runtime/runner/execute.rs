@@ -82,12 +82,7 @@ impl<S: VariableStorage> Runner<S> {
         text: &[TextSegment],
         tags: Vec<String>,
     ) -> Result<Option<DialogueEvent>> {
-        let text = self.eval_segments(text)?;
-        let text = tags
-            .iter()
-            .find_map(|t| t.strip_prefix("line:"))
-            .and_then(|id| self.provider.get(id))
-            .unwrap_or(text);
+        let text = self.eval_line_text(text, &tags)?;
         let line_id = line_id_from_tags(&tags);
         Ok(Some(DialogueEvent::Line {
             speaker,
@@ -125,7 +120,7 @@ impl<S: VariableStorage> Runner<S> {
             if chosen.once {
                 self.once_seen.insert(chosen.id.clone());
             }
-            let text = self.eval_segments(&chosen.text)?;
+            let text = self.eval_line_text(&chosen.text, &chosen.tags)?;
             let line_id = line_id_from_tags(&chosen.tags);
             return Ok(Some(DialogueEvent::Line {
                 speaker: chosen.speaker.clone(),
@@ -148,7 +143,7 @@ impl<S: VariableStorage> Runner<S> {
                 Some(e) => self.eval_expr(e.as_ref())?.is_truthy(),
                 None => true,
             };
-            let text = self.eval_segments(&item.text)?;
+            let text = self.eval_line_text(&item.text, &item.tags)?;
             let line_id = line_id_from_tags(&item.tags);
             options.push(DialogueOption {
                 text,

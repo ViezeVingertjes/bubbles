@@ -3,7 +3,8 @@
 //! [`crate::runtime::eval`] module.
 
 use crate::compiler::ast::{Expr, TextSegment};
-use crate::error::Result;
+use crate::compiler::expr::parse_expr;
+use crate::error::{DialogueError, Result};
 use crate::runtime::eval::eval;
 use crate::value::{Value, VariableStorage};
 
@@ -42,5 +43,50 @@ impl<S: VariableStorage> Runner<S> {
             return Ok(Vec::new());
         }
         Ok(text.split_whitespace().map(str::to_owned).collect())
+    }
+
+    /// Parses `template` for `{expr}` placeholders at runtime and evaluates
+    /// each one against the current storage and function library.
+    ///
+    /// Used after a [`crate::runtime::provider::LineProvider`] returns a
+    /// translated string that may still contain `{expr}` syntax, enabling
+    /// translate-then-format ordering.
+    pub(super) fn eval_template(&self, template: &str) -> Result<String> {
+        let mut out = String::with_capacity(template.len());
+        let mut remaining = template;
+        while let Some(open) = remaining.find('{') {
+            out.push_str(&remaining[..open]);
+            let after = &remaining[open + 1..];
+            let close = after.find('}').ok_or_else(|| DialogueError::Parse {
+                file: "<translation>".into(),
+                line: 0,
+                message: format!("unclosed `{{` in translated template: `{template}`"),
+            })?;
+            let expr_src = &after[..close];
+            let expr = parse_expr(expr_src)?;
+            let value = self.eval_expr(&expr)?;
+            out.push_str(&value.to_string());
+            remaining = &after[close + 1..];
+        }
+        out.push_str(remaining);
+        Ok(out)
+    }
+
+    /// Resolves the final text for a line: looks up the provider first so that
+    /// translators receive raw templates they can still use `{expr}` in, then
+    /// falls back to evaluating the compile-time-parsed segments.
+    pub(super) fn eval_line_text(
+        &self,
+        segments: &[TextSegment],
+        tags: &[String],
+    ) -> Result<String> {
+        let line_id = crate::runtime::event::line_id_from_tags(tags);
+        line_id
+            .as_deref()
+            .and_then(|id| self.provider.get(id))
+            .map_or_else(
+                || self.eval_segments(segments),
+                |template| self.eval_template(&template),
+            )
     }
 }
