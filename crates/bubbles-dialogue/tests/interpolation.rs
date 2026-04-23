@@ -2,6 +2,8 @@
 
 mod common;
 
+use bubbles::{HashMapProvider, HashMapStorage, RunnerBuilder, Value, VariableStorage, compile};
+
 use common::line_texts as lines_from;
 
 #[test]
@@ -103,4 +105,50 @@ title: Start
 ";
     let events = common::play(src, "Start");
     assert_eq!(lines_from(&events), ["He found 1 coin."]);
+}
+
+// ── eval_template: provider returns a template containing {expr} ──────────────
+//
+// This exercises the BraceSegment::Expr branch in evaluation.rs::eval_template.
+
+#[test]
+fn provider_template_with_expr_is_evaluated() {
+    // Source text is plain; the provider overrides it with a template that
+    // itself contains an expression placeholder.
+    let src = "title: A\n---\nHello. #line:greeting\n===\n";
+    let prog = compile(src).unwrap();
+
+    let mut provider = HashMapProvider::new();
+    // The translated template uses the variable $name.
+    provider.insert("greeting", "Hola, {$name}!");
+
+    let mut storage = HashMapStorage::new();
+    storage.set("$name", Value::Text("Alice".into()));
+
+    let mut runner = RunnerBuilder::new(prog, storage)
+        .with_provider(provider)
+        .build();
+    runner.start("A").unwrap();
+    let events = common::drain(&mut runner);
+    assert_eq!(lines_from(&events), ["Hola, Alice!"]);
+}
+
+#[test]
+fn provider_template_with_arithmetic_expr_is_evaluated() {
+    // Provider template with a non-trivial expression: {$hp + 10}.
+    let src = "title: A\n---\nYou have HP. #line:hp_line\n===\n";
+    let prog = compile(src).unwrap();
+
+    let mut provider = HashMapProvider::new();
+    provider.insert("hp_line", "HP remaining: {$hp + 10}");
+
+    let mut storage = HashMapStorage::new();
+    storage.set("$hp", Value::Number(90.0));
+
+    let mut runner = RunnerBuilder::new(prog, storage)
+        .with_provider(provider)
+        .build();
+    runner.start("A").unwrap();
+    let events = common::drain(&mut runner);
+    assert_eq!(lines_from(&events), ["HP remaining: 100"]);
 }
