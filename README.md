@@ -59,7 +59,7 @@ Add to `Cargo.toml`:
 
 ```toml
 [dependencies]
-bubbles-dialogue = "0.3"
+bubbles-dialogue = "0.4"
 ```
 
 ```rust
@@ -272,18 +272,30 @@ project with no runtime dependency, that is what Bubbles is for.
 
 ## Save / load
 
-```rust
-// Capture session state mid-dialogue (requires serde feature).
-let snap = runner.snapshot();
-let json = serde_json::to_string(&snap)?;
+Requires the `serde` feature (or `full`):
 
-// … restore later in a new session …
-let snap: bubbles::RunnerSnapshot = serde_json::from_str(&json)?;
+```toml
+bubbles-dialogue = { version = "0.4", features = ["serde"] }
+```
+
+Serialise **both** the snapshot and variable storage - neither is complete
+without the other:
+
+```rust
+// Save.
+let snap_json = serde_json::to_string(&runner.snapshot())?;
+let vars_json = serde_json::to_string(runner.storage())?;
+
+// Restore in a new session.
+let snap: bubbles::RunnerSnapshot = serde_json::from_str(&snap_json)?;
+let vars: bubbles::HashMapStorage  = serde_json::from_str(&vars_json)?;
+let mut runner = bubbles::Runner::new(program, vars);
 runner.restore(snap)?;
 ```
 
 `RunnerSnapshot` preserves visit counts and exhausted `<<once>>` blocks.
-Variable storage is serialised separately via `runner.storage()`.
+The runner is left in the `Idle` state after `restore`; call `start` again
+only if you want to replay from the beginning of the saved node.
 
 ---
 
