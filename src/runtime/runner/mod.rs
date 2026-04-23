@@ -5,7 +5,6 @@ pub(super) mod execute;
 pub(super) mod node_body;
 
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::sync::{Arc, Mutex};
 
 use crate::compiler::Program;
 use crate::compiler::ast::Stmt;
@@ -14,7 +13,7 @@ use crate::library::FunctionLibrary;
 use crate::runtime::event::DialogueEvent;
 use crate::runtime::provider::{LineProvider, PassthroughProvider};
 use crate::saliency::{FirstAvailable, SaliencyStrategy};
-use crate::value::{Value, VariableStorage};
+use crate::value::VariableStorage;
 
 /// Execution state of the runner.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -58,7 +57,7 @@ pub struct Runner<S: VariableStorage> {
     pub(super) pending: VecDeque<DialogueEvent>,
     pub(super) option_bodies: OptionBodies,
     pub(super) library: FunctionLibrary,
-    pub(super) visits: Arc<Mutex<HashMap<String, u32>>>,
+    pub(super) visits: HashMap<String, u32>,
     pub(super) once_seen: HashSet<String>,
     pub(super) saliency: Box<dyn SaliencyStrategy>,
     pub(super) provider: Box<dyn LineProvider>,
@@ -66,44 +65,8 @@ pub struct Runner<S: VariableStorage> {
 
 impl<S: VariableStorage> Runner<S> {
     /// Creates a new runner for the given program and variable storage.
-    ///
-    /// # Panics
-    /// Panics only if the internal `Mutex` is poisoned, which cannot happen in normal use.
     #[must_use]
     pub fn new(program: Program, storage: S) -> Self {
-        let visits: Arc<Mutex<HashMap<String, u32>>> = Arc::new(Mutex::new(HashMap::new()));
-        let mut library = FunctionLibrary::new();
-
-        let v1 = Arc::clone(&visits);
-        library.register("visited", move |args| {
-            let title = match args.as_slice() {
-                [Value::Text(t)] => t.clone(),
-                _ => {
-                    return Err(DialogueError::Function {
-                        name: "visited".into(),
-                        message: "expected one string argument".into(),
-                    });
-                }
-            };
-            Ok(Value::Bool(
-                *v1.lock().unwrap().get(&title).unwrap_or(&0) > 0,
-            ))
-        });
-        let v2 = Arc::clone(&visits);
-        library.register("visited_count", move |args| {
-            let title = match args.as_slice() {
-                [Value::Text(t)] => t.clone(),
-                _ => {
-                    return Err(DialogueError::Function {
-                        name: "visited_count".into(),
-                        message: "expected one string argument".into(),
-                    });
-                }
-            };
-            let count = *v2.lock().unwrap().get(&title).unwrap_or(&0);
-            Ok(Value::Number(f64::from(count)))
-        });
-
         Self {
             program,
             storage,
@@ -111,8 +74,8 @@ impl<S: VariableStorage> Runner<S> {
             stack: Vec::new(),
             pending: VecDeque::new(),
             option_bodies: Vec::new(),
-            library,
-            visits,
+            library: FunctionLibrary::new(),
+            visits: HashMap::new(),
             once_seen: HashSet::new(),
             saliency: Box::new(FirstAvailable),
             provider: Box::new(PassthroughProvider),
@@ -123,9 +86,6 @@ impl<S: VariableStorage> Runner<S> {
     ///
     /// # Errors
     /// Returns [`DialogueError::UnknownNode`] if the title does not exist in the program.
-    ///
-    /// # Panics
-    /// Panics only if the internal `Mutex` is poisoned, which cannot happen in normal use.
     pub fn start(&mut self, node: &str) -> Result<()> {
         if !self.program.node_exists(node) {
             return Err(DialogueError::UnknownNode(node.to_owned()));
@@ -134,12 +94,7 @@ impl<S: VariableStorage> Runner<S> {
         self.stack.clear();
         self.stack.push(Frame::new(node.to_owned(), body));
         self.state = State::Running;
-        *self
-            .visits
-            .lock()
-            .unwrap()
-            .entry(node.to_owned())
-            .or_insert(0) += 1;
+        *self.visits.entry(node.to_owned()).or_insert(0) += 1;
         self.pending
             .push_back(DialogueEvent::NodeStarted(node.to_owned()));
         Ok(())
@@ -249,17 +204,12 @@ impl<S: VariableStorage> Runner<S> {
     /// of the snapshotted node.
     ///
     /// Only available with the `serde` feature.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the internal visits `Mutex` is poisoned (only possible if a
-    /// previous thread panicked while holding it, which is not expected in normal use).
     #[cfg(feature = "serde")]
     #[must_use]
     pub fn snapshot(&self) -> crate::runtime::RunnerSnapshot {
         crate::runtime::RunnerSnapshot {
             current_node: self.stack.last().map(|f| f.node.clone()),
-            visits: self.visits.lock().unwrap().clone(),
+            visits: self.visits.clone(),
             once_seen: self.once_seen.clone(),
         }
     }
@@ -273,14 +223,10 @@ impl<S: VariableStorage> Runner<S> {
     /// Returns [`DialogueError::UnknownNode`] if the snapshotted node no longer
     /// exists in the program (e.g. after a script update).
     ///
-    /// # Panics
-    ///
-    /// Panics if the internal visits lock is poisoned (not expected in normal use).
-    ///
     /// Only available with the `serde` feature.
     #[cfg(feature = "serde")]
     pub fn restore(&mut self, snapshot: crate::runtime::RunnerSnapshot) -> Result<()> {
-        *self.visits.lock().unwrap() = snapshot.visits;
+        self.visits = snapshot.visits;
         self.once_seen = snapshot.once_seen;
         self.stack.clear();
         self.pending.clear();

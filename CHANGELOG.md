@@ -4,6 +4,18 @@ All notable changes are documented here (keep-a-changelog format).
 
 ## [Unreleased]
 
+### Changed
+
+- `Runner` now stores visit counts as a plain `HashMap<String, u32>` instead of
+  `Arc<Mutex<HashMap<...>>>`.  The `visited()` and `visited_count()` builtins
+  are intercepted by the evaluator directly, removing the Mutex, the lock
+  surface, and the "panics on poisoned mutex" caveats from `Runner::new`,
+  `Runner::start`, `Runner::snapshot`, and `Runner::restore`.  User-registered
+  functions named `visited` / `visited_count` are now masked by the builtins
+  (before, library lookups for those names were never reached because the
+  closures registered by `Runner::new` resolved first, so the observable
+  behaviour is unchanged).
+
 ### Internal
 
 - Removed `src/runtime/interpolate.rs`, a dead module that only held a duplicate

@@ -42,6 +42,50 @@ title: A
 }
 
 #[test]
+fn visited_in_interpolation_on_own_node() {
+    // visited("A") is called inside a `{expr}` on a line of node A itself.
+    // start() increments the count *before* the line is evaluated, so the
+    // line should see visited == true.
+    let src = "\
+title: A
+---
+Seen before: {visited(\"A\")}.
+===
+";
+    let events = common::play(src, "A");
+    let line = events
+        .iter()
+        .find_map(|e| match e {
+            DialogueEvent::Line { text, .. } => Some(text.as_str()),
+            _ => None,
+        })
+        .expect("expected one line");
+    assert_eq!(line, "Seen before: true.");
+}
+
+#[test]
+fn visited_count_in_set_on_first_line() {
+    // visited_count("A") read inside a `<<set>>` on the first body line of A
+    // must see the increment that `start` performed, so $c == 1 after the set.
+    let src = "\
+title: A
+---
+<<set $c = visited_count(\"A\")>>
+count={$c}
+===
+";
+    let events = common::play(src, "A");
+    let line = events
+        .iter()
+        .find_map(|e| match e {
+            DialogueEvent::Line { text, .. } => Some(text.as_str()),
+            _ => None,
+        })
+        .expect("expected one line");
+    assert_eq!(line, "count=1");
+}
+
+#[test]
 fn visited_count_increases() {
     let src = "title: A\n---\nHello.\n===\n";
     let prog = compile(src).unwrap();

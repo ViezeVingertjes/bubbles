@@ -15,8 +15,35 @@ impl<S: VariableStorage> Runner<S> {
     /// function library.
     pub(super) fn eval_expr(&self, expr: &Expr) -> Result<Value> {
         eval(expr, &self.storage, &|name, args| {
-            self.library.call(name, args)
+            self.call_function(name, args)
         })
+    }
+
+    /// Dispatches a function call, short-circuiting the built-in `visited` and
+    /// `visited_count` lookups against the runner-local visit table before
+    /// delegating to the [`crate::library::FunctionLibrary`].
+    ///
+    /// Keeping these two builtins out of the [`FunctionLibrary`] means the
+    /// visits map is not shared across threads, so we can store it as a plain
+    /// `HashMap` instead of `Arc<Mutex<_>>`.
+    fn call_function(&self, name: &str, args: Vec<Value>) -> Result<Value> {
+        match (name, args.as_slice()) {
+            ("visited", [Value::Text(title)]) => Ok(Value::Bool(
+                self.visits.get(title).copied().unwrap_or(0) > 0,
+            )),
+            ("visited", _) => Err(DialogueError::Function {
+                name: "visited".into(),
+                message: "expected one string argument".into(),
+            }),
+            ("visited_count", [Value::Text(title)]) => Ok(Value::Number(f64::from(
+                self.visits.get(title).copied().unwrap_or(0),
+            ))),
+            ("visited_count", _) => Err(DialogueError::Function {
+                name: "visited_count".into(),
+                message: "expected one string argument".into(),
+            }),
+            _ => self.library.call(name, args),
+        }
     }
 
     /// Renders pre-parsed text segments into a final string.

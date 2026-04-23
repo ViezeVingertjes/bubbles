@@ -201,12 +201,7 @@ impl<S: VariableStorage> Runner<S> {
         let body = self.pick_node_body(&target)?;
         self.stack.clear();
         self.stack.push(Frame::new(target.clone(), body));
-        *self
-            .visits
-            .lock()
-            .unwrap()
-            .entry(target.clone())
-            .or_insert(0) += 1;
+        *self.visits.entry(target.clone()).or_insert(0) += 1;
         self.pending.push_front(DialogueEvent::NodeStarted(target));
         Ok(None)
     }
@@ -216,12 +211,7 @@ impl<S: VariableStorage> Runner<S> {
             return Err(DialogueError::UnknownNode(target));
         }
         let body = self.pick_node_body(&target)?;
-        *self
-            .visits
-            .lock()
-            .unwrap()
-            .entry(target.clone())
-            .or_insert(0) += 1;
+        *self.visits.entry(target.clone()).or_insert(0) += 1;
         self.stack.push(Frame::new(target.clone(), body));
         self.pending.push_front(DialogueEvent::NodeStarted(target));
         Ok(None)
