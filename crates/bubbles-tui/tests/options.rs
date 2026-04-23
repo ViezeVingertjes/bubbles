@@ -1,6 +1,6 @@
 //! Option-handling tests: focus, direct selection, guard rendering.
 
-use bubbles_tui::{AppState, Intent, render};
+use bubbles_tui::{AppState, DisplayedOption, Intent, render};
 use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 
@@ -84,6 +84,29 @@ fn selecting_an_unavailable_option_is_a_noop() {
 
     state.apply(Intent::SelectOption(0));
     assert!(state.options().is_empty());
+}
+
+#[test]
+fn displayed_option_preserves_line_id_and_tags() {
+    // Options with a #line:id tag should surface line_id and tags in the
+    // DisplayedOption so the renderer (or embedding code) can use them
+    // for localisation lookup, analytics, or styling.
+    let src = "title: A\n---\nChoose.\n-> Pick me #line:opt1 #important\n===\n";
+    let mut state = AppState::from_source(src, "A").unwrap();
+    advance_until_options(&mut state);
+
+    let opts: &[DisplayedOption] = state.options();
+    assert_eq!(opts.len(), 1);
+    assert_eq!(
+        opts[0].line_id.as_deref(),
+        Some("opt1"),
+        "line_id not preserved on DisplayedOption"
+    );
+    assert!(
+        opts[0].tags.contains(&"important".to_owned()),
+        "tags not preserved on DisplayedOption: {:?}",
+        opts[0].tags
+    );
 }
 
 #[test]

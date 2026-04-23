@@ -19,6 +19,11 @@ pub struct DisplayedOption {
     /// Whether the option's guard currently passes; false options are
     /// displayed but not selectable.
     pub available: bool,
+    /// The `#line:id` tag value for this option, if one was present in the
+    /// source. Useful for localisation lookup and analytics.
+    pub line_id: Option<String>,
+    /// Any additional `#tag` values attached to this option in the source.
+    pub tags: Vec<String>,
 }
 
 impl From<DialogueOption> for DisplayedOption {
@@ -26,6 +31,8 @@ impl From<DialogueOption> for DisplayedOption {
         Self {
             text: opt.text,
             available: opt.available,
+            line_id: opt.line_id,
+            tags: opt.tags,
         }
     }
 }
