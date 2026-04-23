@@ -4,6 +4,8 @@ All notable changes are documented here (keep-a-changelog format).
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-04-23
+
 ### Added
 
 - `<<stop>>` statement: terminates the entire dialogue immediately,

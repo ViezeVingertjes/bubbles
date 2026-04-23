@@ -58,7 +58,7 @@ Add to `Cargo.toml`:
 
 ```toml
 [dependencies]
-bubbles-dialogue = "0.2"
+bubbles-dialogue = "0.3"
 ```
 
 ```rust

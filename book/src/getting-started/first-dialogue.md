@@ -14,7 +14,7 @@ Or by hand:
 
 ```toml
 [dependencies]
-bubbles-dialogue = "0.2"
+bubbles-dialogue = "0.3"
 ```
 
 > **Requires Rust 1.95 or later.** Bubbles targets a recent stable toolchain so it can lean on modern features without `unsafe`.
