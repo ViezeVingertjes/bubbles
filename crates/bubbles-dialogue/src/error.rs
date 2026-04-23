@@ -28,10 +28,43 @@ pub enum DialogueError {
     /// A validation failure detected after all sources are merged.
     #[error("validation error: {0}")]
     Validation(String),
-    /// A runtime execution error.
+    /// A general runtime execution error.
+    ///
+    /// Prefer the more-specific variants ([`ProtocolViolation`],
+    /// [`TypeMismatch`], [`DialogueError::UndefinedVariable`]) for errors that embedders
+    /// are likely to want to distinguish programmatically.
+    ///
+    /// [`ProtocolViolation`]: DialogueError::ProtocolViolation
+    /// [`TypeMismatch`]: DialogueError::TypeMismatch
     #[error("runtime error: {0}")]
     Runtime(String),
-    /// A type mismatch in an expression.
+    /// The [`Runner`](crate::runtime::Runner) API was called in the wrong
+    /// order (e.g. [`next_event`](crate::runtime::Runner::next_event) while
+    /// awaiting an option, or
+    /// [`select_option`](crate::runtime::Runner::select_option) when not
+    /// awaiting).
+    ///
+    /// Embedders can match on this variant to detect integration bugs
+    /// without parsing the error message string.
+    #[error("protocol violation: {0}")]
+    ProtocolViolation(String),
+    /// A type mismatch in an expression (e.g. adding a number to a string).
+    ///
+    /// `expected` and `got` are human-readable descriptions of the involved
+    /// types; `context` is the operation that triggered the mismatch.
+    #[error("type mismatch in {context}: expected {expected}, got {got}")]
+    TypeMismatch {
+        /// The type the operation expected.
+        expected: String,
+        /// The type actually encountered.
+        got: String,
+        /// The operation that produced the mismatch (e.g. `"+"`).
+        context: String,
+    },
+    /// A general type error message, kept for backwards compatibility and
+    /// for cases not covered by [`TypeMismatch`].
+    ///
+    /// [`TypeMismatch`]: DialogueError::TypeMismatch
     #[error("type error: {0}")]
     Type(String),
     /// An unknown variable was referenced.

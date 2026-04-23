@@ -36,7 +36,11 @@ where
                     if let Value::Number(n) = v {
                         Ok(Value::Number(-n))
                     } else {
-                        Err(DialogueError::Type(format!("cannot negate {v:?}")))
+                        Err(DialogueError::TypeMismatch {
+                            expected: "number".into(),
+                            got: value_type_name(&v).into(),
+                            context: "unary `-`".into(),
+                        })
                     }
                 }
                 UnOp::Not => Ok(Value::Bool(!v.is_truthy())),
@@ -78,7 +82,11 @@ where
             (Value::Number(a), Value::Number(b)) => Ok(Value::Number(a + b)),
             (Value::Text(a), Value::Text(b)) => Ok(Value::Text(a + &b)),
             (Value::Text(a), b) => Ok(Value::Text(a + &b.to_string())),
-            (a, b) => Err(DialogueError::Type(format!("cannot add {a:?} and {b:?}"))),
+            (a, b) => Err(DialogueError::TypeMismatch {
+                expected: "number or string".into(),
+                got: format!("{} and {}", value_type_name(&a), value_type_name(&b)),
+                context: "operator `+`".into(),
+            }),
         },
         BinOp::Sub => num_op(lv, rv, "-", |x, y| x - y),
         BinOp::Mul => num_op(lv, rv, "*", |x, y| x * y),
@@ -94,6 +102,14 @@ where
     }
 }
 
+const fn value_type_name(v: &Value) -> &'static str {
+    match v {
+        Value::Number(_) => "number",
+        Value::Text(_) => "string",
+        Value::Bool(_) => "bool",
+    }
+}
+
 fn num_op(left: Value, right: Value, op: &str, calc: impl Fn(f64, f64) -> f64) -> Result<Value> {
     match (left, right) {
         (Value::Number(a), Value::Number(b)) => {
@@ -105,18 +121,22 @@ fn num_op(left: Value, right: Value, op: &str, calc: impl Fn(f64, f64) -> f64) -
             }
             Ok(Value::Number(calc(a, b)))
         }
-        (lv, rv) => Err(DialogueError::Type(format!(
-            "operator `{op}` requires numbers, got {lv:?} and {rv:?}"
-        ))),
+        (lv, rv) => Err(DialogueError::TypeMismatch {
+            expected: "number".into(),
+            got: format!("{} and {}", value_type_name(&lv), value_type_name(&rv)),
+            context: format!("operator `{op}`"),
+        }),
     }
 }
 
 fn cmp_op(left: Value, right: Value, op: &str, pred: impl Fn(f64, f64) -> bool) -> Result<Value> {
     match (left, right) {
         (Value::Number(a), Value::Number(b)) => Ok(Value::Bool(pred(a, b))),
-        (lv, rv) => Err(DialogueError::Type(format!(
-            "operator `{op}` requires numbers, got {lv:?} and {rv:?}"
-        ))),
+        (lv, rv) => Err(DialogueError::TypeMismatch {
+            expected: "number".into(),
+            got: format!("{} and {}", value_type_name(&lv), value_type_name(&rv)),
+            context: format!("operator `{op}`"),
+        }),
     }
 }
 
@@ -192,7 +212,10 @@ mod tests {
         let storage = HashMapStorage::new();
         let expr = parse_expr(r#"-"hello""#).unwrap();
         let err = eval(&expr, &storage, &no_fns).unwrap_err();
-        assert!(err.to_string().contains("negate"), "got {err}");
+        assert!(
+            matches!(err, DialogueError::TypeMismatch { ref context, .. } if context.contains('-')),
+            "got {err}"
+        );
     }
 
     #[test]
@@ -200,7 +223,10 @@ mod tests {
         let storage = HashMapStorage::new();
         let expr = parse_expr(r#""a" - 1"#).unwrap();
         let err = eval(&expr, &storage, &no_fns).unwrap_err();
-        assert!(err.to_string().contains('-'), "got {err}");
+        assert!(
+            matches!(err, DialogueError::TypeMismatch { ref context, .. } if context.contains('-')),
+            "got {err}"
+        );
     }
 
     #[test]
@@ -208,7 +234,10 @@ mod tests {
         let storage = HashMapStorage::new();
         let expr = parse_expr(r#""a" < 1"#).unwrap();
         let err = eval(&expr, &storage, &no_fns).unwrap_err();
-        assert!(err.to_string().contains('<'), "got {err}");
+        assert!(
+            matches!(err, DialogueError::TypeMismatch { ref context, .. } if context.contains('<')),
+            "got {err}"
+        );
     }
 
     #[test]

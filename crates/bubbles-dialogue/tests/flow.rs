@@ -2,7 +2,7 @@
 
 mod common;
 
-use bubbles::{DialogueEvent, HashMapStorage, Runner, compile};
+use bubbles::{DialogueError, DialogueEvent, HashMapStorage, Runner, compile};
 
 use common::{drain, line_texts};
 
@@ -278,5 +278,47 @@ beta
     assert_eq!(
         line_texts(&events),
         ["alpha", "beta", "alpha", "beta", "Done."]
+    );
+}
+
+// ── structured error variants ─────────────────────────────────────────────────
+
+#[test]
+fn next_event_while_awaiting_option_returns_protocol_violation() {
+    let prog = compile("title: A\n---\n-> Only\n===\n").unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("A").unwrap();
+    runner.next_event().unwrap(); // NodeStarted
+    runner.next_event().unwrap(); // Options
+    let err = runner.next_event().unwrap_err();
+    assert!(
+        matches!(err, DialogueError::ProtocolViolation(_)),
+        "expected ProtocolViolation, got: {err:?}"
+    );
+}
+
+#[test]
+fn select_option_when_not_awaiting_returns_protocol_violation() {
+    let prog = compile("title: A\n---\n===\n").unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("A").unwrap();
+    let err = runner.select_option(0).unwrap_err();
+    assert!(
+        matches!(err, DialogueError::ProtocolViolation(_)),
+        "expected ProtocolViolation, got: {err:?}"
+    );
+}
+
+#[test]
+fn type_error_from_expression_returns_type_mismatch() {
+    // Adding a number to a string is a type mismatch.
+    let prog = compile("title: A\n---\n<<set $x = 1 + \"oops\">>\n===\n").unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("A").unwrap();
+    runner.next_event().unwrap(); // NodeStarted
+    let err = runner.next_event().unwrap_err();
+    assert!(
+        matches!(err, DialogueError::TypeMismatch { .. }),
+        "expected TypeMismatch, got: {err:?}"
     );
 }

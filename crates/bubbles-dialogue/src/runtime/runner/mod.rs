@@ -115,7 +115,7 @@ impl<S: VariableStorage> Runner<S> {
         }
         match self.state {
             State::Idle | State::Done => Ok(None),
-            State::AwaitingOption => Err(DialogueError::Runtime(
+            State::AwaitingOption => Err(DialogueError::ProtocolViolation(
                 "call select_option() before next_event()".into(),
             )),
             State::Running => loop {
@@ -139,7 +139,7 @@ impl<S: VariableStorage> Runner<S> {
     /// range.
     pub fn select_option(&mut self, index: usize) -> Result<()> {
         if self.state != State::AwaitingOption {
-            return Err(DialogueError::Runtime(
+            return Err(DialogueError::ProtocolViolation(
                 "select_option() called when not awaiting an option".into(),
             ));
         }
