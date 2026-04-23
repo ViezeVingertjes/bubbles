@@ -32,21 +32,14 @@ tags: scene docks outdoor
 
 Node tags travel with the `NodeStarted` event. Games use them to pre-load music, trigger ambient systems, or build scene lists for editors and save migrations.
 
-### Variables and a first-visit check
+### Variables
 
 ```text
 <<declare $gold = 25>>
-<<declare $met_stumpy = false>>
-
-<<if $met_stumpy>>
-    Stumpy: You again. Permit still costs ten doubloons.
-<<else>>
-    Stumpy: Name's McGee. Stumpy McGee, Harbormaster.
-    <<set $met_stumpy = true>>
-<<endif>>
+<<declare $has_permit = false>>
 ```
 
-`<<declare>>` registers the variables a script owns. They are typed from their default values and persist across visits and across save/load cycles when you use `RunnerSnapshot`. See [Save and Load](../advanced/save-load.md).
+`<<declare>>` registers the variables a script owns. They are typed from their default values and persist across save/load cycles when you use `RunnerSnapshot`. See [Save and Load](../advanced/save-load.md).
 
 ### Line groups for ambient flavour
 
@@ -70,7 +63,7 @@ Each time this node runs, `BestLeastRecentlyViewed` picks whichever bark the pla
 <<endonce>>
 ```
 
-The first visit gets the full reveal. Every later visit gets the short acknowledgement. No flag variable needed. The once-seen state is stored automatically and survives `RunnerSnapshot` round-trips.
+The first time you reach the options prompt you get the full rumour. Every return after a failed bribe or the map seller detour gets the short acknowledgement. No flag variable needed. The once-seen state is stored automatically and survives `RunnerSnapshot` round-trips.
 
 ### Guarded options
 

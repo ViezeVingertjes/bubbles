@@ -10,7 +10,6 @@
 // Features demonstrated in this file:
 //   - Node tags (scene / location metadata)
 //   - <<declare>> typed variables
-//   - <<if>> / <<else>> conditionals based on a visit flag
 //   - Guarded options with <<if>> (gold >= threshold)
 //   - <<detour>> into a cross-file node and <<return>>
 //   - <<once>> / <<else>> / <<endonce>> for one-off content
@@ -23,22 +22,20 @@ title: Start
 tags: scene docks outdoor
 ---
 <<declare $gold = 25>>
-<<declare $has_permit = false>>
-<<declare $met_stumpy = false>>
 
 => Dockworker: Oi, watch yer step!
 => Dockworker: These crates won't unload themselves, ye know.
 => Dockworker: Smells like low tide and regret out here.
 => Dockworker: Cap'n said the tide turns at noon. Better hurry.
 
-<<if $met_stumpy>>
-    Stumpy: You again. Permit still costs ten doubloons.
-<<else>>
-    Stumpy: Name's McGee. Stumpy McGee, Harbormaster.
-    Stumpy: Ye can't sail from Barnacle Bay without a travel permit.
-    <<set $met_stumpy = true>>
-<<endif>>
+Stumpy: Name's McGee. Stumpy McGee, Harbormaster.
+Stumpy: Ye can't sail from Barnacle Bay without a travel permit.
 
+<<jump Options>>
+===
+
+title: Options
+---
 <<once>>
     Stumpy: Word is there's a three-headed sea creature lurking past Dead Man's Reef.
     Stumpy: Whole fleet turned back. Brave sailors, every one of 'em.
@@ -46,16 +43,10 @@ tags: scene docks outdoor
     Stumpy: Aye, same tale about the sea creature. Nothing new to report.
 <<endonce>>
 
-<<jump Options>>
-===
-
-title: Options
----
 Stumpy: So. What'll it be?
 
 -> Pay ten doubloons for a permit. <<if $gold >= 10>>
     <<set $gold = $gold - 10>>
-    <<set $has_permit = true>>
     <<stamp_permit>>
     Stumpy: There she is. Official seal and everything.
     Stumpy: You have {$gold} doubloons left. Don't spend 'em all at once.
