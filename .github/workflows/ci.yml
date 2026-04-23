@@ -48,7 +48,14 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: dtolnay/rust-toolchain@1.95
+      - name: Read MSRV from Cargo.toml
+        id: msrv
+        run: echo "version=$(grep '^rust-version' Cargo.toml | grep -oP '"\K[^"]+')" >> "$GITHUB_OUTPUT"
+
+      - name: Install Rust ${{ steps.msrv.outputs.version }}
+        run: |
+          rustup toolchain install ${{ steps.msrv.outputs.version }} --profile minimal --no-self-update
+          rustup default ${{ steps.msrv.outputs.version }}
 
       - uses: Swatinem/rust-cache@v2
 
