@@ -3,7 +3,6 @@
 use logos::Logos;
 
 /// A lexical token produced by the lexer.
-#[allow(clippy::upper_case_acronyms)]
 #[derive(Logos, Debug, Clone, PartialEq)]
 #[logos(skip r"[ \t\r\f]+")] // skip horizontal whitespace; newlines are significant in the parser
 pub enum Token {
