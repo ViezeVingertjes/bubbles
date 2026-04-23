@@ -24,13 +24,13 @@ Then read [The Harbour](./harbour.md) for a feature-by-feature walkthrough, or [
 
 ```sh
 # single file
-cargo run -p bubbles-tui -- path/to/script.bub
+cargo run -p bubbles-tui -- <script.bub>
 
 # multiple files compiled together (cross-file jumps and detours work)
-cargo run -p bubbles-tui -- main.bub services.bub shared/barks.bub
+cargo run -p bubbles-tui -- <main.bub> <services.bub> [more.bub ...]
 
 # explicit start node (defaults to "Start" if omitted)
-cargo run -p bubbles-tui -- path/to/script.bub MyStartNode
+cargo run -p bubbles-tui -- <script.bub> <StartNode>
 ```
 
 ## Keybindings
