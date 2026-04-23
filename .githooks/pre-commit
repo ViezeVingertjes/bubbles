@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Pre-commit hook: runs rustfmt and clippy to catch CI failures early.
+# Pre-commit hook: mirrors the checks in .github/workflows/ci.yml so CI
+# failures are caught locally before a push.
 # Install once with: git config core.hooksPath .githooks
 
 set -euo pipefail
@@ -20,10 +21,28 @@ if ! cargo fmt --check 2>&1; then
   fail "rustfmt found unformatted code. Run \`cargo fmt\` and re-stage your changes."
 fi
 
-echo -e "${BOLD}pre-commit:${RESET} running clippy..."
+echo -e "${BOLD}pre-commit:${RESET} running clippy (all features)..."
 if ! cargo clippy --all-features --all-targets -- -D warnings 2>&1; then
   echo ""
   fail "clippy reported errors. Fix them and re-stage your changes."
+fi
+
+echo -e "${BOLD}pre-commit:${RESET} running clippy (no default features)..."
+if ! cargo clippy --no-default-features --all-targets -- -D warnings 2>&1; then
+  echo ""
+  fail "clippy (no default features) reported errors. Fix them and re-stage your changes."
+fi
+
+echo -e "${BOLD}pre-commit:${RESET} checking file sizes..."
+if ! bash scripts/check-file-sizes.sh 2>&1; then
+  echo ""
+  fail "file-size check failed. Split oversized files and re-stage your changes."
+fi
+
+echo -e "${BOLD}pre-commit:${RESET} checking naming..."
+if ! bash scripts/check-naming.sh 2>&1; then
+  echo ""
+  fail "naming check failed. Fix the reported names and re-stage your changes."
 fi
 
 echo -e "${GREEN}${BOLD}pre-commit:${RESET} all checks passed."
