@@ -2,21 +2,45 @@
 
 All notable changes are documented here (keep-a-changelog format).
 
-## [Unreleased]
+## [0.2.0] — 2026-04-23
 
 ### Added
 
+- **`plural(count, singular, plural)`** built-in: returns the singular form when `|count| == 1`,
+  plural otherwise.  Usable inside any `{expr}` substitution.
+- **`select(key, mapping)`** built-in: key-based text dispatch for gendered grammar and similar
+  patterns.  Format: `"k1:text1|k2:text2|other:fallback"`.  The first colon per entry is the
+  separator so values may contain colons.  The `other` key is required; omitting it returns an error.
+- **Translate-then-format provider ordering**: `LineProvider::get()` is now called *before*
+  `{expr}` segments are evaluated.  The returned string is itself a template — any `{expr}` it
+  contains are evaluated against current variable storage after translation.  This lets translators
+  reorder or reshape interpolations freely and use `plural()` / `select()` inside translated strings.
+  `exec_line_group` and `exec_options` also gained provider lookup (previously only `exec_line` used it).
 - CI and `scripts/check-wasm.sh`: `wasm32-unknown-unknown` clippy for `--no-default-features` and
   `--no-default-features --features serde` (library only; keeps the crate wasm-compatible).
 - `autoexamples = false` with explicit `[[example]]` entries so ad-hoc files under `examples/` are
   not picked up by Cargo (local scratch examples stay out of `cargo clippy --all-targets`).
 - `line_id_from_tags()` helper and `line_id: Option<String>` on `DialogueEvent::Line` and
-  `DialogueOption` when the source has a `#line:<id>` tag (stable key for VO / loc without re-parsing `tags`).
+  `DialogueOption` when the source has a `#line:<id>` tag (stable key for VO / loc without
+  re-parsing `tags`).
 
 ### Changed
 
-- **Breaking:** `DialogueEvent::Line` and `DialogueOption` have a new `line_id` field. Update struct
-  literals and exhaustive matches, or use `..` in patterns.
+- **Breaking:** `RunnerSnapshot::visits` changed from `HashMap<String, usize>` to
+  `HashMap<String, u32>`.  Existing snapshots serialised as JSON are unaffected on 64-bit targets
+  (JSON numbers are untyped), but binary formats may need migration.
+- **Breaking:** `LineProvider::get()` contract changed — the returned `String` is now a *template*
+  that may contain `{expr}` syntax evaluated after translation.  Plain strings (no braces) continue
+  to work unchanged.
+- **Breaking:** `DialogueEvent::Line` and `DialogueOption` have a new `line_id` field.  Update
+  struct literals and exhaustive matches, or use `..` in patterns.
+- `rand` builtins (`random_range`, `dice`) now validate their arguments (non-finite, fractional, or
+  out-of-range values produce a `DialogueError::Function` instead of silently wrapping).
+
+### Fixed
+
+- Removed all `#[allow(clippy::...)]` suppressions; the underlying code was restructured so no
+  suppression is needed.
 
 ## [0.1.0] — 2026-04-22
 

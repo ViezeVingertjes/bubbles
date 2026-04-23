@@ -7,8 +7,6 @@
 [![CI](https://github.com/ViezeVingertjes/bubbles/actions/workflows/ci.yml/badge.svg)](https://github.com/ViezeVingertjes/bubbles/actions)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
 
-Crates.io and docs.rs badges above fill in after the first release on crates.io.
-
 Write branching `.bub` scripts, compile them once at startup, then drive the
 dialogue from any game loop with a simple pull-based event API.  Designed to
 integrate cleanly into Bevy, Godot, or any custom Rust engine — zero async
@@ -31,7 +29,7 @@ primitives, zero allocations in the hot path beyond the events themselves.
 | Expressions | Arithmetic, comparison, boolean, unary, parens, proper precedence |
 | Inline substitution | `{expr}` anywhere in line / option / command text |
 | Host commands | `<<verb arg1 arg2>>` surfaced as `DialogueEvent::Command` |
-| Built-in functions | `visited`, `visited_count`, `random`, `random_range`, `dice`, `round`, `floor`, `ceil`, `min`, `max`, `abs`, `clamp`, `string`, `int` |
+| Built-in functions | `visited`, `visited_count`, `random`, `random_range`, `dice`, `round`, `floor`, `ceil`, `min`, `max`, `abs`, `clamp`, `string`, `int`, `plural`, `select` |
 | Custom functions | Host-registered closures callable inside any expression |
 | Once blocks | `<<once>>` / `<<once if cond>>` / `<<endonce>>` with optional `<<else>>` |
 | Detour / return | `<<detour Node>>` / `<<return>>` subroutine stack |
@@ -42,7 +40,7 @@ primitives, zero allocations in the hot path beyond the events themselves.
 | Multi-file compile | `compile_many(&[(name, source)])` with duplicate-title error |
 | Reference validation | Catches typo'd jump/detour targets at compile time |
 | Program introspection | `node_titles()`, `node_tags()`, `node_exists()`, `variable_declarations()` |
-| Localisation seam | `LineProvider` trait consulted for `#line:id`-tagged lines |
+| Localisation seam | `LineProvider` returns a **template** for `#line:id`-tagged lines; `{expr}` in the translated string is evaluated after lookup (translate-then-format) |
 | Stable line ids | `#line:<id>` also sets `line_id` on `DialogueEvent::Line` / `DialogueOption` (for VO, analytics); see [`line_id_from_tags`](https://docs.rs/bubbles-dialogue/latest/bubbles/fn.line_id_from_tags.html) |
 | Save / load | `RunnerSnapshot` (serde feature) captures visits, once-seen, active node |
 
@@ -54,7 +52,7 @@ Add to `Cargo.toml`:
 
 ```toml
 [dependencies]
-bubbles-dialogue = "0.1"
+bubbles-dialogue = "0.2"
 ```
 
 ```rust
@@ -174,12 +172,44 @@ runner.set_saliency(RandomAvailable);                 // uniform random
 use bubbles::HashMapProvider;
 
 let mut provider = HashMapProvider::new();
-provider.insert("greeting_id", "Hallo!");
+// The value is a *template* — {expr} placeholders are evaluated
+// against the current variable storage AFTER the lookup.
+provider.insert("greeting_id", "Hallo {$name}!");
 runner.set_provider(provider);
 ```
 
-A line tagged `#line:greeting_id` will be substituted with the provider's
-translation before the event is emitted.
+When a line carries `#line:greeting_id`, the provider is consulted
+**first** (translate-then-format ordering).  The returned string may
+contain `{expr}` placeholders just like the original source — they are
+evaluated after translation, so translators can reorder or reshape
+interpolations for their language.  If the provider returns `None`, the
+source text is used unchanged.
+
+### Pluralisation and gendered grammar
+
+Two built-in functions handle the most common i18n patterns directly
+inside `{expr}` substitutions:
+
+```
+# English source
+You found {$n} {plural($n, "gem", "gems")}.
+
+# Translated template stored in the provider (e.g. Spanish)
+Encontraste {$n} {plural($n, "gema", "gemas")}.
+```
+
+```
+# Gendered pronouns via select()
+{select($gender, "m:He|f:She|other:They")} arrived at the tavern.
+```
+
+`plural(count, singular, plural)` — returns the singular form when
+`|count| == 1`, the plural form otherwise.
+
+`select(key, "k1:text1|k2:text2|other:fallback")` — returns the text
+for the matching key, or the `other` fallback when the key is not in the
+mapping.  The first colon on each entry is the separator, so values may
+themselves contain colons.
 
 ### Host functions
 
