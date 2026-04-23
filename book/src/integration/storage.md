@@ -84,6 +84,41 @@ Now dialogue writes land straight in the save file. No synchronisation step, no 
 
 > **Tip:** You're free to filter, rename, or project variables in `get`/`set`. Want only variables starting with `$quest_` to persist? Check the name in `set` and ignore the rest. Bubbles never peeks at storage outside these two methods.
 
+## Overriding `get_ref` for zero-copy reads
+
+The runner calls `get_ref` on every `{$var}` interpolation and every expression that reads a variable. The default implementation calls `get` and wraps the result in `Cow::Owned`, which means a `clone()` on every read.
+
+If your store already owns `Value` objects you can hand back a borrow instead:
+
+```rust,ignore
+use std::borrow::Cow;
+use std::collections::HashMap;
+use bubbles::{Value, VariableStorage};
+
+pub struct MyStorage {
+    vars: HashMap<String, Value>,
+}
+
+impl VariableStorage for MyStorage {
+    fn get(&self, name: &str) -> Option<Value> {
+        self.vars.get(name).cloned()
+    }
+
+    fn set(&mut self, name: &str, value: Value) {
+        self.vars.insert(name.to_owned(), value);
+    }
+
+    // Override: hand back a reference so the evaluator never clones.
+    fn get_ref(&self, name: &str) -> Option<Cow<'_, Value>> {
+        self.vars.get(name).map(Cow::Borrowed)
+    }
+}
+```
+
+For a `HashMap<String, Value>` this is a one-liner. The payoff is that `{$long_text}` in a line of dialogue never copies the string — it borrows from your map for the duration of the interpolation.
+
+> **When the default is fine:** If your store does a lookup that already produces owned `Value`s (e.g. a database row, a deserialized field) there is nothing to borrow — keep the default and only override if profiling shows the allocations matter.
+
 ## Seeding storage from the outside
 
 Before (or during) a conversation, push values in from your game:
