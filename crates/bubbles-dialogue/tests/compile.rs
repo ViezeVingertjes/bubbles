@@ -1,6 +1,6 @@
 //! Integration tests for the compilation pipeline.
 
-use bubbles::{compile, compile_many, validate};
+use bubbles::{compile, compile_many, compile_many_validated, compile_validated, validate};
 
 #[test]
 fn empty_node_parses() {
@@ -364,4 +364,46 @@ hello {1 +} world
         !err.contains("<expr>"),
         "error should report the real file, got: {err}"
     );
+}
+
+// ── compile_validated / compile_many_validated ────────────────────────────────
+
+#[test]
+fn compile_validated_rejects_unknown_jump_target() {
+    // compile alone succeeds; compile_validated must catch the bad jump.
+    let src = "title: A\n---\n<<jump Missing>>\n===\n";
+    assert!(
+        compile(src).is_ok(),
+        "compile alone should not validate jump targets"
+    );
+    let err = compile_validated(src).unwrap_err().to_string();
+    assert!(
+        err.contains("Missing") || err.contains("unknown"),
+        "expected validation error mentioning 'Missing', got: {err}"
+    );
+}
+
+#[test]
+fn compile_validated_accepts_valid_program() {
+    let src = "title: A\n---\n<<jump B>>\n===\ntitle: B\n---\nHello.\n===\n";
+    assert!(compile_validated(src).is_ok());
+}
+
+#[test]
+fn compile_many_validated_rejects_unknown_detour_target() {
+    let src_a = "title: A\n---\n<<detour Missing>>\n===\n";
+    let result = compile_many_validated(&[("a", src_a)]);
+    assert!(
+        result.is_err(),
+        "expected validation error for unknown detour target"
+    );
+}
+
+#[test]
+fn compile_many_validated_accepts_cross_file_jump() {
+    let result = compile_many_validated(&[
+        ("a", "title: A\n---\n<<jump B>>\n===\n"),
+        ("b", "title: B\n---\nHello.\n===\n"),
+    ]);
+    assert!(result.is_ok());
 }
