@@ -1,4 +1,4 @@
-// Barnacle Bay — Shared Beats
+// Barnacle Bay - Shared Beats
 //
 // Reusable nodes called via <<detour>> from harbour.bub.
 // Demonstrates the multi-file split: the map seller lives here so this beat
@@ -14,7 +14,7 @@
 
 title: MapSeller
 ---
-MapSeller: Psst. Charts, maps, treasure coordinates — all freshly forged.
+MapSeller: Psst. Charts, maps, treasure coordinates. All freshly forged.
 
 <<if $gold >= 15>>
     MapSeller: For fifteen doubloons I'll sell ye a map to the Sunken Galleon.

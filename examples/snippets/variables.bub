@@ -1,5 +1,5 @@
 // Snippet: Variables
-// Pattern: grog shop transaction — price rises each round (running gag)
+// Pattern: grog shop transaction. Price rises each round (running gag).
 // Features: <<declare>>, <<set>>, arithmetic expressions, {$variable} interpolation,
 //            <<if>> / <<else>> conditionals driven by variable state
 // Run: cargo run -p bubbles-tui -- examples/snippets/variables.bub

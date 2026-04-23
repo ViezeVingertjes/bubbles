@@ -1,5 +1,5 @@
 // Snippet: Commands
-// Pattern: prying open a treasure chest — trigger host-side events
+// Pattern: prying open a treasure chest. Trigger host-side events
 // Features: <<command>> dispatch with arguments, line tags (#dramatic, #sfx),
 //            node tags, tagged lines
 // Run: cargo run -p bubbles-tui -- examples/snippets/commands.bub

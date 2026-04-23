@@ -1,5 +1,5 @@
 // Snippet: Once Blocks
-// Pattern: old sea dog with a legendary tale — first telling is epic,
+// Pattern: old sea dog with a legendary tale. First telling is epic,
 //           subsequent visits are gracefully acknowledged without a flag variable
 // Features: <<once>> / <<else>> / <<endonce>> for non-repeating NPC content,
 //            multiple once blocks in sequence
@@ -17,7 +17,7 @@ Pete: Ahoy there, young sailor. Pull up a barrel.
     Pete: I bit off the tip of the seventh one. Still got it somewhere.
     Pete: The kraken wept. Haven't seen one since.
 <<else>>
-    Pete: As I told ye before — wrestled a kraken, bit its tentacle, it wept.
+    Pete: As I told ye before. Wrestled a kraken, bit its tentacle, it wept.
     Pete: The details don't change in the repeating.
 <<endonce>>
 

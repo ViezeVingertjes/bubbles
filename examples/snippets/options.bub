@@ -17,8 +17,8 @@ Duelist: Let's see if your tongue is as sharp as your cutlass.
     Duelist: I have no response to that. Well played.
     <<jump Victory>>
 -> Stall for time.
-    You: Before we begin — did you know your boots are on the wrong feet?
-    Duelist: They are not— wait, are they?
+    You: Before we begin... did you know your boots are on the wrong feet?
+    Duelist: They are not - wait, are they?
     <<jump Escaped>>
 -> Surrender immediately.
     You: I yield! Take whatever you want.
