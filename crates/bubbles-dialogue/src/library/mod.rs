@@ -197,6 +197,15 @@ impl Default for FunctionLibrary {
     }
 }
 
+impl std::fmt::Debug for FunctionLibrary {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let names: Vec<&str> = self.fns.keys().map(String::as_str).collect();
+        f.debug_struct("FunctionLibrary")
+            .field("functions", &names)
+            .finish()
+    }
+}
+
 // ── argument helpers ──────────────────────────────────────────────────────────
 
 fn require_one_number(name: &str, args: &[Value]) -> Result<f64> {
