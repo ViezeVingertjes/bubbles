@@ -135,8 +135,9 @@ impl<S: VariableStorage> Runner<S> {
     /// Selects an option by index after receiving [`DialogueEvent::Options`].
     ///
     /// # Errors
-    /// Returns [`DialogueError::Runtime`] if called when not awaiting an option or index is out of
-    /// range.
+    ///
+    /// Returns [`DialogueError::ProtocolViolation`] if called when not awaiting an option
+    /// selection, or if `index` is out of range.
     pub fn select_option(&mut self, index: usize) -> Result<()> {
         if self.state != State::AwaitingOption {
             return Err(DialogueError::ProtocolViolation(
@@ -144,7 +145,7 @@ impl<S: VariableStorage> Runner<S> {
             ));
         }
         let body = self.option_bodies.get(index).cloned().ok_or_else(|| {
-            DialogueError::Runtime(format!(
+            DialogueError::ProtocolViolation(format!(
                 "option index {index} out of range ({})",
                 self.option_bodies.len()
             ))

@@ -24,9 +24,8 @@ use super::Runner;
 /// let mut runner = RunnerBuilder::new(prog, HashMapStorage::new())
 ///     .with_saliency(BestLeastRecentlyViewed::default())
 ///     .with_function("greet", |_args| Ok(Value::Text("hi".into())))
-///     .build()
-///     .start("A")
-///     .unwrap();
+///     .build();
+/// runner.start("A").unwrap();
 /// ```
 pub struct RunnerBuilder<S: VariableStorage> {
     program: Program,
