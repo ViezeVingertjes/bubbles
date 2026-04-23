@@ -4,6 +4,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/bubbles-dialogue.svg)](https://crates.io/crates/bubbles-dialogue)
 [![docs.rs](https://docs.rs/bubbles-dialogue/badge.svg)](https://docs.rs/bubbles-dialogue)
+[![Guide](https://img.shields.io/badge/guide-github%20pages-informational)](https://viezevingertjes.github.io/bubbles/)
 [![CI](https://github.com/ViezeVingertjes/bubbles/actions/workflows/ci.yml/badge.svg)](https://github.com/ViezeVingertjes/bubbles/actions)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
 
@@ -11,6 +12,10 @@ Write branching `.bub` scripts, compile them once at startup, then drive the
 dialogue from any game loop with a simple pull-based event API.  Designed to
 integrate cleanly into Bevy, Godot, or any custom Rust engine — zero async
 primitives, zero allocations in the hot path beyond the events themselves.
+
+> **Docs:** the full guide lives at **<https://viezevingertjes.github.io/bubbles/>** — a friendly
+> walk through the `.bub` language and integration, plus the hosted rustdoc.
+> The rest of this README is the quick-reference overview.
 
 **Requirements:** Rust **1.95** or later (see `rust-version` in `Cargo.toml`).
 
