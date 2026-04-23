@@ -1,5 +1,7 @@
 //! Integration tests for runner flow: node start, completion, and dialogue end.
 
+mod common;
+
 use bubbles::{DialogueEvent, HashMapStorage, Runner, compile};
 
 fn line_texts(events: &[DialogueEvent]) -> Vec<String> {
@@ -227,6 +229,57 @@ fn return_from_entry_node_ends_dialogue() {
         }
     }
     assert!(saw_complete);
+}
+
+#[test]
+fn stop_ends_dialogue_mid_node() {
+    // `<<stop>>` terminates the dialogue immediately, skipping the rest of
+    // the node body and any calling frames. No `NodeComplete` is emitted —
+    // the stack is cleared and a single `DialogueComplete` closes things out.
+    let prog = compile(
+        "title: A\n\
+         ---\n\
+         first\n\
+         <<stop>>\n\
+         never shown\n\
+         ===\n",
+    )
+    .unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("A").unwrap();
+    let events = drain(&mut runner);
+
+    assert!(matches!(events[0], DialogueEvent::NodeStarted(_)));
+    assert!(matches!(
+        &events[1],
+        DialogueEvent::Line { text, .. } if text == "first"
+    ));
+    assert_eq!(events[2], DialogueEvent::DialogueComplete);
+    assert_eq!(events.len(), 3, "unexpected events: {events:?}");
+    assert_eq!(line_texts(&events), ["first"]);
+}
+
+#[test]
+fn stop_terminates_across_detour() {
+    // `<<stop>>` must unwind the full call stack: a detour into a node that
+    // calls `<<stop>>` should end the entire dialogue, not just return from
+    // the detour.
+    let src = "\
+title: Start
+---
+before
+<<detour Sub>>
+after
+===
+title: Sub
+---
+in sub
+<<stop>>
+===
+";
+    let events = common::play(src, "Start");
+    assert_eq!(line_texts(&events), ["before", "in sub"]);
+    assert_eq!(events.last(), Some(&DialogueEvent::DialogueComplete));
 }
 
 #[test]

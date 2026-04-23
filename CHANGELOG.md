@@ -6,6 +6,11 @@ All notable changes are documented here (keep-a-changelog format).
 
 ### Added
 
+- `<<stop>>` statement: terminates the entire dialogue immediately,
+  regardless of how deep the detour/jump stack is, and emits a single
+  `DialogueEvent::DialogueComplete`.  Useful for bad endings, interruptions,
+  or any "the conversation is just over now" beat.  Previously this had to
+  be simulated with a dedicated empty "end" node or a host command.
 - `VariableStorage::get_ref(&self, name) -> Option<Cow<'_, Value>>`: an
   optional, borrow-friendly read path the expression evaluator prefers.
   The default implementation forwards to `get` (so existing storages keep

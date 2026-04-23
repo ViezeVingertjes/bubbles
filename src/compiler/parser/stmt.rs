@@ -22,6 +22,7 @@ impl Parser<'_> {
             "jump" => Ok(Stmt::Jump(inner[kw.len()..].trim().to_owned())),
             "detour" => Ok(Stmt::Detour(inner[kw.len()..].trim().to_owned())),
             "return" => Ok(Stmt::Return),
+            "stop" => Ok(Stmt::Stop),
             "set" => parse_set(inner, lineno, self.file),
             "declare" => parse_declare(inner, lineno, self.file),
             "if" => self.parse_if(inner, lineno, cur_indent),

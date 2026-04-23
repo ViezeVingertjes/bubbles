@@ -54,6 +54,29 @@ You can detour from within a detour. The stack handles any depth.
 
 If a detour node runs off the end without a `<<return>>`, Bubbles returns anyway. `<<return>>` is just the explicit form.
 
+## `<<stop>>`: end the dialogue right here
+
+When you want to exit the whole dialogue — not just the current node, and not return to the caller — use `<<stop>>`.
+
+```text
+title: Guard
+---
+Guard: State your business.
+
+-> I'm just passing through.
+    Guard: Move along.
+-> ...
+    Guard: That's enough. You're done here.
+    <<stop>>
+
+Guard: Anything else?
+===
+```
+
+Unlike `<<return>>`, which pops one frame, `<<stop>>` clears the entire call stack and emits a single `DialogueComplete` event. Nothing after it in the current node runs, and no caller resumes.
+
+Reach for `<<stop>>` for bad-ending branches, timed interruptions, or any beat where the conversation is simply over — regardless of how deep the detour stack is.
+
 ## When to jump, when to detour
 
 - **Jump** for scene changes: `<<jump StreetAtNight>>`, `<<jump Ending>>`.

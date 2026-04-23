@@ -71,6 +71,13 @@ impl<S: VariableStorage> Runner<S> {
                 self.stack.pop();
                 Ok(None)
             }
+            Stmt::Stop => {
+                self.stack.clear();
+                self.pending.clear();
+                self.option_bodies.clear();
+                self.state = State::Done;
+                Ok(Some(DialogueEvent::DialogueComplete))
+            }
             Stmt::Command { name, args, tags } => {
                 let args = self.eval_segments_as_args(&args)?;
                 Ok(Some(DialogueEvent::Command { name, args, tags }))

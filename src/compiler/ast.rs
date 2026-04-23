@@ -68,6 +68,9 @@ pub enum Stmt {
     Detour(String),
     /// A `<<return>>` statement.
     Return,
+    /// A `<<stop>>` statement — terminates the whole dialogue, clearing the
+    /// call stack and emitting [`crate::DialogueEvent::DialogueComplete`].
+    Stop,
     /// A generic host command `<<name args…>>`.
     Command {
         /// Command name.

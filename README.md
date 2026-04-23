@@ -38,6 +38,7 @@ primitives, zero allocations in the hot path beyond the events themselves.
 | Custom functions | Host-registered closures callable inside any expression |
 | Once blocks | `<<once>>` / `<<once if cond>>` / `<<endonce>>` with optional `<<else>>` |
 | Detour / return | `<<detour Node>>` / `<<return>>` subroutine stack |
+| Early termination | `<<stop>>` ends the dialogue from anywhere in the call stack |
 | Smart variables | `<<declare $x = expr>>` initialises once, stored in `VariableStorage` |
 | Line groups | `=>` alternatives selected by the active `SaliencyStrategy` |
 | Node groups | Multiple nodes sharing a title with `when:` header conditions |
@@ -135,6 +136,7 @@ The count is {$count}.         # inline expression substitution
 <<jump OtherNode>>             # jump (clears call stack)
 <<detour SubScene>>            # call-stack push
 <<return>>                     # pop back to caller
+<<stop>>                       # end the whole dialogue immediately
 
 <<once>>
     Fires the very first time only.
