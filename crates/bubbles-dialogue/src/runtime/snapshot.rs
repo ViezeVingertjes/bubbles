@@ -15,27 +15,37 @@ use std::collections::{HashMap, HashSet};
 /// serialise `HashMapStorage` (or their own [`VariableStorage`] impl) alongside
 /// the snapshot.  Both are `serde`-ready when the `serde` feature is enabled.
 ///
-/// # Example
+/// # Save / load example
+///
+/// Both the snapshot **and** variable storage must be serialised together —
+/// neither is complete without the other.
 ///
 /// ```rust
 /// # #[cfg(feature = "serde")]
 /// # {
-/// use bubbles::{compile, HashMapStorage, Runner};
+/// use bubbles::{HashMapStorage, Runner, Value, VariableStorage, compile};
 ///
-/// let src = "title: A\n---\nLine one.\n===\n";
+/// let src = "title: A\n---\n<<set $gold = 10>>\nHello!\n===\n";
 /// let prog = compile(src).unwrap();
+///
+/// // ── first session ────────────────────────────────────────────────────
 /// let mut runner = Runner::new(prog.clone(), HashMapStorage::new());
 /// runner.start("A").unwrap();
 /// let _ = runner.next_event(); // NodeStarted
-/// let _ = runner.next_event(); // Line
+/// let _ = runner.next_event(); // (set $gold side-effect, then Line)
 ///
+/// // Serialise BOTH pieces of mutable state.
 /// let snap = runner.snapshot();
-/// let json = serde_json::to_string(&snap).unwrap();
+/// let snap_json = serde_json::to_string(&snap).unwrap();
+/// let vars_json = serde_json::to_string(runner.storage()).unwrap();
 ///
-/// // … later, in a new game session …
-/// let mut runner2 = Runner::new(prog, HashMapStorage::new());
-/// let snap2: bubbles::RunnerSnapshot = serde_json::from_str(&json).unwrap();
-/// runner2.restore(snap2).unwrap();
+/// // ── restore in a new session ─────────────────────────────────────────
+/// let saved_vars: HashMapStorage = serde_json::from_str(&vars_json).unwrap();
+/// let saved_snap: bubbles::RunnerSnapshot = serde_json::from_str(&snap_json).unwrap();
+///
+/// let mut runner2 = Runner::new(prog, saved_vars);
+/// runner2.restore(saved_snap).unwrap();
+/// // runner2 is now back at the beginning of node "A" with $gold already set.
 /// # }
 /// ```
 ///
