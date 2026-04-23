@@ -11,13 +11,12 @@ title: Start
 <<declare $price = 3>>
 
 GrogVendor: Welcome to Griselda's Grog Shack. Finest grog in Barnacle Bay.
+GrogVendor: Today's price is {$price} doubloons a mug. Supply and demand, as they say.
 <<jump Shop>>
 ===
 
 title: Shop
 ---
-GrogVendor: Today's price is {$price} doubloons a mug. Supply and demand, as they say.
-
 -> Buy a mug. <<if $doubloons >= $price>>
     <<set $doubloons = $doubloons - $price>>
     <<set $grogs_bought = $grogs_bought + 1>>
@@ -28,6 +27,7 @@ GrogVendor: Today's price is {$price} doubloons a mug. Supply and demand, as the
 -> Ask about the price hike.
     GrogVendor: Each mug sold creates demand. It's economics!
     GrogVendor: Learned it from a travelling merchant. Suspicious fellow.
+    GrogVendor: Current price is {$price} doubloons, for the record.
     <<jump Shop>>
 -> Leave.
     <<if $grogs_bought > 0>>
