@@ -39,7 +39,7 @@
 
 # Examples
 
-- [CLI Runner](./examples/cli-runner.md)
+- [TUI Runner](./examples/tui-runner.md)
 - [The Tavern](./examples/tavern.md)
 
 ---

@@ -100,9 +100,17 @@ fn main() -> Result<(), bubbles::DialogueError> {
 Run the included examples:
 
 ```bash
-cargo run --example cli_runner --all-features
-cargo run --example tavern --all-features
+cargo run -p bubbles-dialogue --example tavern --all-features
 ```
+
+Or drop into the writer's terminal UI — play a script, watch the
+transcript, hit `b` to rewind, `r` to reload:
+
+```bash
+cargo run -p bubbles-tui -- path/to/script.bub Start
+```
+
+See the [TUI Runner guide](https://viezevingertjes.github.io/bubbles/examples/tui-runner.html) for the full keymap and architecture overview.
 
 ---
 

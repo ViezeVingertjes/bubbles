@@ -33,5 +33,5 @@ A quick index of what you'll look up most often:
 ## Still not sure?
 
 - Search the guide (top-right) for keywords like "once", "option", "localisation".
-- Jump into the [examples](./examples/cli-runner.md) — they touch most of the API in under 200 lines each.
+- Jump into the [examples](./examples/tui-runner.md) — they touch most of the API in under 200 lines each.
 - [Open an issue](https://github.com/ViezeVingertjes/bubbles/issues) if something's unclear. Documentation gaps are bugs.

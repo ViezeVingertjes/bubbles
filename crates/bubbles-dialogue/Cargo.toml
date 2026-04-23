@@ -17,9 +17,6 @@ autoexamples = false
 name = "bubbles"
 
 [[example]]
-name = "cli_runner"
-
-[[example]]
 name = "tavern"
 
 [features]

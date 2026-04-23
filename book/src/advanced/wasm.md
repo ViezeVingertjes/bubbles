@@ -137,4 +137,4 @@ On a stripped, optimised build, a Bubbles runtime plus a small `.bub` script ten
 
 ---
 
-> **Next:** [CLI Runner](../examples/cli-runner.md)
+> **Next:** [TUI Runner](../examples/tui-runner.md)

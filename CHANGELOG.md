@@ -4,6 +4,30 @@ All notable changes are documented here (keep-a-changelog format).
 
 ## [Unreleased]
 
+### Added
+
+- New `bubbles-tui` crate: a ratatui-based writer's terminal UI that
+  drives the same `Runner` a game would use.  Ships as a separate
+  workspace member with its own binary (`cargo run -p bubbles-tui --
+  file.bub`), showing node markers, speaker lines, option prompts,
+  command emissions, and runtime errors.  Includes a scrollable
+  transcript pane, an error overlay with file/line excerpts, and
+  Backspace/`b`-driven step-back across the session history.
+
+### Changed
+
+- Repository converted to a Cargo workspace.  `bubbles-dialogue` lives in
+  `crates/bubbles-dialogue/` and keeps the same crate name, features,
+  and semantics.  Scripts and CI now use workspace-aware `cargo`
+  invocations (`--workspace`, `-p bubbles-dialogue`).
+
+### Removed
+
+- Dropped the `cli_runner` example.  Its role — interactively playing a
+  `.bub` file — is better served by the new `bubbles-tui` crate, which
+  shows the same information alongside a transcript, error overlay, and
+  rewind.
+
 ## [0.3.0] — 2026-04-23
 
 ### Added

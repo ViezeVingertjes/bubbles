@@ -134,7 +134,7 @@ let all_choices: [&[usize]; 2] = [
 
 A normal integration would read input from the player. Here the sequence is hard-coded so the output is reproducible.
 
-Inside the loop, the event handling is the same shape as [the CLI runner](./cli-runner.md): pretty-print node boundaries, lines, options, commands.
+Inside the loop, the event handling is the same shape as [the TUI runner](./tui-runner.md): react to node boundaries, lines, options, and commands as they are pulled from the runner.
 
 ## Save and load
 

@@ -54,7 +54,7 @@ The chapters are meant to be read in order, but each one stands on its own:
 - **[The .bub Language](./language/nodes-and-lines.md)** — every piece of the script format, one concept per page.
 - **[Integrating with Your Engine](./integration/runner.md)** — wiring Bubbles into your rendering, input, and save systems.
 - **[Advanced](./advanced/save-load.md)** — snapshots, multi-file projects, WebAssembly.
-- **[Examples](./examples/cli-runner.md)** — annotated walkthroughs of the demos shipped with the crate.
+- **[Examples](./examples/tui-runner.md)** — annotated walkthroughs of the demos shipped with the crate.
 - **[API Reference](./api-reference.md)** — the full rustdoc, generated fresh for every release.
 
 Ready? Let's write a dialogue.
