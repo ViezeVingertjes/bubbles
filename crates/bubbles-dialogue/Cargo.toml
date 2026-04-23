@@ -1,0 +1,43 @@
+[package]
+name          = "bubbles-dialogue"
+version       = "0.3.0"
+description   = "Lightweight engine-agnostic dialogue runtime for Rust games."
+documentation = "https://docs.rs/bubbles-dialogue"
+readme        = "../../README.md"
+keywords      = ["dialogue", "game", "narrative", "interactive-fiction"]
+categories    = ["game-development", "parser-implementations"]
+edition.workspace      = true
+license.workspace      = true
+repository.workspace   = true
+homepage.workspace     = true
+rust-version.workspace = true
+autoexamples = false
+
+[lib]
+name = "bubbles"
+
+[[example]]
+name = "cli_runner"
+
+[[example]]
+name = "tavern"
+
+[features]
+default = ["rand"]
+full    = ["rand", "serde"]
+rand    = ["dep:rand"]
+serde   = ["dep:serde", "indexmap/serde"]
+
+[dependencies]
+indexmap  = "2"
+logos     = "0.16"
+thiserror = "2"
+rand      = { version = "0.9", optional = true }
+serde     = { version = "1", features = ["derive"], optional = true }
+
+[dev-dependencies]
+proptest = "1"
+serde_json = "1"
+
+[lints]
+workspace = true

@@ -1,0 +1,23 @@
+[package]
+name        = "bubbles-tui"
+version     = "0.1.0"
+description = "Terminal UI writer tool for the bubbles-dialogue runtime."
+readme      = "README.md"
+keywords    = ["dialogue", "tui", "ratatui", "interactive-fiction", "narrative"]
+categories  = ["command-line-utilities", "game-development"]
+publish     = false
+edition.workspace      = true
+license.workspace      = true
+repository.workspace   = true
+homepage.workspace     = true
+rust-version.workspace = true
+
+[[bin]]
+name = "bubbles-tui"
+path = "src/main.rs"
+
+[dependencies]
+bubbles-dialogue = { path = "../bubbles-dialogue", features = ["full"] }
+
+[lints]
+workspace = true

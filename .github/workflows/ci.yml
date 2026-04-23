@@ -16,22 +16,22 @@ jobs:
           components: rustfmt, clippy
 
       - name: Format check
-        run: cargo fmt --check
+        run: cargo fmt --all --check
 
-      - name: Clippy (all features)
-        run: cargo clippy --all-features --all-targets -- -D warnings
+      - name: Clippy (all features, workspace)
+        run: cargo clippy --workspace --all-features --all-targets -- -D warnings
 
-      - name: Test (all features)
-        run: cargo test --all-features
+      - name: Test (all features, workspace)
+        run: cargo test --workspace --all-features
 
-      - name: Test (no default features)
-        run: cargo test --no-default-features
+      - name: Test (no default features, bubbles-dialogue)
+        run: cargo test -p bubbles-dialogue --no-default-features
 
       - name: WebAssembly (library)
         run: bash scripts/check-wasm.sh
 
       - name: Docs
-        run: RUSTDOCFLAGS="-D warnings" cargo doc --all-features --no-deps
+        run: RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps
 
       - name: Naming check
         run: bash scripts/check-naming.sh

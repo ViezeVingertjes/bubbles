@@ -60,7 +60,7 @@ jobs:
       - name: Build rustdoc
         env:
           RUSTDOCFLAGS: "-D warnings"
-        run: cargo doc --no-deps --all-features
+        run: cargo doc -p bubbles-dialogue --no-deps --all-features
 
       - name: Move rustdoc under /api
         run: |
