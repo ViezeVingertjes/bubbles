@@ -42,8 +42,20 @@ jobs:
         with:
           mdbook-version: latest
 
+      # Run mdbook from *inside* the `book/` directory. mdBook resolves
+      # `--dest-dir` relative to the current working directory, **not** the
+      # positional book root, so the previous `mdbook build book --dest-dir
+      # ../site` silently wrote to `<repo>/../site` — a directory outside
+      # the workspace that the artifact upload never saw. Rustdoc alone made
+      # it into the site, which is why `/api/` served but the book root 404'd.
       - name: Build the book
-        run: mdbook build book --dest-dir ../site
+        working-directory: book
+        run: mdbook build -d ../site
+
+      - name: Verify book output
+        run: |
+          test -f site/index.html || { echo "mdbook did not produce site/index.html"; ls -la site || true; exit 1; }
+          test -f site/introduction.html || { echo "mdbook missing introduction.html"; exit 1; }
 
       - name: Build rustdoc
         env:
