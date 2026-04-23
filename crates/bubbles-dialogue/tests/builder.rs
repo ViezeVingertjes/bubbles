@@ -3,7 +3,7 @@
 mod common;
 
 use bubbles::saliency::BestLeastRecentlyViewed;
-use bubbles::{HashMapStorage, RunnerBuilder, Value, VariableStorage, compile};
+use bubbles::{HashMapProvider, HashMapStorage, RunnerBuilder, Value, VariableStorage, compile};
 
 use common::line_texts;
 
@@ -77,6 +77,26 @@ fn builder_with_function_registers_host_fn() {
     runner.start("A").unwrap();
     let events = common::drain(&mut runner);
     assert_eq!(line_texts(&events), ["42"]);
+}
+
+// ── custom line provider ──────────────────────────────────────────────────────
+
+#[test]
+fn builder_with_provider_substitutes_localised_text() {
+    // The line carries a `#line:greeting` tag; the provider returns the French
+    // translation.  The runner should emit the translated text.
+    let src = "title: A\n---\nHello. #line:greeting\n===\n";
+    let prog = compile(src).unwrap();
+
+    let mut provider = HashMapProvider::new();
+    provider.insert("greeting", "Bonjour.");
+
+    let mut runner = RunnerBuilder::new(prog, HashMapStorage::new())
+        .with_provider(provider)
+        .build();
+    runner.start("A").unwrap();
+    let events = common::drain(&mut runner);
+    assert_eq!(line_texts(&events), ["Bonjour."]);
 }
 
 // ── initial variable storage ──────────────────────────────────────────────────
