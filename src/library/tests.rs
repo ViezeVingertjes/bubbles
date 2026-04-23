@@ -182,6 +182,39 @@ fn random_range_lo_gt_hi_errors() {
 
 #[cfg(feature = "rand")]
 #[test]
+fn random_range_fractional_arg_errors() {
+    let lib = FunctionLibrary::new();
+    assert!(
+        lib.call(
+            "random_range",
+            vec![Value::Number(1.5), Value::Number(6.0)]
+        )
+        .is_err()
+    );
+}
+
+#[cfg(feature = "rand")]
+#[test]
+fn dice_negative_sides_errors() {
+    let lib = FunctionLibrary::new();
+    assert!(
+        lib.call("dice", vec![Value::Number(-1.0), Value::Number(3.0)])
+            .is_err()
+    );
+}
+
+#[cfg(feature = "rand")]
+#[test]
+fn dice_fractional_count_errors() {
+    let lib = FunctionLibrary::new();
+    assert!(
+        lib.call("dice", vec![Value::Number(6.0), Value::Number(2.5)])
+            .is_err()
+    );
+}
+
+#[cfg(feature = "rand")]
+#[test]
 fn dice_zero_sides_errors() {
     let lib = FunctionLibrary::new();
     assert!(
