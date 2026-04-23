@@ -4,6 +4,7 @@
 
 use crate::compiler::ast::{Expr, TextSegment};
 use crate::compiler::expr::parse_expr_at;
+use crate::compiler::interpolation::{BraceSegment, scan_brace_segments};
 use crate::error::{DialogueError, Result};
 use crate::runtime::eval::eval;
 use crate::value::{Value, VariableStorage};
@@ -79,23 +80,22 @@ impl<S: VariableStorage> Runner<S> {
     /// translated string that may still contain `{expr}` syntax, enabling
     /// translate-then-format ordering.
     pub(super) fn eval_template(&self, template: &str) -> Result<String> {
+        let brace_segments = scan_brace_segments(template).map_err(|_| DialogueError::Parse {
+            file: "<translation>".into(),
+            line: 0,
+            message: format!("unclosed `{{` in translated template: `{template}`"),
+        })?;
+
         let mut out = String::with_capacity(template.len());
-        let mut remaining = template;
-        while let Some(open) = remaining.find('{') {
-            out.push_str(&remaining[..open]);
-            let after = &remaining[open + 1..];
-            let close = after.find('}').ok_or_else(|| DialogueError::Parse {
-                file: "<translation>".into(),
-                line: 0,
-                message: format!("unclosed `{{` in translated template: `{template}`"),
-            })?;
-            let expr_src = &after[..close];
-            let expr = parse_expr_at(expr_src, "<translation>", 0)?;
-            let value = self.eval_expr(&expr)?;
-            out.push_str(&value.to_string());
-            remaining = &after[close + 1..];
+        for seg in brace_segments {
+            match seg {
+                BraceSegment::Literal(s) => out.push_str(s),
+                BraceSegment::Expr(src) => {
+                    let expr = parse_expr_at(src, "<translation>", 0)?;
+                    out.push_str(&self.eval_expr(&expr)?.to_string());
+                }
+            }
         }
-        out.push_str(remaining);
         Ok(out)
     }
 

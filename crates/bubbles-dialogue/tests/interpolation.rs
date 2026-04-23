@@ -2,20 +2,7 @@
 
 mod common;
 
-use bubbles::DialogueEvent;
-
-fn lines_from(events: &[DialogueEvent]) -> Vec<&str> {
-    events
-        .iter()
-        .filter_map(|e| {
-            if let DialogueEvent::Line { text, .. } = e {
-                Some(text.as_str())
-            } else {
-                None
-            }
-        })
-        .collect()
-}
+use common::line_texts as lines_from;
 
 #[test]
 fn variable_and_expression_substituted() {

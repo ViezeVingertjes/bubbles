@@ -4,6 +4,7 @@
 use std::sync::Arc;
 
 use crate::compiler::ast::{Expr, Stmt, TextSegment};
+use crate::compiler::interpolation::{BraceSegment, scan_brace_segments};
 use crate::error::{DialogueError, Result};
 
 use super::command::split_first_word;
@@ -45,29 +46,21 @@ pub(super) fn parse_interpolated(
     line: usize,
     file: &str,
 ) -> Result<Vec<TextSegment>> {
-    let mut segments = Vec::new();
-    let mut remaining = raw;
+    let brace_segments = scan_brace_segments(raw).map_err(|_| DialogueError::Parse {
+        file: file.to_owned(),
+        line,
+        message: format!("unclosed `{{` in {context}: `{raw}`"),
+    })?;
 
-    while let Some(open) = remaining.find('{') {
-        if open > 0 {
-            segments.push(TextSegment::literal(&remaining[..open]));
+    let mut segments = Vec::with_capacity(brace_segments.len());
+    for seg in brace_segments {
+        match seg {
+            BraceSegment::Literal(s) => segments.push(TextSegment::literal(s)),
+            BraceSegment::Expr(src) => {
+                segments.push(TextSegment::Expr(parse_expr_arc(src, context, line, file)?));
+            }
         }
-        let after = &remaining[open + 1..];
-        let close = after.find('}').ok_or_else(|| DialogueError::Parse {
-            file: file.to_owned(),
-            line,
-            message: format!("unclosed `{{` in {context}: `{raw}`"),
-        })?;
-        let src = &after[..close];
-        let expr = parse_expr_arc(src, context, line, file)?;
-        segments.push(TextSegment::Expr(expr));
-        remaining = &after[close + 1..];
     }
-
-    if !remaining.is_empty() {
-        segments.push(TextSegment::literal(remaining));
-    }
-
     Ok(segments)
 }
 
