@@ -9,7 +9,7 @@ transcript, and step back through the session while iterating on content.
 Run the harbour showcase (two files compiled together):
 
 ```sh
-cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub Harbour
+cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
 ```
 
 Or run any single `.bub` file:

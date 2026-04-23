@@ -5,7 +5,7 @@
 // holds the shared beats it detoures into.
 //
 // Run:
-//   cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub Harbour
+//   cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
 //
 // Features demonstrated in this file:
 //   - Node tags (scene / location metadata)
@@ -19,7 +19,7 @@
 //   - <<command>> dispatch (<<stamp_permit>>)
 //   - <<jump>> for a one-way transition
 
-title: Harbour
+title: Start
 tags: scene docks outdoor
 ---
 <<declare $gold = 25>>

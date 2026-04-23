@@ -146,7 +146,7 @@ Writers edit a file, save, and the game picks up the new script - often without 
 
 > **Try it:** The harbour showcase is a two-file project you can run right now:
 > ```sh
-> cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub Harbour
+> cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
 > ```
 > `harbour.bub` detours into `MapSeller`, which is defined in `services.bub`, a cross-file jump working exactly as described above. See [The Harbour](../examples/harbour.md) for a full walkthrough.
 

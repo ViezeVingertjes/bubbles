@@ -7,7 +7,7 @@ The [`bubbles-tui`](https://github.com/ViezeVingertjes/bubbles/tree/main/crates/
 Run the harbour showcase, a two-file pirate scene covering most language features:
 
 ```sh
-cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub Harbour
+cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
 ```
 
 Or jump straight to any of the focused snippets:

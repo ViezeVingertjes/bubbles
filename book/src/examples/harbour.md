@@ -5,7 +5,7 @@
 Run it:
 
 ```sh
-cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub Harbour
+cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
 ```
 
 You arrive at Barnacle Bay and need a travel permit from the cantankerous harbormaster Stumpy McGee. A shady map seller lurks nearby. The map seller lives in `services.bub`, called via `<<detour>>` and returning cleanly to the harbour scene.
