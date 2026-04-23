@@ -28,21 +28,6 @@ pub enum DialogueError {
     /// A validation failure detected after all sources are merged.
     #[error("validation error: {0}")]
     Validation(String),
-    /// A general runtime execution error.
-    ///
-    /// # Deprecation
-    ///
-    /// Prefer [`DialogueError::ProtocolViolation`] for API-misuse errors and
-    /// [`DialogueError::TypeMismatch`] for type errors.  This variant is kept
-    /// for backwards compatibility and for host-function error messages
-    /// (see [`DialogueError::Function`]).
-    #[deprecated(
-        since = "0.5.0",
-        note = "use ProtocolViolation or TypeMismatch for structured errors; \
-                use Function { name, message } for host-function errors"
-    )]
-    #[error("runtime error: {0}")]
-    Runtime(String),
     /// The [`Runner`](crate::runtime::Runner) API was called in the wrong
     /// order (e.g. [`next_event`](crate::runtime::Runner::next_event) while
     /// awaiting an option, or
@@ -66,18 +51,6 @@ pub enum DialogueError {
         /// The operation that produced the mismatch (e.g. `"+"`).
         context: String,
     },
-    /// A general type error message.
-    ///
-    /// # Deprecation
-    ///
-    /// Prefer [`DialogueError::TypeMismatch`], which carries structured
-    /// `expected`, `got`, and `context` fields instead of an opaque string.
-    #[deprecated(
-        since = "0.5.0",
-        note = "use TypeMismatch { expected, got, context } instead"
-    )]
-    #[error("type error: {0}")]
-    Type(String),
     /// An unknown variable was referenced.
     #[error("undefined variable '{0}'")]
     UndefinedVariable(String),

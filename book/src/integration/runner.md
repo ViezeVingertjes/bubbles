@@ -63,7 +63,7 @@ while let Some(event) = runner.next_event()? {
 - Returns the next event, or
 - Returns an error (runtime type mismatch, bad option index, etc).
 
-If you hit an `Options` event and call `next_event` again without a `select_option`, you get back `DialogueError::Runtime("call select_option() before next_event()")`. Bubbles refuses to guess.
+If you hit an `Options` event and call `next_event` again without a `select_option`, you get back `DialogueError::ProtocolViolation("...")`. Bubbles refuses to guess.
 
 ## Completion
 

@@ -107,10 +107,16 @@ Your game probably has its own notions - a faction reputation check, a distance 
 ```rust,ignore
 runner.library_mut().register("faction_at_least", |args| {
     let Some(bubbles::Value::Text(name)) = args.first() else {
-        return Err(bubbles::DialogueError::Runtime("name required".into()));
+        return Err(bubbles::DialogueError::Function {
+            name: "faction_at_least".into(),
+            message: "expected string argument (faction name)".into(),
+        });
     };
     let Some(bubbles::Value::Number(thresh)) = args.get(1) else {
-        return Err(bubbles::DialogueError::Runtime("threshold required".into()));
+        return Err(bubbles::DialogueError::Function {
+            name: "faction_at_least".into(),
+            message: "expected number argument (threshold)".into(),
+        });
     };
     let score = game::faction_score(name);
     Ok(bubbles::Value::Bool(score >= *thresh))

@@ -31,7 +31,6 @@ impl ErrorOverlay {
     /// [`DialogueError::Parse`] and `source` is provided, the offending line
     /// is attached as an excerpt.
     #[must_use]
-    #[allow(deprecated)]
     pub fn from_error(error: &DialogueError, source: Option<&str>) -> Self {
         match error {
             DialogueError::Parse {
@@ -65,18 +64,6 @@ impl ErrorOverlay {
                 location: None,
                 excerpt: None,
             },
-            DialogueError::Runtime(msg) => Self {
-                title: "Runtime error".to_owned(),
-                message: msg.clone(),
-                location: None,
-                excerpt: None,
-            },
-            DialogueError::Type(msg) => Self {
-                title: "Type error".to_owned(),
-                message: msg.clone(),
-                location: None,
-                excerpt: None,
-            },
             DialogueError::UndefinedVariable(name) => Self {
                 title: "Undefined variable".to_owned(),
                 message: format!("undefined variable '{name}'"),
@@ -105,7 +92,7 @@ impl ErrorOverlay {
                 location: None,
                 excerpt: None,
             },
-            // Forward-compatible fallback for future variants.
+            // Forward-compatible fallback for future variants (#[non_exhaustive]).
             _ => Self {
                 title: "Error".to_owned(),
                 message: error.to_string(),

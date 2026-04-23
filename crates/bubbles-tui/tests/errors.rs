@@ -145,26 +145,6 @@ fn from_error_validation() {
 }
 
 #[test]
-#[allow(deprecated)]
-fn from_error_runtime() {
-    let o = overlay(&DialogueError::Runtime("something went wrong".into()));
-    assert!(
-        o.title.to_lowercase().contains("runtime"),
-        "got {:?}",
-        o.title
-    );
-    assert!(o.message.contains("something went wrong"));
-}
-
-#[test]
-#[allow(deprecated)]
-fn from_error_type() {
-    let o = overlay(&DialogueError::Type("cannot add".into()));
-    assert!(o.title.to_lowercase().contains("type"), "got {:?}", o.title);
-    assert!(o.message.contains("cannot add"));
-}
-
-#[test]
 fn from_error_undefined_variable() {
     let o = overlay(&DialogueError::UndefinedVariable("$hp".into()));
     assert!(

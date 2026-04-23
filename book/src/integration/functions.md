@@ -9,7 +9,10 @@ use bubbles::{DialogueError, Value};
 
 runner.library_mut().register("double", |args| {
     let Some(Value::Number(n)) = args.first() else {
-        return Err(DialogueError::Runtime("double expects a number".into()));
+        return Err(DialogueError::Function {
+            name: "double".into(),
+            message: "expected one number argument".into(),
+        });
     };
     Ok(Value::Number(n * 2.0))
 });
@@ -61,7 +64,10 @@ let state_for_fn = Arc::clone(&state);
 
 runner.library_mut().register("reputation", move |args| {
     let Some(Value::Text(faction)) = args.first() else {
-        return Err(DialogueError::Runtime("faction name required".into()));
+        return Err(DialogueError::Function {
+            name: "reputation".into(),
+            message: "expected one string argument (faction name)".into(),
+        });
     };
     let s = state_for_fn.lock().unwrap();
     Ok(Value::Number(s.reputation(faction) as f64))
@@ -111,7 +117,10 @@ let inventory = Arc::clone(&inventory_handle);
 
 runner.library_mut().register("has_item", move |args| {
     let Some(Value::Text(item)) = args.first() else {
-        return Err(DialogueError::Runtime("has_item expects an item id".into()));
+        return Err(DialogueError::Function {
+            name: "has_item".into(),
+            message: "expected one string argument (item id)".into(),
+        });
     };
     Ok(Value::Bool(inventory.lock().unwrap().contains(item)))
 });
@@ -120,7 +129,10 @@ runner.library_mut().register("count", {
     let inventory = Arc::clone(&inventory_handle);
     move |args| {
         let Some(Value::Text(item)) = args.first() else {
-            return Err(DialogueError::Runtime("count expects an item id".into()));
+            return Err(DialogueError::Function {
+                name: "count".into(),
+                message: "expected one string argument (item id)".into(),
+            });
         };
         Ok(Value::Number(inventory.lock().unwrap().count(item) as f64))
     }
