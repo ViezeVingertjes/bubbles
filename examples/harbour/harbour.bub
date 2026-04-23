@@ -5,7 +5,7 @@
 // holds the shared beats it detoures into.
 //
 // Run:
-//   cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
+//   cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub Harbour
 //
 // Features demonstrated in this file:
 //   - Node tags (scene / location metadata)
@@ -55,7 +55,7 @@ Stumpy: So. What'll it be?
     Stumpy: There she is. Official seal and everything.
     Stumpy: You have {$gold} doubloons left. Don't spend 'em all at once.
     <<jump Depart>>
--> Bribe him with everything you've got. <<if $gold >= 1 and $gold < 10>>
+-> Bribe him with everything you've got. <<if $gold >= 1 && $gold < 10>>
     Stumpy: Hah! {$gold} doubloons? That barely covers the ink for the stamp.
     Stumpy: Come back when ye've got more coin.
 -> Ask about the map seller.

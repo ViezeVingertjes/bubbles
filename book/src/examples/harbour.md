@@ -5,7 +5,7 @@
 Run it:
 
 ```sh
-cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
+cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub Harbour
 ```
 
 You arrive at Barnacle Bay and need a travel permit from the cantankerous harbormaster Stumpy McGee. A shady map seller lurks nearby. The map seller lives in `services.bub`, called via `<<detour>>` and returning cleanly to the harbour scene.
@@ -80,7 +80,7 @@ The first visit gets the full reveal. Every later visit gets the short acknowled
     <<stamp_permit>>
     Stumpy: You have {$gold} doubloons left.
     <<jump Depart>>
--> Bribe him with everything. <<if $gold >= 1 and $gold < 10>>
+-> Bribe him with everything. <<if $gold >= 1 && $gold < 10>>
 ```
 
 Options with an `<<if>>` guard are shown but marked unavailable when the condition is false. The TUI renders them with a `o` marker. Your game sees the same thing via the `available` field on `DialogueOption`.
