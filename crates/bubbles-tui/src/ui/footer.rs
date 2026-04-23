@@ -25,11 +25,13 @@ fn hint_text(state: &AppState) -> &'static str {
     }
     match state.focus() {
         FocusPanel::Dialogue if state.options().is_empty() => {
-            "  Enter: advance    Tab: focus transcript    q/Esc: quit"
+            "  Enter: advance    b: back    Tab: transcript    q/Esc: quit"
         }
         FocusPanel::Dialogue => {
-            "  \u{2191}/\u{2193}: focus    Enter: choose    1-9: pick    Tab: transcript    q/Esc: quit"
+            "  \u{2191}/\u{2193}: focus    Enter: choose    1-9: pick    b: back    q/Esc: quit"
         }
-        FocusPanel::Transcript => "  \u{2191}/\u{2193}: scroll    Tab: dialogue    q/Esc: quit",
+        FocusPanel::Transcript => {
+            "  \u{2191}/\u{2193}: scroll    b: back    Tab: dialogue    q/Esc: quit"
+        }
     }
 }

@@ -33,4 +33,6 @@ pub enum Intent {
     /// Hide the active error overlay without reloading.  The underlying
     /// session stays as-is (i.e. still unusable if the error killed it).
     DismissError,
+    /// Rewind one visible step by replaying the input history.
+    StepBack,
 }

@@ -8,6 +8,7 @@
 use bubbles::DialogueError;
 
 use crate::display::{DisplayedLine, DisplayedOption, FocusPanel, FocusShift};
+use crate::history::HistoryStep;
 use crate::ingest::apply_event;
 use crate::intent::Intent;
 use crate::overlay::ErrorOverlay;
@@ -26,6 +27,8 @@ pub struct AppState {
     transcript: Transcript,
     focus: FocusPanel,
     error_overlay: Option<ErrorOverlay>,
+    history: Vec<HistoryStep>,
+    recording: bool,
     quit_requested: bool,
 }
 
@@ -68,12 +71,19 @@ impl AppState {
             transcript: Transcript::new(),
             focus: FocusPanel::Dialogue,
             error_overlay,
+            history: Vec::new(),
+            recording: true,
             quit_requested: false,
         }
     }
 
-    /// Replaces the source the next [`Intent::Reload`] will use.  Does not
-    /// clear the overlay or touch the running session.
+    /// `true` when there is a previous visible step to rewind to.
+    #[must_use]
+    pub const fn can_step_back(&self) -> bool {
+        self.history.len() > 1
+    }
+
+    /// Replaces the source the next [`Intent::Reload`] will use.
     pub fn replace_source(&mut self, source: String) {
         self.source = source;
     }
@@ -155,18 +165,78 @@ impl AppState {
     /// into an [`ErrorOverlay`]; the method currently never returns `Err`.
     pub fn apply(&mut self, intent: Intent) -> Result<(), DialogueError> {
         match intent {
-            Intent::Advance => self.advance_or_commit(),
+            Intent::Advance => {
+                if self.options.is_empty() {
+                    self.run_advance();
+                } else if let Some(idx) = self.focused_option {
+                    self.run_commit(idx);
+                    if !self.is_errored() && self.options.is_empty() {
+                        self.run_advance();
+                    }
+                }
+            }
             Intent::Quit => self.quit_requested = true,
             Intent::FocusNext => self.move_focus(FocusShift::Next),
             Intent::FocusPrev => self.move_focus(FocusShift::Prev),
-            Intent::SelectOption(idx) => self.guarded(|s| s.commit_option(idx)),
+            Intent::SelectOption(idx) => self.run_commit(idx),
             Intent::ToggleFocus => self.toggle_focus(),
             Intent::ScrollUp => self.transcript.scroll_up(),
             Intent::ScrollDown => self.transcript.scroll_down(),
             Intent::Reload => self.reload(),
             Intent::DismissError => self.error_overlay = None,
+            Intent::StepBack => self.step_back(),
         }
         Ok(())
+    }
+
+    fn run_advance(&mut self) {
+        self.guarded(Self::advance);
+        if !self.is_errored() && self.recording {
+            self.history.push(HistoryStep::Advance);
+        }
+    }
+
+    fn run_commit(&mut self, idx: usize) {
+        let will_commit = self.options.get(idx).is_some_and(|o| o.available);
+        self.guarded(|s| s.commit_option(idx));
+        if will_commit && !self.is_errored() && self.recording {
+            self.history.push(HistoryStep::SelectOption(idx));
+        }
+    }
+
+    fn step_back(&mut self) {
+        if !self.can_step_back() {
+            return;
+        }
+        let mut history = std::mem::take(&mut self.history);
+        history.pop();
+        self.reset_runtime_state();
+        self.recording = false;
+        for step in &history {
+            match *step {
+                HistoryStep::Advance => self.guarded(Self::advance),
+                HistoryStep::SelectOption(i) => self.guarded(|s| s.commit_option(i)),
+            }
+        }
+        self.recording = true;
+        self.history = history;
+    }
+
+    fn reset_runtime_state(&mut self) {
+        match Session::from_source(&self.source, &self.start_node) {
+            Ok(session) => {
+                self.session = Some(session);
+                self.error_overlay = None;
+            }
+            Err(err) => {
+                self.error_overlay = Some(ErrorOverlay::from_error(&err, Some(&self.source)));
+                self.session = None;
+            }
+        }
+        self.transcript = Transcript::new();
+        self.current_line = None;
+        self.options.clear();
+        self.focused_option = None;
     }
 
     fn guarded<F>(&mut self, f: F)
@@ -180,21 +250,6 @@ impl AppState {
             self.options.clear();
             self.focused_option = None;
         }
-    }
-
-    fn advance_or_commit(&mut self) {
-        self.guarded(|s| {
-            if s.options.is_empty() {
-                return s.advance();
-            }
-            if let Some(idx) = s.focused_option {
-                s.commit_option(idx)?;
-                if s.options.is_empty() {
-                    s.advance()?;
-                }
-            }
-            Ok(())
-        });
     }
 
     fn advance(&mut self) -> Result<(), DialogueError> {
@@ -268,19 +323,7 @@ impl AppState {
     }
 
     fn reload(&mut self) {
-        match Session::from_source(&self.source, &self.start_node) {
-            Ok(session) => {
-                self.session = Some(session);
-                self.error_overlay = None;
-                self.transcript = Transcript::new();
-                self.current_line = None;
-                self.options.clear();
-                self.focused_option = None;
-            }
-            Err(err) => {
-                self.error_overlay = Some(ErrorOverlay::from_error(&err, Some(&self.source)));
-                self.session = None;
-            }
-        }
+        self.reset_runtime_state();
+        self.history.clear();
     }
 }
