@@ -45,9 +45,10 @@ impl Parser<'_> {
     }
 
     pub(super) fn parse_stmt(&mut self, cur_indent: usize) -> Result<Stmt> {
+        let last = self.last_lineno();
         let (lineno, content) = self
             .peek()
-            .expect("parse_stmt called only when peek() is Some");
+            .ok_or_else(|| self.err(last, "unexpected end of input"))?;
         let t = content.trim();
 
         if t.starts_with("<<") {
@@ -59,9 +60,10 @@ impl Parser<'_> {
         if t.starts_with("=>") {
             return self.parse_line_group(cur_indent);
         }
+        let last = self.last_lineno();
         let (lineno, _) = self
             .advance()
-            .expect("peek() was Some so advance() cannot be None");
+            .ok_or_else(|| self.err(last, "unexpected end of input"))?;
         let file = self.file;
         parse_line_stmt(t, lineno, file)
     }
