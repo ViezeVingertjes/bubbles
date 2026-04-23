@@ -14,7 +14,7 @@ You arrive at Barnacle Bay and need a travel permit from the cantankerous harbor
 
 ```text
 examples/harbour/
-  harbour.bub   - main dockside scene
+  harbour.bub   - main dockside scene (Start, Options, Depart, End nodes)
   services.bub  - shared beats (MapSeller)
 ```
 

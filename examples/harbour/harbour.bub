@@ -46,6 +46,11 @@ tags: scene docks outdoor
     Stumpy: Aye, same tale about the sea creature. Nothing new to report.
 <<endonce>>
 
+<<jump Options>>
+===
+
+title: Options
+---
 Stumpy: So. What'll it be?
 
 -> Pay ten doubloons for a permit. <<if $gold >= 10>>
@@ -58,9 +63,11 @@ Stumpy: So. What'll it be?
 -> Bribe him with everything you've got. <<if $gold >= 1 && $gold < 10>>
     Stumpy: Hah! {$gold} doubloons? That barely covers the ink for the stamp.
     Stumpy: Come back when ye've got more coin.
+    <<jump Options>>
 -> Ask about the map seller.
     <<detour MapSeller>>
     Stumpy: That old rogue sell ye anything useful?
+    <<jump Options>>
 -> Nothing. Just passing through.
     Stumpy: Then pass through somewhere else. This dock's busy.
     <<jump End>>
