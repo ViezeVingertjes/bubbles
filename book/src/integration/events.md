@@ -73,12 +73,29 @@ DialogueEvent::Options(opts) => {
 }
 ```
 
+You can also enforce UI constraints using the `group` field:
+
+```rust,ignore
+DialogueEvent::Options(opts) => {
+    // Group options by their `group` field for radio-button or exclusion logic
+    let mut groups: std::collections::HashMap<Option<String>, Vec<_>> = std::collections::HashMap::new();
+    for (i, opt) in opts.iter().enumerate() {
+        groups.entry(opt.group.clone()).or_insert_with(Vec::new).push(i);
+    }
+    
+    // Show a radio-button style menu for options in the same group
+    let choice = ui.show_choice_menu(&opts);
+    runner.select_option(choice)?;
+}
+```
+
 Each option has:
 
 - `text: String` - pre-interpolated, markup tags stripped.
 - `available: bool` - result of the `<<if>>` guard. `false` means locked.
 - `line_id: Option<String>` - stable id if `#line:...` is on the option.
 - `tags: Vec<String>` - any other tags.
+- `group: Option<String>` - the `#group:<name>` value if present. Use this to enforce UI constraints like radio-buttons or mutually exclusive choices.
 - `spans: Vec<MarkupSpan>` - inline markup spans over `text`, same shape as on `Line`.
 
 > **Note:** Trying to select an unavailable option returns an error. Filter or disable those choices in your UI before the player can pick them.

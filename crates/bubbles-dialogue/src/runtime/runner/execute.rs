@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::compiler::ast::{Expr, IfBranch, Stmt, StmtList, TextSegment};
 use crate::error::{DialogueError, Result};
 use crate::runtime::event::{
-    DialogueEvent, DialogueOption, line_id_from_tags, line_mode_from_tags,
+    DialogueEvent, DialogueOption, line_id_from_tags, line_mode_from_tags, option_group_from_tags,
 };
 use crate::saliency::Candidate;
 use crate::value::VariableStorage;
@@ -172,11 +172,13 @@ impl<S: VariableStorage> Runner<S> {
             };
             let (text, spans) = self.eval_line_text(&item.text, &item.tags)?;
             let line_id = line_id_from_tags(&item.tags);
+            let group = option_group_from_tags(&item.tags);
             options.push(DialogueOption {
                 text,
                 available,
                 line_id,
                 tags: item.tags.clone(),
+                group,
                 spans,
             });
             bodies.push(item.body.clone()); // Arc<[Stmt]> — O(1) reference-count bump

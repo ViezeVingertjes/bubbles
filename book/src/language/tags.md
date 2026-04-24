@@ -102,23 +102,51 @@ The id is also the key Bubbles uses when looking up translations through a [`Lin
 
 > **Tip:** Pick a naming convention early. Something like `scene_speaker_variant` (`tavern_aria_greet_first`) scales well and makes VO manifests easy to audit. The ids are never sent anywhere until you ask for them - they cost nothing at runtime.
 
-## Getting just the id
+## Option groups for UI constraints
 
-If you have a bare `&[String]` of tags and need to extract the id:
+Options can be grouped with `#group:<name>` to signal mutual exclusivity or radio-button semantics:
 
-```rust,ignore
-use bubbles::line_id_from_tags;
-
-let id = line_id_from_tags(&tags); // Option<String>
+```text
+Choose your faction:
+-> Join the Reds #group:faction
+-> Join the Blues #group:faction
+-> Stay neutral
 ```
 
-Same rule as the runtime: the first `line:` prefix wins, empty ids are rejected.
+Each `group` value flows onto [`DialogueOption::group`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.DialogueOption.html):
+
+```rust,ignore
+DialogueEvent::Options(opts) => {
+    for opt in opts {
+        if let Some(g) = &opt.group {
+            // This option belongs to a group; you could disable others in the same group
+            // e.g. if g == "faction" { /* radio-button logic */ }
+        }
+    }
+}
+```
+
+The `group` tag itself also remains in [`DialogueOption::tags`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.DialogueOption.html) if you need it for styling.
+
+## Getting structured metadata from tags
+
+Two helper functions extract special tags:
+
+```rust,ignore
+use bubbles::{line_id_from_tags, option_group_from_tags};
+
+let id = line_id_from_tags(&tags);          // Option<String>
+let group = option_group_from_tags(&tags);  // Option<String>
+```
+
+Both return the first match and reject empty values.
 
 ## Reserved tags
 
-Only one:
+Only two:
 
-- `line:<id>` - stable id, described above.
+- `line:<id>` - stable id for voice-over and localisation.
+- `group:<name>` - option group name for UI constraints.
 
 Every other tag is yours. Bubbles won't grow a reserved list that clashes with `#combat` or `#boss`. Go ahead and use whatever makes sense for your engine.
 

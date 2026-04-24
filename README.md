@@ -119,6 +119,7 @@ fn main() -> Result<(), bubbles::DialogueError> {
 | Bookmarks / save | `Runner::snapshot` / `Runner::restore` with `RunnerSnapshot` (always available); enable `serde` to persist snapshot and `HashMapStorage` to disk |
 | Line modes | `#narration` and `#debug` on lines set `DialogueEvent::Line::line_mode` for filtering or routing |
 | Variable inspection | `Runner::all_variables`, `Runner::variable`, `Runner::variable_ref`; `VariableStorage::all_variables` (override on custom stores) |
+|| Option groups | `#group:<name>` on options for UI constraints (radio buttons, mutually exclusive choices) |
 
 ---
 

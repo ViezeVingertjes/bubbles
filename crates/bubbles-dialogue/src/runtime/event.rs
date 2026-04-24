@@ -31,6 +31,19 @@ pub fn line_mode_from_tags(tags: &[String]) -> LineMode {
     }
 }
 
+/// Returns the group from a `#group:<name>` tag in `tags`, if any (first match wins).
+///
+/// Used for UI constraints (radio-button semantics, mutually exclusive option sets).
+/// The group tag itself remains in [`DialogueOption::tags`]; your UI can use both
+/// the `group` field for constraint logic and `tags` for styling/metadata.
+#[must_use]
+pub fn option_group_from_tags(tags: &[String]) -> Option<String> {
+    tags.iter()
+        .find_map(|t| t.strip_prefix("group:"))
+        .map(ToOwned::to_owned)
+        .filter(|s| !s.is_empty())
+}
+
 /// A resolved inline markup span: a named annotation over a byte range in the
 /// stripped display text.
 ///
@@ -80,6 +93,8 @@ pub struct DialogueOption {
     pub line_id: Option<String>,
     /// Trailing `#tag` metadata.
     pub tags: Vec<String>,
+    /// If the option was tagged with `#group:<name>`, the group name for UI constraints (radio buttons, etc.).
+    pub group: Option<String>,
     /// Inline markup spans over [`text`](DialogueOption::text), in source order.
     /// Empty when the option text contains no markup tags.
     pub spans: Vec<MarkupSpan>,
