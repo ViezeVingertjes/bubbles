@@ -17,7 +17,7 @@
 //                                   light* variants)
 //   [pause /]                self-closing; no visible text, zero-length span
 
-title: Markup
+title: Start
 ---
 Narrator: [b]Bold[/b], [i]italic[/i], and [u]underline[/u] — the essentials.
 Narrator: Combine them: [b][i]bold-italic[/i][/b], or [u][i]underlined italic[/i][/u].
