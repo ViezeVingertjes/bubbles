@@ -7,6 +7,7 @@ mod first;
 mod random;
 
 #[cfg(test)]
+#[path = "saliency_tests.rs"]
 mod tests;
 
 pub use blrv::BestLeastRecentlyViewed;

@@ -38,4 +38,5 @@ where
 }
 
 #[cfg(test)]
+#[path = "eval_tests.rs"]
 mod tests;

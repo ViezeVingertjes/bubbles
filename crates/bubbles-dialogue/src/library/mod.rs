@@ -82,4 +82,5 @@ impl std::fmt::Debug for FunctionLibrary {
 }
 
 #[cfg(test)]
+#[path = "library_tests/mod.rs"]
 mod tests;
