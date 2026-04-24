@@ -35,6 +35,8 @@ pub struct DisplayedOption {
     pub line_id: Option<String>,
     /// Any additional `#tag` values attached to this option in the source.
     pub tags: Vec<String>,
+    /// If the option was tagged with `#group:<name>`, the group name for UI constraints.
+    pub group: Option<String>,
 }
 
 impl From<DialogueOption> for DisplayedOption {
@@ -45,6 +47,7 @@ impl From<DialogueOption> for DisplayedOption {
             available: opt.available,
             line_id: opt.line_id,
             tags: opt.tags,
+            group: opt.group,
         }
     }
 }

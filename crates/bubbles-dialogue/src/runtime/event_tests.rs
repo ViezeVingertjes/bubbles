@@ -1,4 +1,4 @@
-use super::{LineMode, line_id_from_tags, line_mode_from_tags};
+use super::{LineMode, line_id_from_tags, line_mode_from_tags, option_group_from_tags};
 
 #[test]
 fn line_id_from_tags_first_line_prefix() {
@@ -35,4 +35,33 @@ fn line_mode_from_tags_narration_and_debug() {
         line_mode_from_tags(&["narration".into(), "debug".into()]),
         LineMode::Debug
     );
+}
+
+#[test]
+fn option_group_from_tags_extracts_group() {
+    assert_eq!(
+        option_group_from_tags(&["group:allies".into()]),
+        Some("allies".into())
+    );
+    assert_eq!(
+        option_group_from_tags(&["style".into(), "group:romance".into()]),
+        Some("romance".into())
+    );
+}
+
+#[test]
+fn option_group_from_tags_first_match_wins() {
+    assert_eq!(
+        option_group_from_tags(&["group:first".into(), "group:second".into()]),
+        Some("first".into())
+    );
+}
+
+#[test]
+fn option_group_from_tags_missing_returns_none() {
+    assert_eq!(
+        option_group_from_tags(&["style".into(), "important".into()]),
+        None
+    );
+    assert_eq!(option_group_from_tags(&["group:".into()]), None);
 }

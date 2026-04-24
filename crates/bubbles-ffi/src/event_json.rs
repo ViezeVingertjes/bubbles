@@ -46,6 +46,7 @@ pub fn dialogue_event_to_json(ev: &DialogueEvent) -> String {
                     "available": o.available,
                     "line_id": o.line_id,
                     "tags": o.tags,
+                    "group": o.group,
                     "spans": o.spans.iter().map(|s| json!({
                         "name": s.name,
                         "start": s.start,
