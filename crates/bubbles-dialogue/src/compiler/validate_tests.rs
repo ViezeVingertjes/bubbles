@@ -1,7 +1,7 @@
 use crate::compiler::compile;
 use crate::error::DialogueError;
 
-// compile() now always validates — these tests assert that broken targets
+// compile() now always validates - these tests assert that broken targets
 // are caught at compile time with a Validation error.
 
 #[test]

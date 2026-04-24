@@ -21,7 +21,7 @@ title: Start
 ---
 <<declare $mood = "caution">>
 
-Narrator: [b]Bold[/b], [i]italic[/i], and [u]underline[/u] — the essentials.
+Narrator: [b]Bold[/b], [i]italic[/i], and [u]underline[/u] - the essentials.
 Narrator: Combine them: [b][i]bold-italic[/i][/b], or [u][i]underlined italic[/i][/u].
 Narrator: Use [dim]dim text[/dim] for parenthetical asides.
 Narrator: [color value=red]Danger![/color] [color value=green]All clear.[/color] [color value=yellow]Proceed with caution.[/color]

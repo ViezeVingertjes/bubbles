@@ -71,7 +71,7 @@ while let Some(event) = runner.next_event()? {
         }
         DialogueEvent::Line { speaker, text, spans, tags, line_id } => {
             // render and wait for input
-            // spans: Vec<MarkupSpan> — byte ranges for [b], [color …], etc.
+            // spans: Vec<MarkupSpan> - byte ranges for [b], [color …], etc.
         }
         DialogueEvent::Options(opts) => {
             // show a menu; each opt has .text, .available, .spans, .tags, .line_id

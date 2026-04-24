@@ -12,6 +12,6 @@ cargo build -p bubbles-ffi --release
 | macOS    | `target/release/libbubbles_ffi.dylib` |
 | Windows  | `target/release/bubbles_ffi.dll` |
 
-For everything else — P/Invoke declarations, event JSON format, variables, save/load, host functions, and the .NET smoke test — see the [Unity and native hosts](../../book/src/integration/unity-and-native.md) chapter in the guide.
+For everything else - P/Invoke declarations, event JSON format, variables, save/load, host functions, and the .NET smoke test - see the [Unity and native hosts](../../book/src/integration/unity-and-native.md) chapter in the guide.
 
 C header: [`include/bubbles_ffi.h`](include/bubbles_ffi.h).

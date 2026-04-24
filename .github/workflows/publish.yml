@@ -38,7 +38,7 @@ jobs:
           fi
           echo "Version check passed: $CRATE_VERSION"
 
-      # Run a quick sanity-check (no clippy, no doc build — CI already did
+      # Run a quick sanity-check (no clippy, no doc build - CI already did
       # those on the commit; this just guards against broken publish paths).
       - name: Test (all features)
         run: cargo test --workspace --all-features

@@ -111,7 +111,7 @@ fn error_overlay_is_drawn_on_top_of_the_dialogue_pane() {
     );
 }
 
-// ── ErrorOverlay::from_error — one test per DialogueError variant ─────────────
+// ── ErrorOverlay::from_error - one test per DialogueError variant ─────────────
 //
 // These drive the overlay directly from constructed errors so every match arm
 // in overlay.rs is exercised even when a particular error path is hard to
@@ -267,7 +267,7 @@ fn protocol_violation_in_runner_populates_overlay() {
     let mut runner = Runner::new(prog, HashMapStorage::new());
     runner.start("A").unwrap();
     runner.next_event().unwrap(); // NodeStarted
-    runner.next_event().unwrap(); // Options — now awaiting
+    runner.next_event().unwrap(); // Options - now awaiting
 
     // Build a DialogueError directly from what we know the runner produces.
     let err = runner.next_event().unwrap_err();

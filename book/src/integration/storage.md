@@ -115,9 +115,9 @@ impl VariableStorage for MyStorage {
 }
 ```
 
-For a `HashMap<String, Value>` this is a one-liner. The payoff is that `{$long_text}` in a line of dialogue never copies the string — it borrows from your map for the duration of the interpolation.
+For a `HashMap<String, Value>` this is a one-liner. The payoff is that `{$long_text}` in a line of dialogue never copies the string - it borrows from your map for the duration of the interpolation.
 
-> **When the default is fine:** If your store does a lookup that already produces owned `Value`s (e.g. a database row, a deserialized field) there is nothing to borrow — keep the default and only override if profiling shows the allocations matter.
+> **When the default is fine:** If your store does a lookup that already produces owned `Value`s (e.g. a database row, a deserialized field) there is nothing to borrow - keep the default and only override if profiling shows the allocations matter.
 
 ## Seeding storage from the outside
 

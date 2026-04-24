@@ -1,4 +1,4 @@
-//! Tests for [`RunnerBuilder`] — the ergonomic one-shot runner construction API.
+//! Tests for [`RunnerBuilder`] - the ergonomic one-shot runner construction API.
 
 mod common;
 

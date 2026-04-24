@@ -47,7 +47,7 @@ fn multiple_exprs() {
 
 #[test]
 fn unclosed_brace_returns_err_with_offset() {
-    // `{unclosed` — the `{` is at offset 7 ("hello: ")
+    // `{unclosed` - the `{` is at offset 7 ("hello: ")
     let result = scan_brace_segments("hello: {unclosed");
     assert_eq!(result, Err(7));
 }

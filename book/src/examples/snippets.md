@@ -220,7 +220,7 @@ Tags are stripped from the text before the event arrives. Alongside the clean te
 Key lines from the script:
 
 ```text
-Narrator: [b]Bold[/b], [i]italic[/i], and [u]underline[/u] — the essentials.
+Narrator: [b]Bold[/b], [i]italic[/i], and [u]underline[/u] - the essentials.
 Narrator: [color value=red]Danger![/color] [color value=green]All clear.[/color]
 -> [b]Excited![/b] Let's go.
 -> [dim]Cautiously optimistic...[/dim]
@@ -230,7 +230,7 @@ In your game:
 
 ```rust,ignore
 DialogueEvent::Line { text, spans, .. } => {
-    // text  = "Bold, italic, and underline — the essentials."
+    // text  = "Bold, italic, and underline - the essentials."
     // spans = [
     //   MarkupSpan { name: "b",         start: 0,  length: 4  },
     //   MarkupSpan { name: "italic",    start: 6,  length: 6  },

@@ -1,4 +1,4 @@
-//! [`SourceSet`] — one or more named source files that are compiled together.
+//! [`SourceSet`] - one or more named source files that are compiled together.
 //!
 //! A single-file workflow is just a `SourceSet` of length one.  `AppState`
 //! always stores a `SourceSet`; the convenience constructors

@@ -106,7 +106,7 @@ Translators can place `[markup]` tags anywhere in their templates. The tags are 
 [b]Attention![/b] Le pont est coupé.
 ```
 
-The spans come back referencing the correct byte ranges in the French string. The ordering is: translate, evaluate expressions, compute spans — the same as the source language.
+The spans come back referencing the correct byte ranges in the French string. The ordering is: translate, evaluate expressions, compute spans - the same as the source language.
 
 ## Falling back gracefully
 

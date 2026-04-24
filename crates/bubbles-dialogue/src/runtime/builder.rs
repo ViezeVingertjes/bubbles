@@ -1,4 +1,4 @@
-//! [`RunnerBuilder`] — ergonomic one-shot construction of a configured [`Runner`].
+//! [`RunnerBuilder`] - ergonomic one-shot construction of a configured [`Runner`].
 
 use crate::compiler::Program;
 use crate::library::{FunctionLibrary, HostFn};
