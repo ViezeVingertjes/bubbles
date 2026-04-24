@@ -45,7 +45,7 @@ Barkeep: Evening, stranger.
 ===
 ```
 
-That is a complete, working dialogue. A speaker line, three options (one guarded by a condition), a variable assignment, and a jump. We will build this exact scene step by step in [The Harbour](./examples/harbour.md).
+That is a complete, working dialogue. A speaker line, three options (one guarded by a condition), a variable assignment, and a jump. The harbour walkthrough uses the same building blocks - speaker lines, guarded options, and jumps - to build a full dockside scene from scratch in [The Harbour](./examples/harbour.md).
 
 ## Jump right in
 

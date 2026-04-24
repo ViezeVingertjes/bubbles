@@ -6,7 +6,7 @@ use std::mem;
 use bubbles::{HashMapStorage, Runner, RunnerSnapshot, VariableStorage};
 
 use crate::error::{clear_err, set_err};
-use crate::util::str_from_parts;
+use crate::util::{str_from_parts, write_cstring_out};
 use crate::value_json::{value_from_json_slice, value_to_json_string};
 use crate::{BUBBLES_ERR, BUBBLES_OK};
 
@@ -231,18 +231,4 @@ pub unsafe extern "C" fn bubbles_runner_restore_session_json(
             BUBBLES_ERR
         }
     }
-}
-
-fn write_cstring_out(out: *mut *mut c_char, s: String) -> c_int {
-    let cs = match CString::new(s) {
-        Ok(c) => c,
-        Err(_) => {
-            set_err("string contained interior NUL");
-            return BUBBLES_ERR;
-        }
-    };
-    unsafe {
-        *out = cs.into_raw();
-    }
-    BUBBLES_OK
 }

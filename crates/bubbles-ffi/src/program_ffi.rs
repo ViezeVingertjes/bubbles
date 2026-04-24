@@ -1,12 +1,12 @@
 //! Introspection on a compiled [`Program`] before it is consumed by [`crate::bubbles_runner_new`].
 
-use std::ffi::{CString, c_char, c_int, c_void};
+use std::ffi::{c_char, c_int, c_void};
 
 use bubbles::Program;
 use serde_json::json;
 
 use crate::error::{clear_err, set_err};
-use crate::util::str_from_parts;
+use crate::util::{str_from_parts, write_cstring_out};
 use crate::{BUBBLES_ERR, BUBBLES_OK};
 
 unsafe fn program_ref<'a>(program: *mut c_void) -> Option<&'a Program> {
@@ -142,18 +142,4 @@ pub unsafe extern "C" fn bubbles_program_variable_declarations_json(
         .collect();
     let j = serde_json::to_string(&decls).unwrap_or_else(|_| "[]".into());
     write_cstring_out(out_json, j)
-}
-
-fn write_cstring_out(out: *mut *mut c_char, s: String) -> c_int {
-    let cs = match CString::new(s) {
-        Ok(c) => c,
-        Err(_) => {
-            set_err("JSON contained interior NUL");
-            return BUBBLES_ERR;
-        }
-    };
-    unsafe {
-        *out = cs.into_raw();
-    }
-    BUBBLES_OK
 }

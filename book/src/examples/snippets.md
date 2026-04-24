@@ -1,6 +1,6 @@
 # Snippets
 
-Five focused recipes, each answering a specific "can Bubbles do X?" question. Every snippet is a self-contained 30-50 line `.bub` file built around a pirate scenario, and each one runs independently through the TUI.
+Six focused recipes, each answering a specific "can Bubbles do X?" question. Every snippet is a self-contained 30-50 line `.bub` file built around a pirate scenario, and each one runs independently through the TUI.
 
 ```sh
 cargo run -p bubbles-tui -- examples/snippets/<name>.bub
@@ -18,19 +18,19 @@ Press `r` to reload after editing (re-reads from disk, full reset), `R` to rerun
 cargo run -p bubbles-tui -- examples/snippets/options.bub
 ```
 
-A duelist challenges you to an insult sword-fight. Whether you can land the devastating final insult depends on `$sword_skill`. Try it with the default value, then change the `<<declare $sword_skill = ...>>` line and press `r` to reload - different skill levels unlock different options and route to different outcome nodes.
+A duelist challenges you to an insult sword-fight. Whether you can land the devastating insult depends on `$sword_skill`. Try it with the default value, then change the `<<declare $sword_skill = ...>>` line and press `r` to reload - different skill levels unlock different options and route to different outcome nodes.
 
 Key lines from the script:
 
 ```text
--> Deliver the Insulto Magnifico! <<if $sword_skill >= 8>>
-    Aria: Your fighting is like a cow having a fit!
+-> Deliver a devastating insult. <<if $sword_skill >= 3>>
+    You: Your sword arm is as weak as a soggy biscuit!
+    Duelist: ...
     <<jump Victory>>
--> Attempt a lesser insult. <<if $sword_skill >= 4>>
-    Aria: You're no match for my blade OR my wit!
-    <<jump CloseCall>>
--> Run away.
-    <<jump Retreat>>
+-> Stall for time.
+    <<jump Escaped>>
+-> Surrender immediately.
+    <<jump Defeated>>
 ```
 
 The `<<if>>` after an option text is a guard. The option stays visible but `available: false` when the guard is false. Your game sees this in `DialogueOption.available`.
@@ -58,19 +58,21 @@ Key lines:
 
 ```text
 <<declare $doubloons = 12>>
-<<declare $grog_price = 2>>
+<<declare $grogs_bought = 0>>
+<<declare $price = 3>>
 
--> Buy a mug ({$grog_price} doubloons). <<if $doubloons >= $grog_price>>
-    <<set $doubloons = $doubloons - $grog_price>>
-    <<set $grog_price = $grog_price + 1>>
-    Griselda: Bottoms up. {$doubloons} doubloons left.
+-> Buy a mug. <<if $doubloons >= $price>>
+    <<set $doubloons = $doubloons - $price>>
+    <<set $grogs_bought = $grogs_bought + 1>>
+    <<set $price = $price + 2>>
+    GrogVendor: Pleasure! That'll be {$price} for the next one.
 ```
 
-`{$doubloons}` in the text is interpolation - evaluated and substituted before the event reaches your game. By the time your code sees the line, it already reads `"9 doubloons left."`.
+`{$price}` in the text is interpolation - evaluated and substituted before the event reaches your game. By the time your code sees the line, it already reads `"That'll be 5 for the next one."`.
 
 **Remix ideas:**
-- Add a `$grog_consumed` counter and branch on it with `<<if $grog_consumed >= 3>>`
-- Show a "running total spent" line using arithmetic in interpolation: `{$grog_price - 2} doubloons wasted`
+- Branch on `$grogs_bought >= 3` for a "you've had enough" path
+- Show a "running total spent" line using arithmetic in interpolation: `{$price - 2} doubloons wasted`
 - Add a `<<declare $tipsy = false>>` flag that flips after two mugs and changes the dialogue options
 
 See [Variables](../language/variables.md), [Expressions](../language/expressions.md), and [Interpolation](../language/interpolation.md).
@@ -85,23 +87,23 @@ See [Variables](../language/variables.md), [Expressions](../language/expressions
 cargo run -p bubbles-tui -- examples/snippets/commands.bub
 ```
 
-Prying open a cursed chest fires `<<play_fanfare>>`, `<<spawn_particles>>`, and `<<apply_curse>>`. Key lines carry tags like `#dramatic` and `#sfx`. The TUI shows commands in the transcript pane so you can see exactly what your event loop would receive.
+Prying open a cursed chest fires `<<creak_sound>>`, `<<play_fanfare>>`, `<<spawn_particles>>`, and `<<apply_curse>>`. Key lines carry tags like `#dramatic` and `#sfx`. The TUI shows commands in the transcript pane so you can see exactly what your event loop would receive.
 
 Key lines from the script:
 
 ```text
-<<play_fanfare>>
-You found the cursed chest! #dramatic #sfx treasure_sting
-<<spawn_particles "gold_burst">>
-<<apply_curse "greed">>
-A cold feeling settles in your chest. #eerie
+<<play_fanfare "treasure_found">>
+<<spawn_particles "gold_coins" 50>>
+Gold coins spill across the sand, glittering in the torchlight. #dramatic
+<<apply_curse "greedy_pirate">>
+Ghostly Voice: That treasure is CURSED, ye fool! #eerie
 ```
 
 In your game:
 
 ```rust,ignore
 DialogueEvent::Command { name, args, .. } => match name.as_str() {
-    "play_fanfare" => audio.fanfare(),
+    "play_fanfare" => audio.play(&args[0]),
     "spawn_particles" => vfx.spawn(&args[0]),
     "apply_curse" => player.add_curse(&args[0]),
     _ => {}
@@ -136,26 +138,26 @@ See [Commands](../language/commands.md) and [Tags and Metadata](../language/tags
 cargo run -p bubbles-tui -- examples/snippets/once.bub
 ```
 
-Old Barnacle Pete has a legendary kraken story. The first visit gets the epic full account. Every return gets a brief acknowledgement. No `$kraken_told` variable in sight.
+Old Barnacle Pete has several legendary tales. Each `<<once>>` block plays in full on the first visit; every return gets a brief acknowledgement. No `$kraken_told` variable in sight.
 
 Key lines:
 
 ```text
 <<once>>
-    Pete: Pull up a chair. It was a night like any other, when the sea itself rose up...
-    Pete: Three masts snapped like twigs. The crew? Gone. Every last one.
-    Pete: And I, alone, swam home. Took three days.
+    Pete: Thirty years ago I wrestled a kraken with me bare hands.
+    Pete: Eight tentacles, each one thicker than a ship's mast.
+    Pete: The kraken wept. Haven't seen one since.
 <<else>>
-    Pete: Aye, same old story. Still gives me chills.
+    Pete: As I told ye before. Wrestled a kraken, bit its tentacle, it wept.
 <<endonce>>
 ```
 
-The "once-seen" state is stored with the runner and survives save/load. Press `R` (rerun) to see the second-visit lines without resetting that history. Press `r` (reload) to start completely fresh.
+Multiple `<<once>>` blocks can be chained in sequence - each tracks its own "seen" state independently. The "once-seen" state is stored with the runner and survives save/load. Press `R` (rerun) to see the second-visit lines without resetting that history. Press `r` (reload) to start completely fresh.
 
 **Remix ideas:**
-- Add a third `<<once>>` nested inside the `<<else>>` for a third-visit variant
-- Try `<<once if $has_bought_a_drink>>` to delay the story until the player's bought a round
+- Try `<<once if $has_bought_a_drink>>` to delay a story until the player's bought a round
 - Add a `<<once>>` for a one-off ambient detail that never repeats
+- Add a fourth tale in `AnotherTale` to extend the chain
 
 See [Once Blocks](../language/once.md).
 
@@ -174,25 +176,25 @@ The dockside has two layers:
 **Line groups** (`=>`): five dock worker barks cycle with `BestLeastRecentlyViewed`. Each visit picks the one seen least recently, so the same line never plays twice in a row.
 
 ```text
-=> Dockworker: Oi, mind the ropes!
-=> Dockworker: These crates won't unload themselves.
-=> Dockworker: Low tide's coming in. Move it!
-=> Dockworker: Cap'n wants the hold cleared by noon.
-=> Dockworker: Smells like fish and regret out here.
+=> Dockworker: Watch yer step on those wet planks!
+=> Dockworker: Tide's coming in. Move them crates!
+=> Dockworker: I've unloaded seventeen ships today. Seventeen!
+=> Dockworker: Cap'n said we're done at sundown. Sundown was an hour ago.
+=> Dockworker: Me back's killing me. Should've been a blacksmith.
 ```
 
 **Node groups**: the `Storyteller` NPC has four nodes with the same title. `when: $time_of_day == "..."` picks the right one. Change the `<<declare $time_of_day = "evening">>` line at the top and press `r` to reload - different time, different story.
 
 ```text
 title: Storyteller
-when: $time_of_day == "dawn"
+when: $time_of_day == "morning"
 ---
-Old Salt: Red sky at morning. Sailors take warning.
+Storyteller: Ah, a fresh morning at the docks! Best time for a tale.
 ===
 
 title: Storyteller
 ---
-Old Salt: Another fine day at the docks. Mostly.
+Storyteller: Hmm. Can't think of a story right now. Come back later.
 ===
 ```
 

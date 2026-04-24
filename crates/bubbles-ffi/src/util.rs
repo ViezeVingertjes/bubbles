@@ -1,6 +1,9 @@
-//! UTF-8 slices from raw FFI pointers.
+//! Shared FFI helpers: UTF-8 slices from raw pointers and C string output.
 
-use std::ffi::c_char;
+use std::ffi::{CString, c_char, c_int};
+
+use crate::error::set_err;
+use crate::{BUBBLES_ERR, BUBBLES_OK};
 
 /// Read UTF-8 from `ptr` / `len`. The borrow is valid only for the caller's memory lifetime.
 ///
@@ -16,4 +19,21 @@ pub(crate) unsafe fn str_from_parts<'a>(
     }
     let slice = unsafe { std::slice::from_raw_parts(ptr.cast::<u8>(), len) };
     std::str::from_utf8(slice).map_err(|_| "invalid utf-8")
+}
+
+/// Converts `s` into a NUL-terminated C string, writes the raw pointer to `*out`, and returns
+/// `BUBBLES_OK`. Sets the thread-local error and returns `BUBBLES_ERR` if `s` contains an
+/// interior NUL byte.
+pub(crate) fn write_cstring_out(out: *mut *mut c_char, s: String) -> c_int {
+    let cs = match CString::new(s) {
+        Ok(c) => c,
+        Err(_) => {
+            set_err("string contained interior NUL");
+            return BUBBLES_ERR;
+        }
+    };
+    unsafe {
+        *out = cs.into_raw();
+    }
+    BUBBLES_OK
 }
