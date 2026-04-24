@@ -43,9 +43,10 @@ DialogueEvent::Line { speaker, text, line_id, tags } => {
 Fields:
 
 - `speaker: Option<String>` - the `Speaker:` prefix, or `None` for narrator lines.
-- `text: String` - already interpolated, already localised.
+- `text: String` - already interpolated, already localised, markup tags stripped.
 - `line_id: Option<String>` - the `#line:...` stable id if present. Use this for VO lookups and localisation.
 - `tags: Vec<String>` - every other `#tag` on the line. Portrait cues, audio buses, subtitle styles - all yours to interpret.
+- `spans: Vec<MarkupSpan>` - inline markup spans over `text`, in source order. Empty when the line has no markup tags. Each span carries a `name`, byte `start`, byte `length`, and optional `properties`. See [Markup](../language/markup.md).
 
 ## `Options(Vec<DialogueOption>)`
 
@@ -60,10 +61,11 @@ DialogueEvent::Options(opts) => {
 
 Each option has:
 
-- `text: String` - pre-interpolated option label.
+- `text: String` - pre-interpolated, markup tags stripped.
 - `available: bool` - result of the `<<if>>` guard. `false` means locked.
 - `line_id: Option<String>` - stable id if `#line:...` is on the option.
 - `tags: Vec<String>` - any other tags.
+- `spans: Vec<MarkupSpan>` - inline markup spans over `text`, same shape as on `Line`.
 
 > **Note:** Trying to select an unavailable option returns an error. Filter or disable those choices in your UI before the player can pick them.
 

@@ -17,12 +17,19 @@ pub fn dialogue_event_to_json(ev: &DialogueEvent) -> String {
             text,
             line_id,
             tags,
+            spans,
         } => json!({
             "kind": "Line",
             "speaker": speaker,
             "text": text,
             "line_id": line_id,
             "tags": tags,
+            "spans": spans.iter().map(|s| json!({
+                "name": s.name,
+                "start": s.start,
+                "length": s.length,
+                "properties": s.properties,
+            })).collect::<Vec<_>>(),
         })
         .to_string(),
         DialogueEvent::Options(opts) => json!({
@@ -33,6 +40,12 @@ pub fn dialogue_event_to_json(ev: &DialogueEvent) -> String {
                     "available": o.available,
                     "line_id": o.line_id,
                     "tags": o.tags,
+                    "spans": o.spans.iter().map(|s| json!({
+                        "name": s.name,
+                        "start": s.start,
+                        "length": s.length,
+                        "properties": s.properties,
+                    })).collect::<Vec<_>>(),
                 })
             }).collect::<Vec<_>>(),
         })

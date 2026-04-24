@@ -15,6 +15,7 @@ internal static class Program
         if (HostFunctionsTest.Run() != 0) return 1;
         if (LocaleTest.Run()       != 0) return 1;
         if (SaveLoadTest.Run()     != 0) return 1;
+        if (MarkupTest.Run()       != 0) return 1;
 
         Console.WriteLine("dotnet smoke ok");
         return 0;

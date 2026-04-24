@@ -57,8 +57,8 @@ pub use library::FunctionLibrary;
 #[cfg(feature = "serde")]
 pub use runtime::RunnerSnapshot;
 pub use runtime::{
-    DialogueEvent, DialogueOption, HashMapProvider, LineProvider, PassthroughProvider, Runner,
-    RunnerBuilder, line_id_from_tags,
+    DialogueEvent, DialogueOption, HashMapProvider, LineProvider, MarkupSpan, PassthroughProvider,
+    Runner, RunnerBuilder, line_id_from_tags,
 };
 #[cfg(feature = "rand")]
 pub use saliency::RandomAvailable;

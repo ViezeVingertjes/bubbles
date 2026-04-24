@@ -26,6 +26,7 @@
 - [Jumps and Detours](./language/jumps.md)
 - [Once Blocks](./language/once.md)
 - [Interpolation](./language/interpolation.md)
+- [Markup](./language/markup.md)
 - [Commands](./language/commands.md)
 - [Line Groups](./language/line-groups.md)
 - [Node Groups and Saliency](./language/node-groups.md)

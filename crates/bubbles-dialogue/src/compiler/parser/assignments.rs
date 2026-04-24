@@ -4,7 +4,7 @@
 use std::sync::Arc;
 
 use crate::compiler::ast::{Expr, Stmt, TextSegment};
-use crate::compiler::interpolation::{BraceSegment, scan_brace_segments};
+use crate::compiler::markup::{MarkupScanError, TextToken, scan_text_segments};
 use crate::error::{DialogueError, Result};
 
 use super::command::split_first_word;
@@ -37,27 +37,60 @@ pub(super) fn parse_expr_arc(
         .map(Arc::new)
 }
 
-/// Splits `raw` text into [`TextSegment`]s, parsing every `{expr}` fragment.
+/// Splits `raw` text into [`TextSegment`]s, parsing every `{expr}` fragment
+/// and recording inline markup open/close/self-close tags.
 ///
-/// Returns a `Parse` error if any fragment is syntactically invalid.
+/// Returns a `Parse` error if any fragment is syntactically invalid or an
+/// unclosed `{` / `[` is found.
 pub(super) fn parse_interpolated(
     raw: &str,
     context: &str,
     line: usize,
     file: &str,
 ) -> Result<Vec<TextSegment>> {
-    let brace_segments = scan_brace_segments(raw).map_err(|_| DialogueError::Parse {
-        file: file.to_owned(),
-        line,
-        message: format!("unclosed `{{` in {context}: `{raw}`"),
+    let tokens = scan_text_segments(raw).map_err(|e| {
+        let msg = match e {
+            MarkupScanError::UnclosedBrace(_) => format!("unclosed `{{` in {context}: `{raw}`"),
+            MarkupScanError::UnclosedBracket(_) => {
+                format!("unclosed `[` in {context}: `{raw}`")
+            }
+        };
+        DialogueError::Parse {
+            file: file.to_owned(),
+            line,
+            message: msg,
+        }
     })?;
 
-    let mut segments = Vec::with_capacity(brace_segments.len());
-    for seg in brace_segments {
-        match seg {
-            BraceSegment::Literal(s) => segments.push(TextSegment::literal(s)),
-            BraceSegment::Expr(src) => {
+    let mut segments = Vec::with_capacity(tokens.len());
+    for tok in tokens {
+        match tok {
+            TextToken::Literal(s) => segments.push(TextSegment::literal(s)),
+            TextToken::Expr(src) => {
                 segments.push(TextSegment::Expr(parse_expr_arc(src, context, line, file)?));
+            }
+            TextToken::MarkupOpen { name, properties } => {
+                segments.push(TextSegment::MarkupOpen {
+                    name: name.to_owned(),
+                    properties: properties
+                        .into_iter()
+                        .map(|(k, v)| (k.to_owned(), v.to_owned()))
+                        .collect(),
+                });
+            }
+            TextToken::MarkupClose { name } => {
+                segments.push(TextSegment::MarkupClose {
+                    name: name.to_owned(),
+                });
+            }
+            TextToken::MarkupSelfClose { name, properties } => {
+                segments.push(TextSegment::MarkupSelfClose {
+                    name: name.to_owned(),
+                    properties: properties
+                        .into_iter()
+                        .map(|(k, v)| (k.to_owned(), v.to_owned()))
+                        .collect(),
+                });
             }
         }
     }

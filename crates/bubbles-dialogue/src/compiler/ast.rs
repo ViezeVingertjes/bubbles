@@ -142,17 +142,38 @@ pub struct LineVariant {
 
 // ── interpolated text ─────────────────────────────────────────────────────────
 
-/// One segment of text that may contain `{expr}` fragments.
+/// One segment of text that may contain `{expr}` fragments or inline markup.
 ///
 /// Line text, option text, line-variant text, and command argument strings are
 /// all stored as `Vec<TextSegment>` so that `{expr}` fragments are parsed once
-/// at compile time and evaluated cheaply at runtime.
+/// at compile time and evaluated cheaply at runtime. Markup open/close/self-close
+/// segments record tag boundaries without carrying any text; byte offsets into
+/// the final rendered string are computed at runtime by [`crate::runtime`].
 #[derive(Debug, Clone)]
 pub enum TextSegment {
     /// A literal string with no interpolation.
     Literal(String),
     /// An `{expr}` fragment whose source has already been parsed.
     Expr(Arc<Expr>),
+    /// An opening markup tag: `[name]` or `[name key=val …]`.
+    MarkupOpen {
+        /// Tag name, e.g. `wave` in `[wave]`.
+        name: String,
+        /// Zero or more `key=value` pairs.
+        properties: Vec<(String, String)>,
+    },
+    /// A closing markup tag: `[/name]`.
+    MarkupClose {
+        /// Tag name matched against the most recent open, e.g. `wave` in `[/wave]`.
+        name: String,
+    },
+    /// A self-closing markup tag: `[name /]` or `[name key=val … /]`.
+    MarkupSelfClose {
+        /// Tag name, e.g. `pause` in `[pause /]`.
+        name: String,
+        /// Zero or more `key=value` pairs.
+        properties: Vec<(String, String)>,
+    },
 }
 
 impl TextSegment {

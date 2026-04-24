@@ -1,4 +1,30 @@
-//! [`DialogueEvent`] and [`DialogueOption`] - the output types of the runner.
+//! [`DialogueEvent`], [`DialogueOption`], and [`MarkupSpan`] - the output types of the runner.
+
+/// A resolved inline markup span: a named annotation over a byte range in the
+/// stripped display text.
+///
+/// Spans are produced at runtime, after expression substitution, so [`start`]
+/// and [`length`] are byte offsets into the final [`DialogueEvent::Line::text`]
+/// / [`DialogueOption::text`] string.
+///
+/// The runtime assigns no meaning to span names or properties. Your game
+/// decides what `[wave]`, `[color value=red]`, or `[pause /]` means and how
+/// to render it.
+///
+/// [`start`]: MarkupSpan::start
+/// [`length`]: MarkupSpan::length
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MarkupSpan {
+    /// The markup tag name, e.g. `wave` for `[wave]text[/wave]`.
+    pub name: String,
+    /// Byte offset of the first character of the spanned text in the display string.
+    pub start: usize,
+    /// Byte length of the spanned text. Zero for self-closing tags.
+    pub length: usize,
+    /// Zero or more `(key, value)` pairs from the tag, e.g. `[("value", "red")]`
+    /// for `[color value=red]`.
+    pub properties: Vec<(String, String)>,
+}
 
 /// Returns the id from a `#line:<id>` tag in `tags`, if any (first match wins).
 ///
@@ -15,7 +41,7 @@ pub fn line_id_from_tags(tags: &[String]) -> Option<String> {
 /// An option presented to the player.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DialogueOption {
-    /// Display text of the option.
+    /// Display text of the option (markup tags stripped, expressions evaluated).
     pub text: String,
     /// Whether this option is currently available (guards that evaluate to false make it unavailable).
     pub available: bool,
@@ -23,6 +49,9 @@ pub struct DialogueOption {
     pub line_id: Option<String>,
     /// Trailing `#tag` metadata.
     pub tags: Vec<String>,
+    /// Inline markup spans over [`text`](DialogueOption::text), in source order.
+    /// Empty when the option text contains no markup tags.
+    pub spans: Vec<MarkupSpan>,
 }
 
 /// Events emitted by [`crate::Runner`] one at a time via [`crate::Runner::next_event`].
@@ -35,12 +64,15 @@ pub enum DialogueEvent {
     Line {
         /// Optional speaker name.
         speaker: Option<String>,
-        /// Text with all `{expr}` fragments already substituted.
+        /// Display text with all `{expr}` fragments evaluated and markup tags stripped.
         text: String,
         /// If the line was tagged with `#line:<id>`, the stable id (no `line:` prefix).
         line_id: Option<String>,
         /// Trailing `#tag` metadata.
         tags: Vec<String>,
+        /// Inline markup spans over [`text`](DialogueEvent::Line::text), in source order.
+        /// Empty when the line contains no markup tags.
+        spans: Vec<MarkupSpan>,
     },
     /// A set of options for the player to choose from.
     Options(Vec<DialogueOption>),
