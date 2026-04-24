@@ -30,6 +30,7 @@ mod display;
 mod history;
 mod ingest;
 mod intent;
+mod markup;
 mod overlay;
 mod session;
 mod source_set;

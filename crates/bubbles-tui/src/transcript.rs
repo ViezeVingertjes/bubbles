@@ -1,5 +1,7 @@
 //! Rolling log of everything the dialogue runner has emitted this session.
 
+use bubbles::MarkupSpan;
+
 /// A single entry in the running session log.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
@@ -14,6 +16,8 @@ pub enum TranscriptEntry {
         speaker: Option<String>,
         /// Fully interpolated line text.
         text: String,
+        /// Markup spans for styled regions of `text`.
+        spans: Vec<MarkupSpan>,
     },
     /// A host command was emitted.
     Command {

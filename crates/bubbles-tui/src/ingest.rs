@@ -31,15 +31,17 @@ pub fn apply_event(
             text,
             tags,
             line_id,
-            ..
+            spans,
         } => {
             transcript.push(TranscriptEntry::Line {
                 speaker: speaker.clone(),
                 text: text.clone(),
+                spans: spans.clone(),
             });
             *current_line = Some(DisplayedLine {
                 speaker,
                 text,
+                spans,
                 line_id,
                 tags,
             });

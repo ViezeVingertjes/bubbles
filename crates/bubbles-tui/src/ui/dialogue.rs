@@ -3,11 +3,12 @@
 use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
-use ratatui::text::{Line, Span};
+use ratatui::text::Span;
 use ratatui::widgets::{Block, Borders, List, ListItem};
 
 use crate::app::AppState;
 use crate::display::DisplayedOption;
+use crate::markup::markup_line;
 
 /// Marker drawn in front of the focused option.
 const FOCUS_MARKER: &str = "> ";
@@ -40,19 +41,18 @@ fn options_list(state: &AppState) -> List<'_> {
     List::new(items).block(Block::default().borders(Borders::ALL).title(" options "))
 }
 
-fn option_item(index: usize, opt: &DisplayedOption, focused: bool) -> ListItem<'_> {
+fn option_item(index: usize, opt: &DisplayedOption, focused: bool) -> ListItem<'static> {
     let marker = if focused {
         FOCUS_MARKER
     } else {
         UNFOCUSED_MARKER
     };
-    let mut spans = vec![
-        Span::raw(marker),
-        Span::raw(format!("{}. ", index + 1)),
-        Span::raw(opt.text.clone()),
-    ];
+
+    let mut line = markup_line(&opt.text, &opt.spans);
+    line.spans.insert(0, Span::raw(format!("{}. ", index + 1)));
+    line.spans.insert(0, Span::raw(marker));
     if !opt.available {
-        spans.push(Span::styled(
+        line.spans.push(Span::styled(
             LOCKED_MARKER,
             Style::default().add_modifier(Modifier::DIM),
         ));
@@ -65,5 +65,5 @@ fn option_item(index: usize, opt: &DisplayedOption, focused: bool) -> ListItem<'
     } else {
         Style::default().add_modifier(Modifier::DIM)
     };
-    ListItem::new(Line::from(spans)).style(style)
+    ListItem::new(line).style(style)
 }

@@ -1,0 +1,38 @@
+// Markup showcase
+//
+// Demonstrates inline markup tags. Tags are stripped from the display text;
+// the TUI uses the resulting span metadata to apply terminal styling.
+//
+// Run:
+//   cargo run -p bubbles-tui -- examples/snippets/markup.bub
+//
+// Supported tags in bubbles-tui:
+//   [b]text[/b]              bold
+//   [i]text[/i]              italic
+//   [u]text[/u]              underline
+//   [dim]text[/dim]          dim
+//   [em]text[/em]            italic (alias)
+//   [color value=NAME]...[/color]   coloured text (red, green, yellow, blue,
+//                                   cyan, magenta, white, gray, and their
+//                                   light* variants)
+//   [pause /]                self-closing; no visible text, zero-length span
+
+title: Markup
+---
+Narrator: [b]Bold[/b], [i]italic[/i], and [u]underline[/u] — the essentials.
+Narrator: Combine them: [b][i]bold-italic[/i][/b], or [u][i]underlined italic[/i][/u].
+Narrator: Use [dim]dim text[/dim] for parenthetical asides.
+Narrator: [color value=red]Danger![/color] [color value=green]All clear.[/color] [color value=yellow]Proceed with caution.[/color]
+Narrator: Mix markup and {$mood} together freely.
+
+<<declare $mood = "caution">>
+
+Narrator: How do you feel about that?
+
+-> [b]Excited![/b] Let's go.
+    Narrator: [color value=green]That's the spirit.[/color] Off you go.
+-> [dim]Cautiously optimistic...[/dim]
+    Narrator: Wise. [i]Very[/i] wise.
+-> [color value=red]Terrified.[/color]
+    Narrator: Understandable. Take a [u]deep breath[/u] first.
+===

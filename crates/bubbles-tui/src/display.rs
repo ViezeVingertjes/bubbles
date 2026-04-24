@@ -1,6 +1,6 @@
 //! View-model types consumed by both the app and the renderer.
 
-use bubbles::DialogueOption;
+use bubbles::{DialogueOption, MarkupSpan};
 
 /// A line of dialogue ready to be drawn on screen.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -9,6 +9,8 @@ pub struct DisplayedLine {
     pub speaker: Option<String>,
     /// Fully interpolated line text (all `{expr}` fragments already resolved).
     pub text: String,
+    /// Markup spans that describe styled regions of [`text`](Self::text).
+    pub spans: Vec<MarkupSpan>,
     /// The `#line:id` tag value for this line, if one was present in the
     /// source. Useful for VO lookup, localisation, and analytics.
     pub line_id: Option<String>,
@@ -21,6 +23,8 @@ pub struct DisplayedLine {
 pub struct DisplayedOption {
     /// Fully interpolated option text.
     pub text: String,
+    /// Markup spans that describe styled regions of [`text`](Self::text).
+    pub spans: Vec<MarkupSpan>,
     /// Whether the option's guard currently passes; false options are
     /// displayed but not selectable.
     pub available: bool,
@@ -35,6 +39,7 @@ impl From<DialogueOption> for DisplayedOption {
     fn from(opt: DialogueOption) -> Self {
         Self {
             text: opt.text,
+            spans: opt.spans,
             available: opt.available,
             line_id: opt.line_id,
             tags: opt.tags,

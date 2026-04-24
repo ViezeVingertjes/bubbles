@@ -8,6 +8,7 @@ use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
 
 use crate::app::AppState;
 use crate::display::FocusPanel;
+use crate::markup::markup_line;
 use crate::transcript::TranscriptEntry;
 
 /// Draws the transcript pane into `area`.
@@ -64,16 +65,22 @@ fn format_entry(entry: &TranscriptEntry) -> Line<'_> {
             format!("[\u{2190} {name}]"),
             Style::default().add_modifier(Modifier::DIM),
         )),
-        TranscriptEntry::Line { speaker, text } => {
-            let mut spans = Vec::with_capacity(2);
+        TranscriptEntry::Line {
+            speaker,
+            text,
+            spans: markup_spans,
+        } => {
+            let mut line = markup_line(text, markup_spans);
             if let Some(spk) = speaker.as_deref() {
-                spans.push(Span::styled(
-                    format!("{spk}: "),
-                    Style::default().add_modifier(Modifier::BOLD),
-                ));
+                line.spans.insert(
+                    0,
+                    Span::styled(
+                        format!("{spk}: "),
+                        Style::default().add_modifier(Modifier::BOLD),
+                    ),
+                );
             }
-            spans.push(Span::raw(text.clone()));
-            Line::from(spans)
+            line
         }
         TranscriptEntry::Command { name, args, tags } => {
             let joined_args = args.join(" ");
