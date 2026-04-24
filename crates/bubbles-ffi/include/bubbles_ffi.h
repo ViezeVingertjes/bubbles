@@ -106,8 +106,9 @@ int32_t bubbles_runner_register_function(void *runner, const char *name_ptr, siz
 int32_t bubbles_runner_start(void *runner, const char *node_ptr, size_t node_len);
 
 /**
- * Next event. Returns BUBBLES_OK and sets *out_event_json to a malloc'd NUL-terminated string,
- * BUBBLES_DONE if finished (*out_event_json = NULL), or BUBBLES_ERR.
+ * Next event. Returns BUBBLES_OK and sets *out_event_json to a library-owned NUL-terminated string
+ * (free with bubbles_string_free, not free()), BUBBLES_DONE if finished (*out_event_json = NULL),
+ * or BUBBLES_ERR.
  */
 int32_t bubbles_runner_next_event(void *runner, char **out_event_json);
 
@@ -117,7 +118,7 @@ int32_t bubbles_runner_select_option(void *runner, size_t index);
 int32_t bubbles_runner_variable_get_json(void *runner, const char *name_ptr, size_t name_len,
                                          char **out_json);
 
-/** Set variable from JSON value (bool, number, or string). */
+/** Set variable from JSON value: plain bool/number/string, or {"Bool":…}/{"Number":…}/{"Text":…}. */
 int32_t bubbles_runner_variable_set_json(void *runner, const char *name_ptr, size_t name_len,
                                          const char *value_json_ptr, size_t value_json_len);
 

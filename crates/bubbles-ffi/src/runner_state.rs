@@ -22,7 +22,10 @@ pub unsafe extern "C" fn bubbles_copy_utf8(ptr: *const c_char, len: usize) -> *m
         Ok(s) => CString::new(s)
             .ok()
             .map_or(std::ptr::null_mut(), |c| c.into_raw()),
-        Err(_) => std::ptr::null_mut(),
+        Err(e) => {
+            crate::error::set_err(e);
+            std::ptr::null_mut()
+        }
     }
 }
 
