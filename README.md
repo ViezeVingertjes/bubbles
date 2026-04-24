@@ -20,6 +20,8 @@ primitives, zero allocations in the hot path beyond the events themselves.
 
 **Requirements:** Rust **1.94** or later (see `rust-version` in `Cargo.toml`).
 
+**Unity / C#:** the workspace includes [`bubbles-ffi`](crates/bubbles-ffi/) (a small `cdylib` with a C header and JSON events for P/Invoke). Build with `cargo build -p bubbles-ffi --release`.
+
 ---
 
 ## Features

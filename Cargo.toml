@@ -2,6 +2,7 @@
 resolver = "3"
 members = [
     "crates/bubbles-dialogue",
+    "crates/bubbles-ffi",
     "crates/bubbles-tui",
 ]
 
