@@ -263,17 +263,17 @@ impl<S: VariableStorage> Runner<S> {
 
     // ── save / load ───────────────────────────────────────────────────────────
 
-    /// Captures the current session state into a serialisable `RunnerSnapshot`.
+    /// Captures the current session state into a [`RunnerSnapshot`](crate::RunnerSnapshot).
     ///
     /// The snapshot records the active node title, visit counts, and the set of
-    /// exhausted `<<once>>` blocks.  Variable storage is **not** included; serialise
-    /// it via [`Runner::storage`] alongside the snapshot.
+    /// exhausted `<<once>>` blocks. Variable storage is **not** included; persist
+    /// it via [`Runner::storage`] alongside the snapshot when saving.
     ///
     /// Restoring with [`Runner::restore`] will restart execution from the beginning
     /// of the snapshotted node.
     ///
-    /// Only available with the `serde` feature.
-    #[cfg(feature = "serde")]
+    /// Enable the `serde` feature on `bubbles-dialogue` if you need `Serialize` /
+    /// `Deserialize` on [`RunnerSnapshot`](crate::RunnerSnapshot).
     #[must_use]
     pub fn snapshot(&self) -> crate::runtime::RunnerSnapshot {
         crate::runtime::RunnerSnapshot {
@@ -291,9 +291,6 @@ impl<S: VariableStorage> Runner<S> {
     ///
     /// Returns [`DialogueError::UnknownNode`] if the snapshotted node no longer
     /// exists in the program (e.g. after a script update).
-    ///
-    /// Only available with the `serde` feature.
-    #[cfg(feature = "serde")]
     pub fn restore(&mut self, snapshot: crate::runtime::RunnerSnapshot) -> Result<()> {
         self.visits = snapshot.visits;
         self.once_seen = snapshot.once_seen;

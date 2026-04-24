@@ -41,7 +41,7 @@
 //! |--------|----------|
 //! | [`value`] | [`Value`], [`VariableStorage`], [`HashMapStorage`] |
 //! | [`compiler`] | [`compile`], [`compile_many`], [`validate`], [`Program`], [`VariableDecl`] |
-//! | [`runtime`] | [`Runner`], [`RunnerPhase`], [`DialogueEvent`], [`LineProvider`], [`line_id_from_tags`], `RunnerSnapshot` (serde) |
+//! | [`runtime`] | [`Runner`], [`RunnerPhase`], [`DialogueEvent`], [`LineProvider`], [`line_id_from_tags`], [`RunnerSnapshot`] |
 //! | [`library`] | [`FunctionLibrary`] and built-in functions |
 //! | [`saliency`] | [`SaliencyStrategy`], [`FirstAvailable`], [`BestLeastRecentlyViewed`], `RandomAvailable` (`rand` feature) |
 //!
@@ -58,7 +58,6 @@ pub mod value;
 pub use compiler::{Program, VariableDecl, compile, compile_many, validate};
 pub use error::{DialogueError, Result};
 pub use library::FunctionLibrary;
-#[cfg(feature = "serde")]
 pub use runtime::RunnerSnapshot;
 pub use runtime::{
     DialogueEvent, DialogueOption, HashMapProvider, LineProvider, MarkupSpan, PassthroughProvider,
