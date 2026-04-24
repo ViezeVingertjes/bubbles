@@ -11,7 +11,7 @@
 
 No async. No global state. No engine lock-in. Pull events when your game is ready, pick an option, continue. That's the whole API.
 
-Works with Bevy, Godot-rust, Macroquad, or any custom engine. Unity and other native hosts can use [`bubbles-ffi`](crates/bubbles-ffi/) — a C ABI wrapper with JSON events for P/Invoke.
+Works with Bevy, Godot-rust, Macroquad, or any custom engine. Unity and other native hosts can use [`bubbles-ffi`](crates/bubbles-ffi/) - a C ABI wrapper with JSON events for P/Invoke.
 
 ---
 
@@ -54,7 +54,7 @@ cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/servic
 
 ```toml
 [dependencies]
-bubbles-dialogue = "0.7.0"
+bubbles-dialogue = "0.8.0"
 ```
 
 On crates.io the package is **`bubbles-dialogue`** (the name **`bubbles`** was already taken). The Rust library is still **`bubbles`**, so you write `use bubbles::{…}` in code.
@@ -103,13 +103,13 @@ fn main() -> Result<(), bubbles::DialogueError> {
 |---|---|
 | Lines and options | Plain text, `Speaker:` attribution, `->` branches with optional `<<if>>` guards |
 | Variables | `Number`, `Text`, `Bool`; `<<declare>>`, `<<set>>`, full expression language |
-| Inline interpolation | `{$var}`, `{$gold / 2}`, `{plural($n, "gem", "gems")}` — evaluated before the event arrives |
-| Inline markup | `[b]text[/b]`, `[color value=red]...[/color]`, `[pause /]` — stripped from text, returned as byte-precise `MarkupSpan`s |
+| Inline interpolation | `{$var}`, `{$gold / 2}`, `{plural($n, "gem", "gems")}` - evaluated before the event arrives |
+| Inline markup | `[b]text[/b]`, `[color value=red]...[/color]`, `[pause /]` - stripped from text, returned as byte-precise `MarkupSpan`s |
 | Jumps and detours | `<<jump Node>>` replaces the call stack; `<<detour Node>>` / `<<return>>` push/pop it |
 | Conditionals | `<<if>>` / `<<elseif>>` / `<<else>>` / `<<endif>>` |
 | Once blocks | `<<once>>` content that fires exactly once, with optional `<<else>>` for every subsequent visit |
-| Line groups | `=>` alternatives chosen by the active saliency strategy — no repeated barks |
-| Node groups | Multiple nodes sharing a title with `when:` conditions — great for time-of-day, relationship state |
+| Line groups | `=>` alternatives chosen by the active saliency strategy - no repeated barks |
+| Node groups | Multiple nodes sharing a title with `when:` conditions - great for time-of-day, relationship state |
 | Saliency | `FirstAvailable`, `RandomAvailable`, `BestLeastRecentlyViewed`, or your own |
 | Host commands | `<<play_sound bell>>` surfaces as `DialogueEvent::Command` |
 | Built-in functions | `visited`, `visited_count`, `random`, `random_range`, `dice`, `round`, `floor`, `ceil`, `min`, `max`, `abs`, `clamp`, `string`, `int`, `plural`, `select` |
@@ -119,6 +119,7 @@ fn main() -> Result<(), bubbles::DialogueError> {
 | Bookmarks / save | `Runner::snapshot` / `Runner::restore` with `RunnerSnapshot` (always available); enable `serde` to persist snapshot and `HashMapStorage` to disk |
 | Line modes | `#narration` and `#debug` on lines set `DialogueEvent::Line::line_mode` for filtering or routing |
 | Variable inspection | `Runner::all_variables`, `Runner::variable`, `Runner::variable_ref`; `VariableStorage::all_variables` (override on custom stores) |
+|| Option groups | `#group:<name>` on options for UI constraints (radio buttons, mutually exclusive choices) |
 
 ---
 
@@ -134,13 +135,13 @@ fn main() -> Result<(), bubbles::DialogueError> {
 
 ## Prior art
 
-Bubbles sits in the same space as [Yarn Spinner](https://yarnspinner.dev) and [Ink](https://github.com/inkle/ink). The difference is integration model: Bubbles compiles to a plain Rust struct and runs wherever your binary runs — no binary format, no external runtime, no Unity package. If you want something that drops into a Bevy, Godot-rust, or Macroquad project in an afternoon, that's what this is for.
+Bubbles sits in the same space as [Yarn Spinner](https://yarnspinner.dev) and [Ink](https://github.com/inkle/ink). The difference is integration model: Bubbles compiles to a plain Rust struct and runs wherever your binary runs - no binary format, no external runtime, no Unity package. If you want something that drops into a Bevy, Godot-rust, or Macroquad project in an afternoon, that's what this is for.
 
 ---
 
 ## Learn more
 
-The full guide — language reference, integration walkthrough, localisation, save/load, WebAssembly, and annotated examples — lives at **<https://viezevingertjes.github.io/bubbles/>**.
+The full guide - language reference, integration walkthrough, localisation, save/load, WebAssembly, and annotated examples - lives at **<https://viezevingertjes.github.io/bubbles/>**.
 
 ---
 
