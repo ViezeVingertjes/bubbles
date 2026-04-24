@@ -16,6 +16,20 @@ use crate::runtime::provider::{LineProvider, PassthroughProvider};
 use crate::saliency::{FirstAvailable, SaliencyStrategy};
 use crate::value::VariableStorage;
 
+/// Where the [`Runner`] is in its `start` / `next_event` / [`Runner::select_option`] protocol.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RunnerPhase {
+    /// No dialogue running; call [`Runner::start`].
+    Idle,
+    /// Advancing lines and statements; call [`Runner::next_event`].
+    Running,
+    /// The last event was [`DialogueEvent::Options`]; call [`Runner::select_option`] before
+    /// [`Runner::next_event`].
+    AwaitingOption,
+    /// The current node finished; the stream is finished until the next [`Runner::start`].
+    Done,
+}
+
 /// Execution state of the runner.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum State {
@@ -68,6 +82,28 @@ pub struct Runner<S: VariableStorage> {
 }
 
 impl<S: VariableStorage> Runner<S> {
+    fn clear_event_queues(&mut self) {
+        self.pending.clear();
+        self.option_bodies.clear();
+    }
+
+    /// Returns read-only access to the compiled program (node titles, declarations, etc.).
+    #[must_use]
+    pub const fn program(&self) -> &Program {
+        &self.program
+    }
+
+    /// Returns the runner’s current phase for UI or protocol guards.
+    #[must_use]
+    pub const fn phase(&self) -> RunnerPhase {
+        match self.state {
+            State::Idle => RunnerPhase::Idle,
+            State::Running => RunnerPhase::Running,
+            State::AwaitingOption => RunnerPhase::AwaitingOption,
+            State::Done => RunnerPhase::Done,
+        }
+    }
+
     /// Creates a new runner for the given program and variable storage.
     #[must_use]
     pub fn new(program: Program, storage: S) -> Self {
@@ -88,6 +124,10 @@ impl<S: VariableStorage> Runner<S> {
 
     /// Starts execution at the given node.
     ///
+    /// Clears any queued events and abandons an in-flight choice so a new conversation
+    /// cannot inherit stale [`DialogueEvent::DialogueComplete`] or option state from a
+    /// prior [`Runner::start`].
+    ///
     /// # Errors
     /// Returns [`DialogueError::UnknownNode`] if the title does not exist in the program.
     pub fn start(&mut self, node: &str) -> Result<()> {
@@ -95,6 +135,7 @@ impl<S: VariableStorage> Runner<S> {
             return Err(DialogueError::UnknownNode(node.to_owned()));
         }
         let body = self.pick_node_body(node)?;
+        self.clear_event_queues();
         let title: Arc<str> = Arc::from(node);
         self.stack.clear();
         self.stack.push(Frame::new(title, body));
@@ -257,8 +298,7 @@ impl<S: VariableStorage> Runner<S> {
         self.visits = snapshot.visits;
         self.once_seen = snapshot.once_seen;
         self.stack.clear();
-        self.pending.clear();
-        self.option_bodies.clear();
+        self.clear_event_queues();
         self.state = State::Idle;
         if let Some(node) = snapshot.current_node {
             self.start(&node)?;

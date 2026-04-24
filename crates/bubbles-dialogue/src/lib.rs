@@ -37,7 +37,7 @@
 //! |--------|----------|
 //! | [`value`] | [`Value`], [`VariableStorage`], [`HashMapStorage`] |
 //! | [`compiler`] | [`compile`], [`compile_many`], [`validate`], [`Program`], [`VariableDecl`] |
-//! | [`runtime`] | [`Runner`], [`DialogueEvent`], [`LineProvider`], [`line_id_from_tags`], `RunnerSnapshot` (serde) |
+//! | [`runtime`] | [`Runner`], [`RunnerPhase`], [`DialogueEvent`], [`LineProvider`], [`line_id_from_tags`], `RunnerSnapshot` (serde) |
 //! | [`library`] | [`FunctionLibrary`] and built-in functions |
 //! | [`saliency`] | [`SaliencyStrategy`], [`FirstAvailable`], [`BestLeastRecentlyViewed`], `RandomAvailable` (`rand` feature) |
 //!
@@ -58,7 +58,7 @@ pub use library::FunctionLibrary;
 pub use runtime::RunnerSnapshot;
 pub use runtime::{
     DialogueEvent, DialogueOption, HashMapProvider, LineProvider, MarkupSpan, PassthroughProvider,
-    Runner, RunnerBuilder, line_id_from_tags,
+    Runner, RunnerBuilder, RunnerPhase, line_id_from_tags,
 };
 #[cfg(feature = "rand")]
 pub use saliency::RandomAvailable;

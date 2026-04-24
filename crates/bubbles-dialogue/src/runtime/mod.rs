@@ -12,6 +12,6 @@ pub use builder::RunnerBuilder;
 pub use eval::eval;
 pub use event::{DialogueEvent, DialogueOption, MarkupSpan, line_id_from_tags};
 pub use provider::{HashMapProvider, LineProvider, PassthroughProvider};
-pub use runner::Runner;
+pub use runner::{Runner, RunnerPhase};
 #[cfg(feature = "serde")]
 pub use snapshot::RunnerSnapshot;
