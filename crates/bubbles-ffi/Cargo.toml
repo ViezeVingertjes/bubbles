@@ -1,6 +1,6 @@
 [package]
 name        = "bubbles-ffi"
-version     = "0.5.0"
+version     = "0.6.0"
 description = "C ABI for bubbles-dialogue (Unity / P/Invoke and other native hosts)."
 readme      = "README.md"
 keywords    = ["dialogue", "ffi", "unity", "game-development", "interop"]

@@ -1,6 +1,6 @@
 [package]
 name        = "bubbles-tui"
-version     = "0.5.0"
+version     = "0.6.0"
 description = "Terminal UI writer tool for the bubbles-dialogue runtime."
 readme      = "README.md"
 keywords    = ["dialogue", "tui", "ratatui", "interactive-fiction", "narrative"]

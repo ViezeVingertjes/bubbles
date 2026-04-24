@@ -54,7 +54,7 @@ cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/servic
 
 ```toml
 [dependencies]
-bubbles-dialogue = "0.5"
+bubbles-dialogue = "0.6"
 ```
 
 ```rust

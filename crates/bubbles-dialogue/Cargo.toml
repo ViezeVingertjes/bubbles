@@ -1,6 +1,6 @@
 [package]
 name          = "bubbles-dialogue"
-version       = "0.5.0"
+version       = "0.6.0"
 description   = "Lightweight engine-agnostic dialogue runtime for Rust games."
 documentation = "https://docs.rs/bubbles-dialogue"
 readme        = "../../README.md"
