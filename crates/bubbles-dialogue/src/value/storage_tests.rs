@@ -24,6 +24,22 @@ fn overwrite_updates_value() {
 }
 
 #[test]
+fn hash_map_storage_all_variables_lists_entries() {
+    let mut s = HashMapStorage::new();
+    s.set("$a", Value::Number(1.0));
+    s.set("$b", Value::Text("x".into()));
+    let mut pairs = s.all_variables();
+    pairs.sort_by(|x, y| x.0.cmp(&y.0));
+    assert_eq!(
+        pairs,
+        vec![
+            ("$a".into(), Value::Number(1.0)),
+            ("$b".into(), Value::Text("x".into())),
+        ]
+    );
+}
+
+#[test]
 fn hash_map_storage_get_ref_returns_borrowed() {
     let mut s = HashMapStorage::new();
     s.set("$x", Value::Text("hello".into()));

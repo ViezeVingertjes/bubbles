@@ -4,6 +4,7 @@ pub(super) mod evaluation;
 pub(super) mod execute;
 pub(super) mod node_body;
 
+use std::borrow::Cow;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::Arc;
 
@@ -14,7 +15,7 @@ use crate::library::FunctionLibrary;
 use crate::runtime::event::DialogueEvent;
 use crate::runtime::provider::{LineProvider, PassthroughProvider};
 use crate::saliency::{FirstAvailable, SaliencyStrategy};
-use crate::value::VariableStorage;
+use crate::value::{Value, VariableStorage};
 
 /// Where the [`Runner`] is in its `start` / `next_event` / [`Runner::select_option`] protocol.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -230,6 +231,28 @@ impl<S: VariableStorage> Runner<S> {
     /// Returns a mutable reference to the variable storage.
     pub const fn storage_mut(&mut self) -> &mut S {
         &mut self.storage
+    }
+
+    /// Returns all variables known to storage (see [`VariableStorage::all_variables`]).
+    ///
+    /// For [`HashMapStorage`](crate::HashMapStorage) this is every key/value pair.
+    /// Custom stores return whatever their [`VariableStorage::all_variables`]
+    /// implementation provides (often empty unless overridden).
+    #[must_use]
+    pub fn all_variables(&self) -> Vec<(String, Value)> {
+        self.storage.all_variables()
+    }
+
+    /// Returns a clone of the value for `name`, or `None` if unset.
+    #[must_use]
+    pub fn variable(&self, name: &str) -> Option<Value> {
+        self.storage.get(name)
+    }
+
+    /// Borrows the value for `name` when the storage can lend it without cloning.
+    #[must_use]
+    pub fn variable_ref(&self, name: &str) -> Option<Cow<'_, Value>> {
+        self.storage.get_ref(name)
     }
 
     /// Returns a mutable reference to the function library (for registering host functions).

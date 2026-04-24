@@ -43,6 +43,15 @@ pub trait VariableStorage {
     fn get_ref(&self, name: &str) -> Option<Cow<'_, Value>> {
         self.get(name).map(Cow::Owned)
     }
+
+    /// Returns every `(variable_name, value)` pair this storage currently holds.
+    ///
+    /// Intended for debug overlays, save editors, and tests. The default
+    /// implementation returns an empty vector; override it when you can
+    /// enumerate variables (as [`HashMapStorage`] does).
+    fn all_variables(&self) -> Vec<(String, Value)> {
+        Vec::new()
+    }
 }
 
 /// Default in-memory variable store backed by a [`HashMap`].
@@ -84,6 +93,13 @@ impl VariableStorage for HashMapStorage {
 
     fn get_ref(&self, name: &str) -> Option<Cow<'_, Value>> {
         self.map.get(name).map(Cow::Borrowed)
+    }
+
+    fn all_variables(&self) -> Vec<(String, Value)> {
+        self.map
+            .iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect()
     }
 }
 
