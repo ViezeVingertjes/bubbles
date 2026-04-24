@@ -17,12 +17,25 @@ DialogueEvent::NodeStarted(name) => {
 
 Good for scene transitions, analytics, or music changes tied to entering a location. Pair it with `NodeComplete` for symmetric fade in / fade out.
 
-## `Line { speaker, text, line_id, tags }`
+## `Line { speaker, text, line_id, tags, line_mode, spans }`
 
 A line ready to display. Interpolation is done, tags are parsed, and the localised template (if any) has already been resolved.
 
 ```rust,ignore
-DialogueEvent::Line { speaker, text, line_id, tags } => {
+use bubbles::LineMode;
+
+DialogueEvent::Line {
+    speaker,
+    text,
+    line_id,
+    tags,
+    line_mode,
+    ..
+} => {
+    if line_mode == LineMode::Debug && !cfg!(debug_assertions) {
+        return; // skip QA lines in release builds
+    }
+
     // Voice-over lookup via stable id
     if let Some(id) = &line_id {
         audio.play_voice_over(id);
@@ -45,7 +58,8 @@ Fields:
 - `speaker: Option<String>` - the `Speaker:` prefix, or `None` for narrator lines.
 - `text: String` - already interpolated, already localised, markup tags stripped.
 - `line_id: Option<String>` - the `#line:...` stable id if present. Use this for VO lookups and localisation.
-- `tags: Vec<String>` - every other `#tag` on the line. Portrait cues, audio buses, subtitle styles - all yours to interpret.
+- `tags: Vec<String>` - every other `#tag` on the line. Portrait cues, audio buses, subtitle styles, plus `#narration` / `#debug` if you used them for `line_mode`.
+- `line_mode: LineMode` - `Normal`, `Narration` (from a `#narration` tag), or `Debug` (from `#debug`; wins if both tags are present). Same tags still appear in `tags` if you need them.
 - `spans: Vec<MarkupSpan>` - inline markup spans over `text`, in source order. Empty when the line has no markup tags. Each span carries a `name`, byte `start`, byte `length`, and optional `properties`. See [Markup](../language/markup.md).
 
 ## `Options(Vec<DialogueOption>)`
@@ -132,7 +146,17 @@ Putting it together - a minimal but honest frame-tick handler:
 fn tick_dialogue(runner: &mut Runner<HashMapStorage>, engine: &mut Engine) -> bool {
     loop {
         match runner.next_event() {
-            Ok(Some(DialogueEvent::Line { speaker, text, line_id, tags })) => {
+            Ok(Some(DialogueEvent::Line {
+                speaker,
+                text,
+                line_id,
+                tags,
+                line_mode,
+                ..
+            })) => {
+                if line_mode == bubbles::LineMode::Debug && !cfg!(debug_assertions) {
+                    continue;
+                }
                 if let Some(id) = &line_id {
                     engine.audio.play_voice_over(id);
                 }

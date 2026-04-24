@@ -54,7 +54,7 @@ cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/servic
 
 ```toml
 [dependencies]
-bubbles-dialogue = "0.6.1"
+bubbles-dialogue = "0.7.0"
 ```
 
 On crates.io the package is **`bubbles-dialogue`** (the name **`bubbles`** was already taken). The Rust library is still **`bubbles`**, so you write `use bubbles::{…}` in code.
@@ -116,7 +116,9 @@ fn main() -> Result<(), bubbles::DialogueError> {
 | Custom functions | Register closures callable from any expression |
 | Localisation | `LineProvider` for `#line:id` lookup; translated templates can contain `{expr}` and `[markup]` |
 | Multi-file | `compile_many(&[(name, src)])` with duplicate-title detection and cross-file jump validation |
-| Save / load | `RunnerSnapshot` via the `serde` feature |
+| Bookmarks / save | `Runner::snapshot` / `Runner::restore` with `RunnerSnapshot` (always available); enable `serde` to persist snapshot and `HashMapStorage` to disk |
+| Line modes | `#narration` and `#debug` on lines set `DialogueEvent::Line::line_mode` for filtering or routing |
+| Variable inspection | `Runner::all_variables`, `Runner::variable`, `Runner::variable_ref`; `VariableStorage::all_variables` (override on custom stores) |
 
 ---
 

@@ -5,30 +5,33 @@ Saving a mid-conversation means saving two things:
 1. The runner's internal state - current node, visit counts, which `<<once>>` blocks have fired.
 2. Your variable storage - all the `$variables` the dialogue has touched.
 
-Bubbles makes (1) serialisable through `RunnerSnapshot`. You handle (2) however your game already handles saves.
+`Runner::snapshot` and `Runner::restore` work on a [`RunnerSnapshot`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.RunnerSnapshot.html) without any feature flags. That covers in-memory bookmarks and anything you can clone yourself.
 
-Enable the `serde` feature to get snapshot serialisation:
+To write a snapshot or `HashMapStorage` to JSON, bincode, or your save format, enable the `serde` feature so those types derive `Serialize` / `Deserialize`:
 
 ```toml
 [dependencies]
 bubbles-dialogue = { version = "{{#include ../../../VERSION}}", features = ["serde"] }
 ```
 
+You still handle (2) however your game already handles saves. `serde` is only required when you persist to disk or over the network.
+
 ## Snapshot the runner
 
 ```rust,ignore
 let snapshot = runner.snapshot();
+// With the serde feature:
 let json = serde_json::to_string(&snapshot)?;
 std::fs::write("save.json", json)?;
 ```
 
-`snapshot()` returns a `RunnerSnapshot` - a small, cheap copy containing:
+`snapshot()` always returns a `RunnerSnapshot` - a small, cheap copy containing:
 
 - `current_node: Option<String>` - the node the runner was in.
 - `visits: HashMap<String, u32>` - how many times each node has completed.
 - `once_seen: HashSet<String>` - fired `<<once>>` block ids.
 
-That's everything specific to the runner. Serialise it as part of your save file.
+That's everything specific to the runner. With `serde`, serialize it alongside storage as part of your save file.
 
 ## Save your variables separately
 

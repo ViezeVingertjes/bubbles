@@ -53,6 +53,8 @@ Options take tags the same way:
 -> Charge in! #combat #loud
 ```
 
+At runtime those strings show up on each [`DialogueOption::tags`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.DialogueOption.html) inside [`DialogueEvent::Options`](https://docs.rs/bubbles-dialogue/latest/bubbles/enum.DialogueEvent.html), the same idea as [`DialogueEvent::Line::tags`](https://docs.rs/bubbles-dialogue/latest/bubbles/enum.DialogueEvent.html) for spoken lines.
+
 ## Node tags
 
 Nodes can carry tags in their header:

@@ -99,6 +99,16 @@ use bubbles::{Value, VariableStorage};
 runner.storage_mut().set("$player_name", Value::Text(player.name.clone()));
 ```
 
+For debug HUDs, cheats, or tests you can also read through the runner without touching storage generics:
+
+```rust,ignore
+let _all = runner.all_variables(); // Vec<(String, Value)>; empty unless storage overrides `all_variables`
+let _one = runner.variable("$gold");
+let _borrowed = runner.variable_ref("$name"); // Cow<Value>, avoids cloning strings when using HashMapStorage
+```
+
+`all_variables` is implemented for [`HashMapStorage`](./storage.md) and lists every key. Custom [`VariableStorage`](./storage.md) types get a default empty list unless you override [`VariableStorage::all_variables`](https://docs.rs/bubbles-dialogue/latest/bubbles/trait.VariableStorage.html#method.all_variables).
+
 ## Threading
 
 `Runner` is `Send` when its storage is - that's true for `HashMapStorage`. Run dialogue on any thread you like; just don't share a single runner across threads without synchronisation. The pull-based API is designed to slot into whatever update scheme your engine uses (single thread, job system, task pool).

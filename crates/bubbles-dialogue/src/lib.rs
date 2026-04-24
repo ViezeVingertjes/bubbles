@@ -41,7 +41,7 @@
 //! |--------|----------|
 //! | [`value`] | [`Value`], [`VariableStorage`], [`HashMapStorage`] |
 //! | [`compiler`] | [`compile`], [`compile_many`], [`validate`], [`Program`], [`VariableDecl`] |
-//! | [`runtime`] | [`Runner`], [`RunnerPhase`], [`DialogueEvent`], [`LineProvider`], [`line_id_from_tags`], [`RunnerSnapshot`] |
+//! | [`runtime`] | [`Runner`], [`RunnerPhase`], [`DialogueEvent`], [`LineMode`], [`LineProvider`], [`line_id_from_tags`], [`line_mode_from_tags`], [`RunnerSnapshot`] |
 //! | [`library`] | [`FunctionLibrary`] and built-in functions |
 //! | [`saliency`] | [`SaliencyStrategy`], [`FirstAvailable`], [`BestLeastRecentlyViewed`], `RandomAvailable` (`rand` feature) |
 //!
