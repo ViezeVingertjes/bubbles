@@ -3,3 +3,12 @@ Cargo.lock
 .cursor/
 /book/book/
 /site/
+
+# .NET (dotnet build / Visual Studio / Rider)
+**/bin/
+**/obj/
+.vs/
+*.user
+*.userosscache
+*.suo
+TestResults/
