@@ -3,7 +3,7 @@
 Every public type, trait, and function has full rustdoc. Two places to read it:
 
 - **This site, under [`/api/bubbles/`](./api/bubbles/index.html)** - built from the same commit as the guide you're reading.
-- **[docs.rs](https://docs.rs/bubbles-dialogue)** - rebuilt on every crate release.
+- **[docs.rs](https://docs.rs/bubbles-dialogue)** - rebuilt on every crate release (crates.io package **bubbles-dialogue**, documented API crate **bubbles**).
 
 Start there for the authoritative signatures, trait definitions, and error types. The guide points into specific pages as you go.
 

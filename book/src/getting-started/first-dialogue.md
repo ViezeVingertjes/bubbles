@@ -17,6 +17,8 @@ Or by hand:
 bubbles-dialogue = "0.6"
 ```
 
+The crates.io package key is **`bubbles-dialogue`**. In Rust you still **`use bubbles::…`** everywhere; only the dependency name in `Cargo.toml` is hyphenated.
+
 > **Requires Rust 1.94 or later.** Bubbles targets a recent stable toolchain so it can lean on modern features without `unsafe`.
 
 ## Write a dialogue

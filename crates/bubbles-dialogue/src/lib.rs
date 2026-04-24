@@ -1,5 +1,9 @@
 //! Lightweight, engine-agnostic dialogue runtime for Rust games.
 //!
+//! On [crates.io](https://crates.io/crates/bubbles-dialogue) the package is **bubbles-dialogue**
+//! because the crate name **bubbles** was already taken there. This library is still named
+//! **bubbles**: depend on `bubbles-dialogue` in `Cargo.toml` and `use bubbles::…` in code.
+//!
 //! Write branching dialogue in `.bub` scripts, compile them once, then drive
 //! the dialogue from any game loop via a pull-based event API.
 //!

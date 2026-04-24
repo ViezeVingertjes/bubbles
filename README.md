@@ -57,6 +57,8 @@ cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/servic
 bubbles-dialogue = "0.6"
 ```
 
+On crates.io the package is **`bubbles-dialogue`** (the name **`bubbles`** was already taken). The Rust library is still **`bubbles`**, so you write `use bubbles::{…}` in code.
+
 ```rust
 use bubbles::{compile, DialogueEvent, HashMapStorage, Runner};
 

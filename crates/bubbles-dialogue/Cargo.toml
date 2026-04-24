@@ -11,6 +11,8 @@ license.workspace      = true
 repository.workspace   = true
 homepage.workspace     = true
 rust-version.workspace = true
+
+# crates.io package is `bubbles-dialogue`; Rust import path stays `bubbles`.
 [lib]
 name = "bubbles"
 

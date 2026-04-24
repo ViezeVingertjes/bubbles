@@ -37,7 +37,7 @@ About 30 lines. Playable in under a minute. Every feature fits in a single node,
 
 ## What you'll need
 
-- A Rust project with `bubbles-dialogue` in `Cargo.toml` (see [Your First Dialogue](../getting-started/first-dialogue.md) if you haven't done this yet)
+- A Rust project with the **bubbles-dialogue** dependency in `Cargo.toml` and **`use bubbles::…`** in code (see [Your First Dialogue](../getting-started/first-dialogue.md) if you haven't done this yet)
 - The TUI runner open in a second terminal (see [Using the TUI](../getting-started/tui.md))
 - A file called `mira.bub` somewhere you can edit and reload
 
