@@ -38,6 +38,17 @@ jobs:
       - name: File-size check
         run: bash scripts/check-file-sizes.sh
 
+      - name: Setup .NET SDK (bubbles-ffi smoke)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: bubbles-ffi P/Invoke smoke (.NET)
+        run: |
+          cargo build -p bubbles-ffi --release
+          cd crates/bubbles-ffi/tests/dotnet_smoke
+          LD_LIBRARY_PATH="${GITHUB_WORKSPACE}/target/release" dotnet run -c Release
+
       - name: cargo-deny
         uses: EmbarkStudios/cargo-deny-action@v2
         with:
