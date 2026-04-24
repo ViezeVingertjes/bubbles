@@ -36,6 +36,7 @@ primitives, zero allocations in the hot path beyond the events themselves.
 | Typed variables | `Number`, `Text`, `Bool`; `<<set $x = expr>>` |
 | Expressions | Arithmetic, comparison, boolean, unary, parens, proper precedence |
 | Inline substitution | `{expr}` anywhere in line / option / command text |
+| Inline markup | `[tag]text[/tag]` and `[tag /]` stripped from display text; byte-precise `MarkupSpan` list returned alongside the text for renderers |
 | Host commands | `<<verb arg1 arg2>>` surfaced as `DialogueEvent::Command` |
 | Built-in functions | `visited`, `visited_count`, `random`, `random_range`, `dice`, `round`, `floor`, `ceil`, `min`, `max`, `abs`, `clamp`, `string`, `int`, `plural`, `select` |
 | Custom functions | Host-registered closures callable inside any expression |
@@ -160,6 +161,10 @@ The count is {$count}.         # inline expression substitution
 => Line variant C.
 
 <<my_command arg1 arg2>>       # host command - surfaced as DialogueEvent::Command
+
+[b]bold[/b] [i]italic[/i]      # inline markup - stripped from text, returned as MarkupSpan
+[color value=red]Danger![/color]
+[pause /]                      # self-closing (zero-length span)
 ===
 ```
 

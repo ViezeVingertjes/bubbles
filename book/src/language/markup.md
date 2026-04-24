@@ -108,3 +108,7 @@ The answer is [42].
 ```
 
 Both arrive with the brackets intact and an empty `spans` list.
+
+---
+
+> **Next:** [Commands](./commands.md)

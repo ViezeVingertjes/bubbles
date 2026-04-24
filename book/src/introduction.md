@@ -17,6 +17,7 @@ No async. No global state. No engine lock-in. Bubbles runs wherever Rust runs - 
 - A tiny text format for nodes, lines, options, and branching
 - Typed variables (`Number`, `Text`, `Bool`) with a real expression language
 - Jumps, detours, conditionals, `<<once>>` blocks, interpolation, host commands
+- Inline markup (`[b]text[/b]`, `[wave]text[/wave]`, `[pause /]`) stripped to byte-precise spans your renderer consumes
 - Line groups and node groups for variety (no more hearing the same bark twice)
 - A pluggable localisation seam, custom functions, and custom saliency strategies
 - Save/load via serde snapshots

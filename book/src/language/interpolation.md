@@ -100,6 +100,18 @@ Du hast {$n} {plural($n, "Edelstein", "Edelsteine")} gefunden.
 
 Same variables, same expressions, grammatically correct output.
 
+## Markup and interpolation together
+
+`{expr}` and `[markup]` syntax both live in the same text and are processed in one pass. Byte offsets in the returned `MarkupSpan`s are always relative to the final, expression-substituted string:
+
+```text
+[b]{$name}[/b] found the key.
+```
+
+If `$name` is `"Alice"`, the text arrives as `"Alice found the key."` and the span is `{ name: "b", start: 0, length: 5 }`. The span points at the right characters regardless of how long the expression result turns out to be.
+
+See [Markup](./markup.md) for the full tag syntax and span reference.
+
 ---
 
-> **Next:** [Commands](./commands.md)
+> **Next:** [Markup](./markup.md)

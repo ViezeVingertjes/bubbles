@@ -94,6 +94,20 @@ Gendered pronouns:
 
 Translators can reshape these expressions for their language - some languages have more than two plural forms, or different gender structures. Because the expression is evaluated *inside* the template, they have full control.
 
+## Markup in translated strings
+
+Translators can place `[markup]` tags anywhere in their templates. The tags are stripped from the display text and returned as `MarkupSpan`s with byte offsets computed against the translated, expression-evaluated string:
+
+```text
+# English source
+[b]Warning![/b] The bridge is out.
+
+# French translation (in your LineProvider)
+[b]Attention![/b] Le pont est coupé.
+```
+
+The spans come back referencing the correct byte ranges in the French string. The ordering is: translate, evaluate expressions, compute spans — the same as the source language.
+
 ## Falling back gracefully
 
 If your provider returns `None` for an id, Bubbles uses the source text from the script. You won't get a crash - just untranslated text - which makes shipping partial translations painless.

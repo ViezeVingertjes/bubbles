@@ -205,4 +205,61 @@ See [Line Groups](../language/line-groups.md) and [Node Groups and Saliency](../
 
 ---
 
+## markup
+
+**You want to annotate a range of text inside a line without changing the display text: bold, italic, coloured, animated, or anything else your renderer can do.**
+
+```sh
+cargo run -p bubbles-tui -- examples/snippets/markup.bub
+```
+
+Tags are stripped from the text before the event arrives. Alongside the clean text you get a `spans` list that names each annotation and gives its byte range. The terminal UI renders the five built-in tag names it knows: `[b]`, `[i]`, `[u]`, `[dim]`, and `[color value=NAME]`.
+
+Key lines from the script:
+
+```text
+Narrator: [b]Bold[/b], [i]italic[/i], and [u]underline[/u] — the essentials.
+Narrator: [color value=red]Danger![/color] [color value=green]All clear.[/color]
+-> [b]Excited![/b] Let's go.
+-> [dim]Cautiously optimistic...[/dim]
+```
+
+In your game:
+
+```rust,ignore
+DialogueEvent::Line { text, spans, .. } => {
+    // text  = "Bold, italic, and underline — the essentials."
+    // spans = [
+    //   MarkupSpan { name: "b",         start: 0,  length: 4  },
+    //   MarkupSpan { name: "italic",    start: 6,  length: 6  },
+    //   MarkupSpan { name: "underline", start: 18, length: 9  },
+    // ]
+    for span in &spans {
+        match span.name.as_str() {
+            "b" => renderer.bold(span.start, span.length),
+            "i" => renderer.italic(span.start, span.length),
+            "color" => {
+                let color = span.properties.iter()
+                    .find(|(k, _)| k == "value")
+                    .map(|(_, v)| v.as_str())
+                    .unwrap_or("white");
+                renderer.color(span.start, span.length, color);
+            }
+            _ => {}
+        }
+    }
+}
+```
+
+The TUI preview shows the markup applied live: bold options, coloured lines, underlined phrases.
+
+**Remix ideas:**
+- Add `[wave]` or `[shake]` tags and handle them in a custom renderer
+- Add `[sfx name=coin_drop /]` (self-closing) and dispatch audio from the span properties
+- Combine markup with `{$variable}` interpolation: `[b]{$name}[/b]` works as expected
+
+See [Markup](../language/markup.md).
+
+---
+
 > **Next:** [API Reference](../api-reference.md)

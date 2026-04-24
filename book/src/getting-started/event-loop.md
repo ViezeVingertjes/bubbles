@@ -69,11 +69,12 @@ while let Some(event) = runner.next_event()? {
         DialogueEvent::NodeStarted(name) => {
             // good place for a scene transition or analytics ping
         }
-        DialogueEvent::Line { speaker, text, tags, line_id } => {
+        DialogueEvent::Line { speaker, text, spans, tags, line_id } => {
             // render and wait for input
+            // spans: Vec<MarkupSpan> — byte ranges for [b], [color …], etc.
         }
         DialogueEvent::Options(opts) => {
-            // show a menu; each opt has .text, .available, .tags, .line_id
+            // show a menu; each opt has .text, .available, .spans, .tags, .line_id
             runner.select_option(chosen)?;
         }
         DialogueEvent::Command { name, args, tags } => {
