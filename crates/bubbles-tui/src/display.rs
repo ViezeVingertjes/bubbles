@@ -1,6 +1,6 @@
 //! View-model types consumed by both the app and the renderer.
 
-use bubbles::{DialogueOption, MarkupSpan};
+use bubbles::{DialogueOption, LineMode, MarkupSpan};
 
 /// A line of dialogue ready to be drawn on screen.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -16,6 +16,8 @@ pub struct DisplayedLine {
     pub line_id: Option<String>,
     /// Any additional `#tag` values attached to this line in the source.
     pub tags: Vec<String>,
+    /// Classification from `#narration` / `#debug` when present.
+    pub line_mode: LineMode,
 }
 
 /// An option ready to be drawn on screen.

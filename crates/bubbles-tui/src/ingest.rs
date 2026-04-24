@@ -31,6 +31,7 @@ pub fn apply_event(
             text,
             tags,
             line_id,
+            line_mode,
             spans,
         } => {
             transcript.push(TranscriptEntry::Line {
@@ -44,6 +45,7 @@ pub fn apply_event(
                 spans,
                 line_id,
                 tags,
+                line_mode,
             });
             true
         }

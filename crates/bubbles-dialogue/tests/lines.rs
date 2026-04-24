@@ -2,7 +2,7 @@
 
 mod common;
 
-use bubbles::DialogueEvent;
+use bubbles::{DialogueEvent, LineMode};
 
 #[test]
 fn plain_lines_emitted_in_order() {
@@ -16,6 +16,7 @@ fn plain_lines_emitted_in_order() {
                 text: "Hello there.".into(),
                 line_id: None,
                 tags: vec![],
+                line_mode: LineMode::Normal,
                 spans: vec![],
             },
             DialogueEvent::Line {
@@ -23,6 +24,7 @@ fn plain_lines_emitted_in_order() {
                 text: "Hi, how are you?".into(),
                 line_id: None,
                 tags: vec![],
+                line_mode: LineMode::Normal,
                 spans: vec![],
             },
             DialogueEvent::NodeComplete("Start".into()),

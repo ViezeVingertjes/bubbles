@@ -1,4 +1,4 @@
-use super::line_id_from_tags;
+use super::{LineMode, line_id_from_tags, line_mode_from_tags};
 
 #[test]
 fn line_id_from_tags_first_line_prefix() {
@@ -16,4 +16,23 @@ fn line_id_from_tags_none_without_prefix() {
 #[test]
 fn line_id_from_tags_empty_after_prefix_is_none() {
     assert_eq!(line_id_from_tags(&["line:".into()]), None);
+}
+
+#[test]
+fn line_mode_from_tags_defaults_to_normal() {
+    assert_eq!(line_mode_from_tags(&[]), LineMode::Normal);
+    assert_eq!(line_mode_from_tags(&["foo".into()]), LineMode::Normal);
+}
+
+#[test]
+fn line_mode_from_tags_narration_and_debug() {
+    assert_eq!(
+        line_mode_from_tags(&["narration".into()]),
+        LineMode::Narration
+    );
+    assert_eq!(line_mode_from_tags(&["debug".into()]), LineMode::Debug);
+    assert_eq!(
+        line_mode_from_tags(&["narration".into(), "debug".into()]),
+        LineMode::Debug
+    );
 }

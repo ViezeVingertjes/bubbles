@@ -4,7 +4,9 @@ use std::sync::Arc;
 
 use crate::compiler::ast::{Expr, IfBranch, Stmt, StmtList, TextSegment};
 use crate::error::{DialogueError, Result};
-use crate::runtime::event::{DialogueEvent, DialogueOption, line_id_from_tags};
+use crate::runtime::event::{
+    DialogueEvent, DialogueOption, line_id_from_tags, line_mode_from_tags,
+};
 use crate::saliency::Candidate;
 use crate::value::VariableStorage;
 
@@ -103,11 +105,13 @@ impl<S: VariableStorage> Runner<S> {
     ) -> Result<Option<DialogueEvent>> {
         let (text, spans) = self.eval_line_text(text, &tags)?;
         let line_id = line_id_from_tags(&tags);
+        let line_mode = line_mode_from_tags(&tags);
         Ok(Some(DialogueEvent::Line {
             speaker,
             text,
             line_id,
             tags,
+            line_mode,
             spans,
         }))
     }
@@ -142,11 +146,13 @@ impl<S: VariableStorage> Runner<S> {
             }
             let (text, spans) = self.eval_line_text(&chosen.text, &chosen.tags)?;
             let line_id = line_id_from_tags(&chosen.tags);
+            let line_mode = line_mode_from_tags(&chosen.tags);
             return Ok(Some(DialogueEvent::Line {
                 speaker: chosen.speaker.clone(),
                 text,
                 line_id,
                 tags: chosen.tags.clone(),
+                line_mode,
                 spans,
             }));
         }

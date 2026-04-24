@@ -1,5 +1,36 @@
 //! [`DialogueEvent`], [`DialogueOption`], and [`MarkupSpan`] - the output types of the runner.
 
+/// How a [`DialogueEvent::Line`] should be treated for display or logging.
+///
+/// The runner sets this from trailing `#tag` metadata on the source line:
+/// `#debug` yields [`LineMode::Debug`], `#narration` yields [`LineMode::Narration`].
+/// If both are present, [`LineMode::Debug`] wins. All other lines use [`LineMode::Normal`].
+///
+/// Tags that only exist to set the mode remain in [`DialogueEvent::Line::tags`]; your
+/// host can ignore them once you branch on [`LineMode`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum LineMode {
+    /// Ordinary character or narrator line.
+    #[default]
+    Normal,
+    /// System or omniscient narration (subtitle style, VO bus, etc.).
+    Narration,
+    /// Developer or QA line you may want to hide in release builds.
+    Debug,
+}
+
+/// Derives [`LineMode`] from trailing `#tag` strings (without the `#` prefix).
+#[must_use]
+pub fn line_mode_from_tags(tags: &[String]) -> LineMode {
+    if tags.iter().any(|t| t == "debug") {
+        LineMode::Debug
+    } else if tags.iter().any(|t| t == "narration") {
+        LineMode::Narration
+    } else {
+        LineMode::Normal
+    }
+}
+
 /// A resolved inline markup span: a named annotation over a byte range in the
 /// stripped display text.
 ///
@@ -70,6 +101,8 @@ pub enum DialogueEvent {
         line_id: Option<String>,
         /// Trailing `#tag` metadata.
         tags: Vec<String>,
+        /// Hint for filtering or routing (from `#narration` / `#debug` when present).
+        line_mode: LineMode,
         /// Inline markup spans over [`text`](DialogueEvent::Line::text), in source order.
         /// Empty when the line contains no markup tags.
         spans: Vec<MarkupSpan>,

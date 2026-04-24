@@ -17,6 +17,7 @@ pub fn dialogue_event_to_json(ev: &DialogueEvent) -> String {
             text,
             line_id,
             tags,
+            line_mode,
             spans,
         } => json!({
             "kind": "Line",
@@ -24,6 +25,11 @@ pub fn dialogue_event_to_json(ev: &DialogueEvent) -> String {
             "text": text,
             "line_id": line_id,
             "tags": tags,
+            "line_mode": match line_mode {
+                bubbles::LineMode::Normal => "normal",
+                bubbles::LineMode::Narration => "narration",
+                bubbles::LineMode::Debug => "debug",
+            },
             "spans": spans.iter().map(|s| json!({
                 "name": s.name,
                 "start": s.start,

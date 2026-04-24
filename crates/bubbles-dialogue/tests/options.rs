@@ -89,6 +89,27 @@ What do you say?
 }
 
 #[test]
+fn option_multiple_trailing_tags_preserve_order() {
+    let src = "\
+title: Start
+---
+-> First #a #b #c
+-> Second
+===
+";
+    let prog = compile(src).unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("Start").unwrap();
+    while let Some(ev) = runner.next_event().unwrap() {
+        if let DialogueEvent::Options(opts) = ev {
+            assert_eq!(opts[0].tags, vec!["a", "b", "c"]);
+            assert!(opts[1].tags.is_empty());
+            break;
+        }
+    }
+}
+
+#[test]
 fn option_metadata_exposed() {
     let src = "\
 title: Start
