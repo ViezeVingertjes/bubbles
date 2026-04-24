@@ -7,14 +7,14 @@ Let's get something talking. We will go from an empty project to a narrator gree
 In a fresh Rust project, add Bubbles to your `Cargo.toml`:
 
 ```sh
-cargo add bubbles-dialogue
+cargo add bubbles-dialogue@{{#include ../../../VERSION}}
 ```
 
 Or by hand:
 
 ```toml
 [dependencies]
-bubbles-dialogue = "0.6"
+bubbles-dialogue = "{{#include ../../../VERSION}}"
 ```
 
 The crates.io package key is **`bubbles-dialogue`**. In Rust you still **`use bubbles::…`** everywhere; only the dependency name in `Cargo.toml` is hyphenated.

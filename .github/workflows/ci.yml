@@ -17,6 +17,9 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      - name: Check version sync (workspace, VERSION, README)
+        run: bash scripts/check-version-sync.sh
+
       - name: Format check
         run: cargo fmt --all --check
 

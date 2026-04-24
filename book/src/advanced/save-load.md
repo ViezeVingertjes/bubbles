@@ -11,7 +11,7 @@ Enable the `serde` feature to get snapshot serialisation:
 
 ```toml
 [dependencies]
-bubbles-dialogue = { version = "0.6", features = ["serde"] }
+bubbles-dialogue = { version = "{{#include ../../../VERSION}}", features = ["serde"] }
 ```
 
 ## Snapshot the runner

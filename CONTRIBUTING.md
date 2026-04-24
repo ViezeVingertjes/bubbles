@@ -25,7 +25,7 @@ Install the pre-commit hook so local quality gates match CI:
 bash scripts/install-hooks.sh
 ```
 
-The hook runs `cargo fmt --check`, the same `cargo clippy` invocations as CI, `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps`, and `scripts/check-file-sizes.sh` before every commit.
+The hook runs `scripts/check-version-sync.sh` first (workspace semver, `VERSION`, and README quick start), then `cargo fmt --check`, the same `cargo clippy` invocations as CI, `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps`, and `scripts/check-file-sizes.sh` before every commit. The version script needs **`jq`** on your `PATH` (same as CI).
 
 ## Commit style
 
@@ -44,6 +44,7 @@ Types: `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `chore`.
 
 | Gate | Tool | Target |
 |---|---|---|
+| Release strings | `scripts/check-version-sync.sh` | workspace `version`, `VERSION`, README match |
 | Format | `cargo fmt` | no diff |
 | Lints | `cargo clippy --all-features -D warnings` | zero warnings |
 | Tests | `cargo test --all-features` | all pass |

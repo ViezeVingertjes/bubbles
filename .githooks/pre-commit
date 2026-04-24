@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Pre-commit hook: mirrors the checks in .github/workflows/ci.yml so CI
-# failures are caught locally before a push.
+# failures are caught locally before a push. Version sync runs first (cheap).
 # Install once with: git config core.hooksPath .githooks
 
 set -euo pipefail
@@ -14,6 +14,12 @@ fail() {
   echo -e "${RED}${BOLD}pre-commit:${RESET} $*" >&2
   exit 1
 }
+
+echo -e "${BOLD}pre-commit:${RESET} checking version sync (workspace, VERSION, README)..."
+if ! bash scripts/check-version-sync.sh 2>&1; then
+  echo ""
+  fail "version drift. See RELEASING.md and align Cargo.toml, VERSION, and README."
+fi
 
 echo -e "${BOLD}pre-commit:${RESET} checking format..."
 if ! cargo fmt --check 2>&1; then

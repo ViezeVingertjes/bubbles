@@ -10,10 +10,10 @@ For a browser or embedded wasm host, use the library in `no_default_features` mo
 
 ```toml
 [dependencies]
-bubbles-dialogue = { version = "0.6", default-features = false }
+bubbles-dialogue = { version = "{{#include ../../../VERSION}}", default-features = false }
 
 # or with serde for save/load:
-bubbles-dialogue = { version = "0.6", default-features = false, features = ["serde"] }
+bubbles-dialogue = { version = "{{#include ../../../VERSION}}", default-features = false, features = ["serde"] }
 ```
 
 The `rand` feature is on by default and works on wasm (via `rand`'s `getrandom` dependency), but you may want to turn it off if you're shipping a tiny build or using a custom RNG.
