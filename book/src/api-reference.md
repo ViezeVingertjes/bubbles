@@ -21,7 +21,7 @@ A quick index of what you'll look up most often:
 | Pick variants | [`SaliencyStrategy`](./api/bubbles/trait.SaliencyStrategy.html), [`FirstAvailable`](./api/bubbles/struct.FirstAvailable.html), [`BestLeastRecentlyViewed`](./api/bubbles/struct.BestLeastRecentlyViewed.html) |
 | Save / load | [`RunnerSnapshot`](./api/bubbles/struct.RunnerSnapshot.html) (requires `serde`) |
 | Handle errors | [`DialogueError`](./api/bubbles/enum.DialogueError.html) |
-| Unity / C# / C shared library | Not on docs.rs: use the repo [bubbles-ffi README](https://github.com/ViezeVingertjes/bubbles/blob/main/crates/bubbles-ffi/README.md) and the [guide chapter](./integration/unity-and-native.md) |
+| Unity / C# / C shared library | Not on docs.rs: see the [guide chapter](./integration/unity-and-native.md) and the [C header](https://github.com/ViezeVingertjes/bubbles/blob/main/crates/bubbles-ffi/include/bubbles_ffi.h) |
 
 ## Feature flags
 
