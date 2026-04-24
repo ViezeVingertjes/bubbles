@@ -11,7 +11,13 @@ It is a small **`cdylib`** plus a [C header](https://github.com/ViezeVingertjes/
 - **ABI:** check `bubbles_abi_version()` against what your bindings expect.
 - **Language:** everything in the C API is **UTF-8**; string inputs use pointer **plus byte length** (not necessarily NUL-terminated).
 
-The `.bub` language, event kinds, and runtime behaviour are the same as in [The Runner Lifecycle](./runner.md) and [Handling Events](./events.md). Only the **packaging** differs: JSON event strings instead of typed `DialogueEvent` in Rust.
+For stepping through dialogue, **event kinds and script semantics** match [The Runner Lifecycle](./runner.md) and [Handling Events](./events.md); the FFI returns each event as a **JSON** string instead of a Rust `DialogueEvent`.
+
+## What the C ABI does not cover yet
+
+The shim is intentionally small. Today it wires **`Runner::new(program, HashMapStorage::new())`** with **default** saliency (`FirstAvailable`), **passthrough** line text (no [localisation](./localisation.md) provider), and **no** custom [host functions](./functions.md). There is no C API for **`RunnerSnapshot`** save/load, **`Program`** introspection (`node_exists`, `variable_declarations`, …), or **direct read/write** of variable storage from the host.
+
+If you need that behaviour from C# or another native language, you either extend **`bubbles-ffi`** with more exports or keep a **Rust** façade that configures a `RunnerBuilder` and exposes your own FFI.
 
 A minimal **.NET** smoke app lives in the repo at `crates/bubbles-ffi/tests/dotnet_smoke/`; CI builds the release library and runs it on Linux.
 
