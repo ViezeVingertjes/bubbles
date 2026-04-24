@@ -6,7 +6,8 @@
 //!   including a null terminator). You may use null-terminated strings from C# by passing
 //!   `strlen` or `Encoding.UTF8.GetByteCount`.
 //! - Functions are **not thread-safe** unless documented otherwise. Call everything from one
-//!   thread (Unity main thread is fine).
+//!   thread (Unity main thread is fine). Do **not** call back into `bubbles_*` from inside a
+//!   [`BubblesHostFn`] callback.
 //! - Outputs allocated by this library are released with [`bubbles_string_free`].
 //! - After [`bubbles_runner_new`], the program handle is consumed and must not be freed or reused.
 //!
@@ -33,16 +34,34 @@
 mod compile_ffi;
 mod error;
 mod event_json;
+mod program_ffi;
+mod runner_config;
 mod runner_ffi;
+mod runner_state;
 mod util;
+mod value_json;
 
 use std::ffi::c_char;
 
 pub use compile_ffi::{bubbles_compile, bubbles_compile_files, bubbles_program_free};
 pub use error::{bubbles_last_error, bubbles_string_free};
+pub use program_ffi::{
+    bubbles_program_node_exists, bubbles_program_node_tags_json, bubbles_program_node_titles_json,
+    bubbles_program_variable_declarations_json,
+};
+pub use runner_config::{
+    BUBBLES_SALIENCY_BLRV, BUBBLES_SALIENCY_FIRST_AVAILABLE, BUBBLES_SALIENCY_RANDOM_AVAILABLE,
+    BubblesHostFn, bubbles_runner_new_with_saliency, bubbles_runner_register_function,
+    bubbles_runner_set_locale_json, bubbles_runner_set_saliency,
+};
 pub use runner_ffi::{
     bubbles_runner_free, bubbles_runner_new, bubbles_runner_next_event,
     bubbles_runner_select_option, bubbles_runner_start,
+};
+pub use runner_state::{
+    bubbles_copy_utf8, bubbles_runner_restore_session_json, bubbles_runner_restore_storage_json,
+    bubbles_runner_snapshot_session_json, bubbles_runner_snapshot_storage_json,
+    bubbles_runner_variable_get_json, bubbles_runner_variable_set_json,
 };
 
 use std::ffi::c_int;

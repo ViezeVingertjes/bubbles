@@ -3,10 +3,11 @@
 use std::ffi::{CString, c_char, c_int, c_void};
 use std::ptr;
 
-use bubbles::{HashMapStorage, Program, Runner};
+use bubbles::{HashMapStorage, Runner};
 
 use crate::error::{clear_err, set_err};
 use crate::event_json;
+use crate::runner_config::build_runner;
 use crate::util::str_from_parts;
 use crate::{BUBBLES_DONE, BUBBLES_ERR, BUBBLES_OK};
 
@@ -20,22 +21,7 @@ pub unsafe extern "C" fn bubbles_runner_new(
     program: *mut c_void,
     out_runner: *mut *mut c_void,
 ) -> c_int {
-    if out_runner.is_null() {
-        set_err("out_runner was null");
-        return BUBBLES_ERR;
-    }
-    if program.is_null() {
-        set_err("program was null");
-        return BUBBLES_ERR;
-    }
-    clear_err();
-    let program = unsafe { *Box::from_raw(program.cast::<Program>()) };
-    let runner = Runner::new(program, HashMapStorage::new());
-    let raw = Box::into_raw(Box::new(runner)).cast::<c_void>();
-    unsafe {
-        *out_runner = raw;
-    }
-    BUBBLES_OK
+    unsafe { build_runner(program, 0, out_runner) }
 }
 
 /// Drops a runner.
