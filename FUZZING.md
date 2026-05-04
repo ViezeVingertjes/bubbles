@@ -54,8 +54,6 @@ Run a quick 30-second smoke session:
 cargo +nightly fuzz run markup_text fuzz/corpus/markup_text -- -max_total_time=30
 ```
 
-Run all targets for 60 seconds each (useful before a release):
-
 ```bash
 for t in compile_bub compile_many_bub lexer_expr markup_text runtime_bounded serde_state_json ffi_public_json; do
   cargo +nightly fuzz run "$t" "fuzz/corpus/$t" -- -max_total_time=60
@@ -90,14 +88,19 @@ These limits balance thoroughness with runtime speed. Adjust after triaging cras
 | `serde_state_json` | 4096 |
 | `ffi_public_json` | 4096 |
 
-## CI strategy
+## CI
 
-Fuzzing is not part of the required CI gate. Recommended phases:
+Fuzzing is not part of the required PR gate. A scheduled workflow runs weekly
+and can also be triggered manually via GitHub Actions:
 
-1. **Local** — run manually before releases using the commands above.
-2. **Smoke** — add a short `max_total_time=30` run per target to a manual-dispatch workflow.
-3. **Scheduled** — add a nightly GitHub Actions job with longer runs and artifact upload
-   once the targets have accumulated a good corpus and no persistent false positives.
+- **Schedule** — every Monday at 02:00 UTC (`.github/workflows/fuzz.yml`).
+- **Manual** — `Actions → Fuzz → Run workflow`, with an optional `duration`
+  input (seconds per target, default 300).
+
+Each target runs in a separate matrix job. On failure the crash input is
+uploaded as a `fuzz-crash-<target>` artifact.
+
+To run a quick smoke session locally before a release:
 
 ## Corpus
 

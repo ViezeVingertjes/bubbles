@@ -1,0 +1,61 @@
+name: Fuzz
+
+on:
+  schedule:
+    - cron: "0 2 * * 1" # every Monday at 02:00 UTC
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: "Seconds per target"
+        required: false
+        default: "300"
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    env:
+      DURATION: ${{ inputs.duration || '300' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: compile_bub
+          - target: compile_many_bub
+          - target: lexer_expr
+            max_len: 2048  # recursive parser; lower cap prevents stack overflows
+          - target: markup_text
+          - target: runtime_bounded
+          - target: serde_state_json
+          - target: ffi_public_json
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: llvm-tools
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: fuzz -> fuzz/target
+
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+
+      - name: Run ${{ matrix.target }}
+        run: >
+          cargo +nightly fuzz run ${{ matrix.target }}
+          fuzz/corpus/${{ matrix.target }}
+          -- -max_total_time=${{ env.DURATION }}
+          -max_len=${{ matrix.max_len || 4096 }}
+
+      - name: Upload artifacts on crash
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crash-${{ matrix.target }}
+          path: fuzz/artifacts/${{ matrix.target }}/
+          if-no-files-found: ignore
