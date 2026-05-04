@@ -45,6 +45,55 @@ jobs:
       - name: Install cargo-fuzz
         run: cargo install cargo-fuzz --locked
 
+      - name: Seed corpus
+        run: |
+          TARGET=${{ matrix.target }}
+          CORPUS=fuzz/corpus/$TARGET
+          mkdir -p "$CORPUS"
+
+          # All targets that consume .bub source get the existing fixtures and examples.
+          case "$TARGET" in
+            compile_bub|compile_many_bub|runtime_bounded)
+              cp crates/bubbles-dialogue/tests/fixtures/*.bub "$CORPUS/"
+              cp examples/harbour/*.bub examples/snippets/*.bub "$CORPUS/"
+              ;;
+          esac
+
+          # Expression seeds for the lexer/parser target.
+          if [ "$TARGET" = "lexer_expr" ]; then
+            printf '%s' '$gold + 5'                  > "$CORPUS/add.txt"
+            printf '%s' '!$flag && $x > 0'           > "$CORPUS/and.txt"
+            printf '%s' 'true || false'               > "$CORPUS/bool.txt"
+            printf '%s' '-(1 + 2) * 3'               > "$CORPUS/arith.txt"
+            printf '%s' '"hello" == "world"'          > "$CORPUS/str_eq.txt"
+            printf '%s' '($a + $b) * ($c - $d)'      > "$CORPUS/nested.txt"
+            printf '%s' 'random_range(1, 100)'        > "$CORPUS/call.txt"
+          fi
+
+          # Markup/interpolation seeds.
+          if [ "$TARGET" = "markup_text" ]; then
+            printf '%s' '[wave]Hello, {$name}![/wave]' > "$CORPUS/full.txt"
+            printf '%s' 'Plain text.'                   > "$CORPUS/plain.txt"
+            printf '%s' '[pause /] then [b]bold[/b]'   > "$CORPUS/mixed.txt"
+            printf '%s' '{$gold} coins left.'           > "$CORPUS/brace.txt"
+            printf '%s' '[b key=val]content[/b]'        > "$CORPUS/props.txt"
+          fi
+
+          # JSON seeds for serde and FFI targets.
+          case "$TARGET" in
+            serde_state_json|ffi_public_json)
+              printf '%s' '42'                                    > "$CORPUS/num.json"
+              printf '%s' 'true'                                  > "$CORPUS/bool.json"
+              printf '%s' '"hello"'                               > "$CORPUS/str.json"
+              printf '%s' '{"Number":3.14}'                       > "$CORPUS/num_tagged.json"
+              printf '%s' '{"Bool":false}'                        > "$CORPUS/bool_tagged.json"
+              printf '%s' '{"Text":"world"}'                      > "$CORPUS/text_tagged.json"
+              printf '%s' '{}'                                    > "$CORPUS/empty.json"
+              printf '%s' '{"$gold":10,"$flag":true,"$name":"Bob"}' > "$CORPUS/storage.json"
+              printf '%s' '{"line_id":"Hello, {$name}!"}'        > "$CORPUS/locale.json"
+              ;;
+          esac
+
       - name: Run ${{ matrix.target }}
         run: >
           cargo +nightly fuzz run ${{ matrix.target }}

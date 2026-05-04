@@ -104,11 +104,23 @@ To run a quick smoke session locally before a release:
 
 ## Corpus
 
-Seed inputs are in `fuzz/corpus/<target>/` and come from:
+`fuzz/corpus/` is gitignored. The CI workflow seeds each target's corpus
+directory from existing repo content before fuzzing starts:
 
-- `crates/bubbles-dialogue/tests/fixtures/*.bub`
-- `examples/harbour/*.bub` and `examples/snippets/*.bub`
-- Handwritten expression, markup, and JSON samples
+| Targets | Seeds from |
+|---|---|
+| `compile_bub`, `compile_many_bub`, `runtime_bounded` | `tests/fixtures/*.bub`, `examples/**/*.bub` |
+| `lexer_expr` | Inline expression strings written by the workflow |
+| `markup_text` | Inline markup/interpolation strings written by the workflow |
+| `serde_state_json`, `ffi_public_json` | Inline JSON values and maps written by the workflow |
 
-After a long fuzzing run, commit any interesting new corpus entries so future runs
-start from a richer base.
+For local runs, populate the corpus the same way before the first session:
+
+```bash
+bash .github/workflows/fuzz.yml  # not executable — copy the "Seed corpus" step manually, or:
+cargo +nightly fuzz run compile_bub fuzz/corpus/compile_bub  # libFuzzer starts from scratch if empty
+```
+
+After a long local run, save any interesting minimized inputs under
+`fuzz/corpus/<target>/` and add them to the seeding step if they cover a new
+code path worth preserving across machines.
