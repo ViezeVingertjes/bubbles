@@ -1,0 +1,5 @@
+# cargo-fuzz requires nightly for -Zsanitizer and coverage instrumentation flags.
+# This file is scoped to the fuzz/ directory only; the parent workspace stays on stable.
+[toolchain]
+channel    = "nightly"
+components = ["rust-src", "rustfmt", "llvm-tools"]

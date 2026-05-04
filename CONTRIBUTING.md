@@ -71,6 +71,19 @@ All of these are enforced in CI and by the pre-commit hook.
   integration-test harness shared across binaries.)
 - `mod.rs` files are thin: declare submodules and re-export the public surface only.
 
+## Fuzzing
+
+The project ships fuzz targets in `fuzz/fuzz_targets/` that cover the compiler,
+runtime, and host-facing JSON boundaries. See [FUZZING.md](FUZZING.md) for setup,
+target descriptions, and how to run, reproduce, and minimize failures.
+
+Fuzzing is not required on every PR, but running a short smoke session before
+large parser or runtime changes is encouraged:
+
+```bash
+cargo +nightly fuzz run compile_bub fuzz/corpus/compile_bub -- -max_total_time=60
+```
+
 ## Pull request checklist
 
 - [ ] All CI gates pass

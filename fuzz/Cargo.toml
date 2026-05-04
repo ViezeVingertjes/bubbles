@@ -1,0 +1,75 @@
+[package]
+name    = "bubbles-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+# Declare an empty workspace so the parent workspace does not absorb this
+# package. Fuzz binaries use nightly-only sanitizer flags that are incompatible
+# with the standard `cargo test --workspace` and clippy jobs.
+[workspace]
+
+[dependencies]
+libfuzzer-sys = "0.4"
+serde_json    = "1"
+
+[dependencies.bubbles-dialogue]
+path     = "../crates/bubbles-dialogue"
+features = ["full"]
+
+[dependencies.bubbles-ffi]
+path = "../crates/bubbles-ffi"
+
+# Each fuzz target is a [[bin]] with test/doc/bench disabled.
+
+[[bin]]
+name  = "compile_bub"
+path  = "fuzz_targets/compile_bub.rs"
+test  = false
+doc   = false
+bench = false
+
+[[bin]]
+name  = "compile_many_bub"
+path  = "fuzz_targets/compile_many_bub.rs"
+test  = false
+doc   = false
+bench = false
+
+[[bin]]
+name  = "lexer_expr"
+path  = "fuzz_targets/lexer_expr.rs"
+test  = false
+doc   = false
+bench = false
+
+[[bin]]
+name  = "markup_text"
+path  = "fuzz_targets/markup_text.rs"
+test  = false
+doc   = false
+bench = false
+
+[[bin]]
+name  = "runtime_bounded"
+path  = "fuzz_targets/runtime_bounded.rs"
+test  = false
+doc   = false
+bench = false
+
+[[bin]]
+name  = "serde_state_json"
+path  = "fuzz_targets/serde_state_json.rs"
+test  = false
+doc   = false
+bench = false
+
+[[bin]]
+name  = "ffi_public_json"
+path  = "fuzz_targets/ffi_public_json.rs"
+test  = false
+doc   = false
+bench = false
