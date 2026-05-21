@@ -1,8 +1,8 @@
 //! Fuzz the full compile → Runner → event loop pipeline.
 //!
 //! Compiles the input, starts at the first available node, then drives
-//! `next_event` up to `MAX_EVENTS` times. Options always resolve to index 0
-//! so execution is deterministic and jump-loops cannot hang the fuzzer.
+//! `next_event` up to `MAX_EVENTS` times. Options resolve to the first
+//! available index so execution is deterministic and jump-loops cannot hang.
 #![no_main]
 
 use bubbles::{DialogueEvent, HashMapStorage, Runner};
@@ -33,10 +33,10 @@ fuzz_target!(|data: &[u8]| {
     for _ in 0..MAX_EVENTS {
         match runner.next_event() {
             Ok(Some(DialogueEvent::Options(ref opts))) => {
-                if opts.is_empty() {
+                let Some(idx) = opts.iter().position(|o| o.available) else {
                     break;
-                }
-                if runner.select_option(0).is_err() {
+                };
+                if runner.select_option(idx).is_err() {
                     break;
                 }
             }

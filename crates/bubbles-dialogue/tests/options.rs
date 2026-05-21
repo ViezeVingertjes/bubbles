@@ -2,7 +2,7 @@
 
 mod common;
 
-use bubbles::{DialogueEvent, HashMapStorage, Runner, compile};
+use bubbles::{DialogueError, DialogueEvent, HashMapStorage, Runner, RunnerPhase, compile};
 
 fn play_select(source: &str, node: &str, choice: usize) -> Vec<DialogueEvent> {
     let prog = compile(source).unwrap();
@@ -124,6 +124,34 @@ title: Start
     while let Some(ev) = runner.next_event().unwrap() {
         if let DialogueEvent::Options(opts) = ev {
             assert!(opts[0].tags.contains(&"expensive".to_string()));
+            runner.select_option(1).unwrap();
+            break;
+        }
+    }
+}
+
+#[test]
+fn select_unavailable_option_returns_protocol_violation() {
+    let src = "\
+title: Start
+---
+Pick?
+-> Locked <<if false>>
+    no
+-> Go
+    ok
+===
+";
+    let prog = compile(src).unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+    runner.start("Start").unwrap();
+    while let Some(ev) = runner.next_event().unwrap() {
+        if let DialogueEvent::Options(opts) = ev {
+            assert!(!opts[0].available);
+            assert!(opts[1].available);
+            let err = runner.select_option(0).unwrap_err();
+            assert!(matches!(err, DialogueError::ProtocolViolation(_)));
+            assert_eq!(runner.phase(), RunnerPhase::AwaitingOption);
             runner.select_option(1).unwrap();
             break;
         }

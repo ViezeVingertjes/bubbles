@@ -181,7 +181,7 @@ impl<S: VariableStorage> Runner<S> {
                 group,
                 spans,
             });
-            bodies.push(item.body.clone()); // Arc<[Stmt]> - O(1) reference-count bump
+            bodies.push((available, item.body.clone())); // Arc<[Stmt]> - O(1) reference-count bump
         }
         self.option_bodies = bodies;
         self.state = State::AwaitingOption;

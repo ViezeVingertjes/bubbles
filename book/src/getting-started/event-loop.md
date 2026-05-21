@@ -43,11 +43,14 @@ fn main() -> Result<(), bubbles::DialogueError> {
             }
             DialogueEvent::Options(opts) => {
                 for (i, opt) in opts.iter().enumerate() {
-                    println!("  {i}) {}", opt.text);
+                    let mark = if opt.available { ' ' } else { 'x' };
+                    println!("  {i}{mark}) {}", opt.text);
                 }
                 let line = stdin.lock().lines().next().unwrap().unwrap();
                 let choice: usize = line.trim().parse().unwrap_or(0);
-                runner.select_option(choice)?;
+                if opts.get(choice).is_some_and(|o| o.available) {
+                    runner.select_option(choice)?;
+                }
             }
             _ => {}
         }
