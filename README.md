@@ -145,6 +145,24 @@ The full guide - language reference, integration walkthrough, localisation, save
 
 ---
 
+## PR governance with PullPact
+
+This repository uses **[PullPact](https://pullpact.online)** for community voting on pull requests. Votes are GitHub reactions on the **PR description**, not on review comments.
+
+### How to participate
+
+- React on the **pull request description** using the approve, reject, and abstain reactions configured in `.pullpact.yaml`.
+- Follow the PullPact check on each PR for the current vote result and next step.
+
+### What happens automatically
+
+- PullPact counts votes and updates a **PullPact** check on the PR.
+- When votes pass and GitHub allows it (required checks, branch protection), PullPact can **merge** the PR (`on_pass: merge` in `.pullpact.yaml`). Stale PRs can be closed automatically (`on_stale: close`).
+
+[Install PullPact](https://github.com/apps/pullpact/installations/new) · [pullpact.online](https://pullpact.online)
+
+---
+
 ## License
 
 Licensed under either of [Apache-2.0](LICENSE-APACHE) or [MIT](LICENSE-MIT) at your option.

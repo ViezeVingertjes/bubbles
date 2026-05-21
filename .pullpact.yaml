@@ -1,0 +1,30 @@
+version: 1
+
+reactions:
+  approve_reaction: "+1"
+  reject_reaction: "-1"
+  abstain_reaction: "eyes"
+
+pull_requests:
+  minimum_voters: 3
+  required_approval_ratio: 0.6
+  eligible_voters: all
+  merge_cooldown_hours: 24
+  cooldown_override_approve_votes: 6
+  stale_timeout_hours: 168
+  vote_settle_hours: 1
+
+  protected_paths:
+    - paths: [".pullpact.yaml"]
+      minimum_voters: 5
+      required_approval_ratio: 0.75
+      merge_cooldown_hours: 72
+      vote_settle_hours: 3
+
+safety:
+  blocked_labels: ["WIP", "DONTMERGE"]
+
+resolution:
+  on_pass: merge
+  on_fail: none
+  on_stale: close
