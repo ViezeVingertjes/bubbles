@@ -157,7 +157,20 @@ This repository uses **[PullPact](https://pullpact.online)** for community votin
 ### What happens automatically
 
 - PullPact counts votes and updates a **PullPact** check on the PR.
-- When votes pass and GitHub allows it (required checks, branch protection), PullPact can **merge** the PR (`on_pass: merge` in `.pullpact.yaml`). Stale PRs can be closed automatically (`on_stale: close`).
+- When votes pass and GitHub allows it (CI green, branch up to date), PullPact can **merge** the PR (`on_pass: merge` in `.pullpact.yaml`). Stale PRs can be closed automatically (`on_stale: close`).
+- GitHub **reviews are not required** for merge count (0 approving reviews). Voting on the PR description is the approval path.
+
+### Branch rules on `main`
+
+All changes land through a **pull request** (no direct pushes). These checks must pass before merge:
+
+| Check | Source |
+|-------|--------|
+| `ci` | GitHub Actions (format, clippy, tests, docs, …) |
+| `msrv` | GitHub Actions (MSRV compile) |
+| `PullPact` | PullPact policy + vote result |
+
+The branch must be **up to date** with `main` before merge. Conversation threads must be resolved. Force-push and branch deletion on `main` are blocked.
 
 [Install PullPact](https://github.com/apps/pullpact/installations/new) · [pullpact.online](https://pullpact.online)
 
