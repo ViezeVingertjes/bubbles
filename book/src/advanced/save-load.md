@@ -42,6 +42,22 @@ std::fs::write("vars.json", storage_json)?;
 
 `HashMapStorage` already derives `Serialize`/`Deserialize` under the `serde` feature. If you've written your own storage, implement those traits yourself (or wrap your actual save format around the `VariableStorage` trait).
 
+## Saving at a choice screen
+
+If the player saves while an [`Options`](https://docs.rs/bubbles-dialogue/latest/bubbles/enum.DialogueEvent.html#variant.Options) event is showing, understand what [`Runner::snapshot`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.Runner.html#method.snapshot) captures:
+
+- `current_node` is set to the active node title.
+- Visit counts and `<<once>>` state are included.
+- The pending option list and [`RunnerPhase::AwaitingOption`](https://docs.rs/bubbles-dialogue/latest/bubbles/enum.RunnerPhase.html) are **not** stored.
+
+[`Runner::restore`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.Runner.html#method.restore) clears the runner and [`start`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.Runner.html#method.start)s that node from the beginning. The player will see the node's lines again before the choice reappears.
+
+Practical patterns:
+
+- Save **after** the player picks an option, when the runner is back in [`Running`](https://docs.rs/bubbles-dialogue/latest/bubbles/enum.RunnerPhase.html) or [`Done`](https://docs.rs/bubbles-dialogue/latest/bubbles/enum.RunnerPhase.html).
+- Split long scenes into smaller nodes so "replay from node start" feels natural.
+- Accept the replay if your UI can skip straight to the last `Options` event (track choice state in your own save data).
+
 ## Restore
 
 On the other side of a save/load, you're recreating the runner from scratch and then pouring state back in.
