@@ -137,34 +137,18 @@ The full guide - language reference, integration walkthrough, localisation, save
 
 ---
 
-## PR governance with PullPact
+## Contributing
 
-This repository uses **[PullPact](https://pullpact.online)** for community voting on pull requests. Votes are GitHub reactions on the **PR description**, not on review comments.
-
-### How to participate
-
-- React on the **pull request description** using the approve, reject, and abstain reactions configured in `.pullpact.yaml`.
-- Follow the PullPact check on each PR for the current vote result and next step.
-
-### What happens automatically
-
-- PullPact counts votes and updates a **PullPact** check on the PR.
-- When votes pass and GitHub allows it (CI green, branch up to date), PullPact can **merge** the PR (`on_pass: merge` in `.pullpact.yaml`). Stale PRs can be closed automatically (`on_stale: close`).
-- GitHub **reviews are not required** for merge count (0 approving reviews). Voting on the PR description is the approval path.
-
-### Branch rules on `main`
-
-All changes land through a **pull request** (no direct pushes). These checks must pass before merge:
+All changes to `main` go through a **pull request** (no direct pushes). These status checks must pass before merge:
 
 | Check | Source |
 |-------|--------|
 | `ci` | GitHub Actions (format, clippy, tests, docs, …) |
 | `msrv` | GitHub Actions (MSRV compile) |
-| `PullPact` | PullPact policy + vote result |
 
-The branch must be **up to date** with `main` before merge. Conversation threads must be resolved. Force-push and branch deletion on `main` are blocked.
+The branch must be **up to date** with `main` before merge. Conversation threads on the PR must be resolved. Force-push and branch deletion on `main` are blocked.
 
-[Install PullPact](https://github.com/apps/pullpact/installations/new) · [pullpact.online](https://pullpact.online)
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and code quality gates.
 
 ---
 
