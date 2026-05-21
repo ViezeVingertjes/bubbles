@@ -68,6 +68,10 @@ pub trait VariableStorage {
 /// assert_eq!(storage.get("$hp"), Some(Value::Number(100.0)));
 /// assert_eq!(storage.get("$name"), Some(Value::Text("Hero".into())));
 /// ```
+///
+/// [`Clone`] duplicates the inner map. Two [`Runner`](crate::runtime::Runner) instances
+/// that need the same variables must share one storage (for example
+/// `Arc<Mutex<HashMapStorage>>`) or use a custom [`VariableStorage`] implementation.
 #[derive(Debug, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct HashMapStorage {
