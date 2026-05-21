@@ -40,15 +40,25 @@ pub fn compile(source: &str) -> Result<Program> {
 /// detour targets are validated across all sources after merging.
 ///
 /// # Errors
-/// Returns a [`crate::DialogueError`] variant on any parse, merge, or
-/// validation failure.
+/// Returns a [`crate::DialogueError`] variant on any parse, merge, validation,
+/// or empty-source failure.
 pub fn compile_many(sources: &[(&str, &str)]) -> Result<Program> {
     let mut all_nodes = Vec::new();
     for (name, source) in sources {
+        if source.trim().is_empty() {
+            return Err(crate::error::DialogueError::Validation(format!(
+                "source is empty ({name})"
+            )));
+        }
         let nodes = parser::parse(name, source)?;
         all_nodes.extend(nodes);
     }
     let prog = Program::from_nodes(all_nodes)?;
+    if prog.node_titles().next().is_none() {
+        return Err(crate::error::DialogueError::Validation(
+            "no nodes in source".into(),
+        ));
+    }
     validate(&prog)?;
     Ok(prog)
 }

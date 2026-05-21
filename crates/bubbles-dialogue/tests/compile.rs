@@ -430,3 +430,15 @@ fn compile_many_accepts_cross_file_jump() {
     ]);
     assert!(result.is_ok());
 }
+
+#[test]
+fn compile_rejects_empty_source() {
+    let err = compile("").unwrap_err();
+    assert!(matches!(err, DialogueError::Validation(_)));
+}
+
+#[test]
+fn compile_rejects_whitespace_only_source() {
+    let err = compile("   \n\n  ").unwrap_err();
+    assert!(matches!(err, DialogueError::Validation(_)));
+}
