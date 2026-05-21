@@ -18,31 +18,23 @@ Works with Bevy, Godot-rust, Macroquad, or any custom engine. Unity and other na
 ## What a script looks like
 
 ```text
-title: Dockside
-tags: scene outdoor
+title: Start
+tags: scene docks outdoor
 ---
 <<declare $gold = 25>>
 
 => Dockworker: Oi, watch yer step!
-=> Dockworker: These crates won't unload themselves.
+=> Dockworker: These crates won't unload themselves, ye know.
 => Dockworker: Smells like low tide and regret out here.
 
-Stumpy: Name's McGee. Harbormaster.
-Stumpy: You can't sail without a travel permit.
+Stumpy: Name's McGee. Stumpy McGee, Harbormaster.
+Stumpy: Ye can't sail from Barnacle Bay without a travel permit.
 
--> Pay ten doubloons. <<if $gold >= 10>>
-    <<set $gold = $gold - 10>>
-    Stumpy: There she is. {$gold} doubloons left.
-    <<jump Depart>>
--> Ask about the map seller.
-    <<detour MapSeller>>
-    <<jump Dockside>>
--> Nothing, just passing through.
-    Stumpy: Then pass through somewhere else.
+<<jump Options>>
 ===
 ```
 
-Try it in the terminal right now:
+The harbour demo continues in `examples/harbour/` with an `Options` node (guarded choices, `<<detour MapSeller>>`, `<<jump Depart>>`). Run it with:
 
 ```bash
 cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
