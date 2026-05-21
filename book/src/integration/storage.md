@@ -50,6 +50,15 @@ runner.storage_mut().set("$hp", Value::Number(50.0));
 
 With the `serde` feature, `HashMapStorage` derives `Serialize`/`Deserialize`, so you can serialise it alongside your main save file.
 
+## Sharing between runners
+
+[`HashMapStorage`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.HashMapStorage.html) implements [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html) by copying the map. Cloning storage and passing each copy to a different [`Runner`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.Runner.html) gives each runner its own variable set.
+
+To share game state across concurrent or sequential conversations, either:
+
+- keep one storage behind every runner that should see the same `$variables`, or
+- implement [`VariableStorage`](https://docs.rs/bubbles-dialogue/latest/bubbles/trait.VariableStorage.html) over your existing save model (ECS component, database row, and so on).
+
 ## Writing your own storage
 
 When you want Bubbles variables to live inside *your* data model - say, a component in your ECS, or a row in a save database - implement the trait yourself.

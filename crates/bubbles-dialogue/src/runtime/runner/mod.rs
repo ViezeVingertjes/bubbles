@@ -3,6 +3,7 @@
 pub(super) mod evaluation;
 pub(super) mod execute;
 pub(super) mod node_body;
+mod session;
 
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -60,7 +61,7 @@ impl Frame {
 }
 
 /// Option bodies held during `AwaitingOption` state.
-type OptionBodies = Vec<StmtList>;
+type OptionBodies = Vec<(bool, StmtList)>;
 
 /// Drives execution of a compiled [`Program`], yielding [`DialogueEvent`]s one at a time.
 ///
@@ -179,19 +180,24 @@ impl<S: VariableStorage> Runner<S> {
     /// # Errors
     ///
     /// Returns [`DialogueError::ProtocolViolation`] if called when not awaiting an option
-    /// selection, or if `index` is out of range.
+    /// selection, if `index` is out of range, or if the option guard is not satisfied.
     pub fn select_option(&mut self, index: usize) -> Result<()> {
         if self.state != State::AwaitingOption {
             return Err(DialogueError::ProtocolViolation(
                 "select_option() called when not awaiting an option".into(),
             ));
         }
-        let body = self.option_bodies.get(index).cloned().ok_or_else(|| {
+        let (available, body) = self.option_bodies.get(index).cloned().ok_or_else(|| {
             DialogueError::ProtocolViolation(format!(
                 "option index {index} out of range ({})",
                 self.option_bodies.len()
             ))
         })?;
+        if !available {
+            return Err(DialogueError::ProtocolViolation(format!(
+                "option index {index} is unavailable (guard not satisfied)"
+            )));
+        }
         self.option_bodies.clear();
         self.state = State::Running;
         self.push_inline_frame(body);
@@ -282,47 +288,5 @@ impl<S: VariableStorage> Runner<S> {
     /// Used by [`crate::runtime::RunnerBuilder`] to avoid double-boxing.
     pub(crate) fn set_provider_box(&mut self, provider: Box<dyn LineProvider>) {
         self.provider = provider;
-    }
-
-    // ── save / load ───────────────────────────────────────────────────────────
-
-    /// Captures the current session state into a [`RunnerSnapshot`](crate::RunnerSnapshot).
-    ///
-    /// The snapshot records the active node title, visit counts, and the set of
-    /// exhausted `<<once>>` blocks. Variable storage is **not** included; persist
-    /// it via [`Runner::storage`] alongside the snapshot when saving.
-    ///
-    /// Restoring with [`Runner::restore`] will restart execution from the beginning
-    /// of the snapshotted node.
-    ///
-    /// Enable the `serde` feature on `bubbles-dialogue` if you need `Serialize` /
-    /// `Deserialize` on [`RunnerSnapshot`](crate::RunnerSnapshot).
-    #[must_use]
-    pub fn snapshot(&self) -> crate::runtime::RunnerSnapshot {
-        crate::runtime::RunnerSnapshot {
-            current_node: self.stack.last().map(|f| f.node.as_ref().to_owned()),
-            visits: self.visits.clone(),
-            once_seen: self.once_seen.clone(),
-        }
-    }
-
-    /// Applies a previously captured `RunnerSnapshot`, restoring visit counts
-    /// and the `<<once>>` exhaustion set, then re-enters the snapshotted node
-    /// from its beginning.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`DialogueError::UnknownNode`] if the snapshotted node no longer
-    /// exists in the program (e.g. after a script update).
-    pub fn restore(&mut self, snapshot: crate::runtime::RunnerSnapshot) -> Result<()> {
-        self.visits = snapshot.visits;
-        self.once_seen = snapshot.once_seen;
-        self.stack.clear();
-        self.clear_event_queues();
-        self.state = State::Idle;
-        if let Some(node) = snapshot.current_node {
-            self.start(&node)?;
-        }
-        Ok(())
     }
 }
