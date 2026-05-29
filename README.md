@@ -40,8 +40,6 @@ The harbour demo continues in `examples/harbour/` with an `Options` node (guarde
 cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
 ```
 
-[**SiliSim**](https://silisim.com/) is a browser-first logic-gate course and silicon simulator that drives lesson dialogue with Bubbles. Each lesson loads a `.bub` script at runtime in WebAssembly - speaker lines, hints, and branching tutorial copy in the same event loop as the circuit builder.
-
 ---
 
 ## Quick start
@@ -136,6 +134,12 @@ Bubbles sits in the same space as [Yarn Spinner](https://yarnspinner.dev) and [I
 ## Learn more
 
 The full guide - language reference, integration walkthrough, localisation, save/load, WebAssembly, and annotated examples - lives at **<https://viezevingertjes.github.io/bubbles/>**.
+
+---
+
+## Projects using Bubbles
+
+- **[SiliSim](https://silisim.com/)** — browser-first logic-gate course and silicon simulator. Lesson dialogue (speaker lines, hints, branching tutorial copy) is driven by `.bub` scripts loaded at runtime in WebAssembly, in the same event loop as the circuit builder.
 
 ---
 
