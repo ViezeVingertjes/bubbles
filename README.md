@@ -46,7 +46,7 @@ cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/servic
 
 ```toml
 [dependencies]
-bubbles-dialogue = "1.0.0"
+bubbles-dialogue = "1.0.1"
 ```
 
 On crates.io the package is **`bubbles-dialogue`** (the name **`bubbles`** was already taken). The Rust library is still **`bubbles`**, so you write `use bubbles::{…}` in code.
