@@ -166,10 +166,12 @@ impl<S: VariableStorage> Runner<S> {
         let mut options = Vec::with_capacity(items.len());
         let mut bodies = Vec::with_capacity(items.len());
         for item in items {
-            let available = match &item.cond {
+            let guard_available = match &item.cond {
                 Some(e) => self.eval_expr(e.as_ref())?.is_truthy(),
                 None => true,
             };
+            let once_available = !(item.once && self.once_seen.contains(&item.id));
+            let available = guard_available && once_available;
             let (text, spans) = self.eval_line_text(&item.text, &item.tags)?;
             let line_id = line_id_from_tags(&item.tags);
             let group = option_group_from_tags(&item.tags);
@@ -181,7 +183,8 @@ impl<S: VariableStorage> Runner<S> {
                 group,
                 spans,
             });
-            bodies.push((available, item.body.clone())); // Arc<[Stmt]> - O(1) reference-count bump
+            let once_id = item.once.then(|| item.id.clone());
+            bodies.push((available, once_id, item.body.clone())); // Arc<[Stmt]> - O(1)
         }
         self.option_bodies = bodies;
         self.state = State::AwaitingOption;

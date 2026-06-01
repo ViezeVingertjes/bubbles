@@ -61,7 +61,7 @@ impl Frame {
 }
 
 /// Option bodies held during `AwaitingOption` state.
-type OptionBodies = Vec<(bool, StmtList)>;
+type OptionBodies = Vec<(bool, Option<String>, StmtList)>;
 
 /// Drives execution of a compiled [`Program`], yielding [`DialogueEvent`]s one at a time.
 ///
@@ -187,16 +187,20 @@ impl<S: VariableStorage> Runner<S> {
                 "select_option() called when not awaiting an option".into(),
             ));
         }
-        let (available, body) = self.option_bodies.get(index).cloned().ok_or_else(|| {
-            DialogueError::ProtocolViolation(format!(
-                "option index {index} out of range ({})",
-                self.option_bodies.len()
-            ))
-        })?;
+        let (available, once_id, body) =
+            self.option_bodies.get(index).cloned().ok_or_else(|| {
+                DialogueError::ProtocolViolation(format!(
+                    "option index {index} out of range ({})",
+                    self.option_bodies.len()
+                ))
+            })?;
         if !available {
             return Err(DialogueError::ProtocolViolation(format!(
                 "option index {index} is unavailable (guard not satisfied)"
             )));
+        }
+        if let Some(id) = once_id {
+            self.once_seen.insert(id);
         }
         self.option_bodies.clear();
         self.state = State::Running;

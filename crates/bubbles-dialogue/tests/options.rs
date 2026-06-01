@@ -182,3 +182,40 @@ title: Start
         }
     }
 }
+
+#[test]
+fn once_option_becomes_unavailable_after_selection() {
+    let src = "\
+title: Start
+---
+Pick?
+-> once Ask about the map
+    Asked.
+-> Leave
+    Left.
+===
+";
+    let prog = compile(src).unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+
+    runner.start("Start").unwrap();
+    while let Some(ev) = runner.next_event().unwrap() {
+        if let DialogueEvent::Options(opts) = ev {
+            assert!(opts[0].available);
+            runner.select_option(0).unwrap();
+            break;
+        }
+    }
+
+    runner.start("Start").unwrap();
+    while let Some(ev) = runner.next_event().unwrap() {
+        if let DialogueEvent::Options(opts) = ev {
+            assert!(!opts[0].available, "once option should be exhausted");
+            assert!(opts[1].available);
+            let err = runner.select_option(0).unwrap_err();
+            assert!(matches!(err, DialogueError::ProtocolViolation(_)));
+            runner.select_option(1).unwrap();
+            break;
+        }
+    }
+}
