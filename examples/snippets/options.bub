@@ -1,7 +1,7 @@
 // Snippet: Options
 // Pattern: insult sword-fight duel (classic pirate banter)
-// Features: options, <<if>> / <<elseif>> / <<else>>, guarded options ($sword_skill),
-//            <<jump>> for one-way transitions
+// Features: options, once-options, guarded options ($sword_skill),
+//            <<if>> / <<elseif>> / <<else>>, <<jump>> for one-way transitions
 // Run: cargo run -p bubbles-tui -- examples/snippets/options.bub
 
 title: Start
@@ -11,6 +11,9 @@ title: Start
 Duelist: I challenge you to a duel of wits and blades, stranger!
 Duelist: Let's see if your tongue is as sharp as your cutlass.
 
+-> once Ask for the ground rules.
+    Duelist: We trade insults first. Draw steel only if your wit fails.
+    Duelist: Ask again and I'll know you're stalling.
 -> Deliver a devastating insult. <<if $sword_skill >= 3>>
     You: Your sword arm is as weak as a soggy biscuit!
     Duelist: ...

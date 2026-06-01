@@ -54,3 +54,37 @@ fn getting_started_event_loop_compiles() {
     }
     assert!(saw_options);
 }
+
+#[test]
+fn options_snippet_demonstrates_once_options() {
+    let source = include_str!("../../../examples/snippets/options.bub");
+    let prog = compile(source).unwrap();
+    let mut runner = Runner::new(prog, HashMapStorage::new());
+
+    runner.start("Start").unwrap();
+    let first_options = next_options(&mut runner);
+    let rules_idx = first_options
+        .iter()
+        .position(|o| o.text.contains("ground rules"))
+        .expect("options snippet should include a one-shot rules option");
+    assert!(first_options[rules_idx].available);
+    runner.select_option(rules_idx).unwrap();
+    drain(&mut runner);
+
+    runner.start("Start").unwrap();
+    let second_options = next_options(&mut runner);
+    assert!(
+        !second_options[rules_idx].available,
+        "the rules option should be unavailable after it has been selected"
+    );
+}
+
+fn next_options(runner: &mut Runner<HashMapStorage>) -> Vec<bubbles::DialogueOption> {
+    loop {
+        match runner.next_event().unwrap() {
+            Some(DialogueEvent::Options(options)) => return options,
+            Some(_) => {}
+            None => panic!("expected options"),
+        }
+    }
+}

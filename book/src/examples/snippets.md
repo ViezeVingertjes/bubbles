@@ -12,17 +12,19 @@ Press `r` to reload after editing (re-reads from disk, full reset), `R` to rerun
 
 ## options
 
-**You want branching choices with conditions, and some options that lock out when the player doesn't qualify.**
+**You want branching choices with conditions, including choices that lock out after the player picks them once.**
 
 ```sh
 cargo run -p bubbles-tui -- examples/snippets/options.bub
 ```
 
-A duelist challenges you to an insult sword-fight. Whether you can land the devastating insult depends on `$sword_skill`. Try it with the default value, then change the `<<declare $sword_skill = ...>>` line and press `r` to reload - different skill levels unlock different options and route to different outcome nodes.
+A duelist challenges you to an insult sword-fight. Whether you can land the devastating insult depends on `$sword_skill`, and the rules explanation can only be picked once. Try it with the default value, then change the `<<declare $sword_skill = ...>>` line and press `r` to reload - different skill levels unlock different options and route to different outcome nodes.
 
 Key lines from the script:
 
 ```text
+-> once Ask for the ground rules.
+    Duelist: We trade insults first. Draw steel only if your wit fails.
 -> Deliver a devastating insult. <<if $sword_skill >= 3>>
     You: Your sword arm is as weak as a soggy biscuit!
     Duelist: ...
@@ -33,7 +35,7 @@ Key lines from the script:
     <<jump Defeated>>
 ```
 
-The `<<if>>` after an option text is a guard. The option stays visible but `available: false` when the guard is false. Your game sees this in `DialogueOption.available`.
+The `<<if>>` after an option text is a guard. The option stays visible but `available: false` when the guard is false. The `once` prefix uses the same availability field after the player has selected that option once.
 
 **Remix ideas:**
 - Add a fourth option locked behind `$has_special_item`

@@ -69,6 +69,19 @@ Whether you render locked options greyed-out, hidden, or with a tooltip is your 
 
 > **Tip:** If the player tries to `select_option` on an unavailable entry, Bubbles returns a runtime error. Filter or disable those choices in your UI.
 
+## One-shot options
+
+Prefix an option with `once` when the player should only be able to pick it once:
+
+```text
+-> once Ask about the ground rules.
+    Duelist: Insults first, blades second.
+-> Begin the duel.
+    Duelist: En garde!
+```
+
+After the one-shot option is selected, future visits still include it in the `Options` event, but with `available: false`. This uses the same runner state as `<<once>>` blocks, so it survives snapshots and `R` reruns in the TUI.
+
 ## Options that don't jump
 
 You don't have to `<<jump>>` out of an option. If the body just runs and ends, execution falls through to whatever comes after the options block:
@@ -108,7 +121,7 @@ Three options, each guarded by gold, each doing its own thing. The final line ru
 
 ---
 
-> **Try it:** [`examples/snippets/options.bub`](../../examples/snippets/options.bub): an insult sword-fight duel showing guarded options and an `<<elseif>>` skill chain.
+> **Try it:** [`examples/snippets/options.bub`](../../examples/snippets/options.bub): an insult sword-fight duel showing one-shot options, guarded options, and an `<<elseif>>` skill chain.
 > ```sh
 > cargo run -p bubbles-tui -- examples/snippets/options.bub
 > ```
