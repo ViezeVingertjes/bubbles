@@ -153,6 +153,11 @@ fn from_error_undefined_variable() {
         o.title
     );
     assert!(o.message.contains("$hp"));
+    assert!(
+        o.message.contains("<<declare>>") || o.message.contains("storage"),
+        "undefined variable overlay should suggest declaring or seeding storage, got {:?}",
+        o.message
+    );
 }
 
 #[test]
@@ -197,6 +202,11 @@ fn from_error_type_mismatch() {
     );
     assert!(o.message.contains("number"));
     assert!(o.message.contains("string"));
+    assert!(
+        o.message.contains("expression"),
+        "type mismatch overlay should point writers at the expression, got {:?}",
+        o.message
+    );
 }
 
 #[test]

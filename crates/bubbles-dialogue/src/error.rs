@@ -23,7 +23,9 @@ pub enum DialogueError {
     #[error("unknown node '{0}'")]
     UnknownNode(String),
     /// A duplicate node title was found across merged sources.
-    #[error("duplicate node title '{0}'")]
+    #[error(
+        "duplicate node title '{0}' (add distinct `when:` headers for an intentional node group)"
+    )]
     DuplicateNode(String),
     /// A validation failure detected after all sources are merged.
     #[error("validation error: {0}")]

@@ -11,18 +11,18 @@ use crate::error::{DialogueError, Result};
 pub fn validate(program: &Program) -> Result<()> {
     for variants in program.nodes.values() {
         for node in variants {
-            validate_stmts(node.body.as_ref(), program)?;
+            validate_stmts(node.body.as_ref(), program, &node.title)?;
         }
     }
     Ok(())
 }
 
-fn validate_stmts(stmts: &[Stmt], program: &Program) -> Result<()> {
+fn validate_stmts(stmts: &[Stmt], program: &Program, node_title: &str) -> Result<()> {
     for stmt in stmts {
         match stmt {
             Stmt::Jump(target) | Stmt::Detour(target) if !program.node_exists(target) => {
                 return Err(DialogueError::Validation(format!(
-                    "reference to unknown node '{target}'"
+                    "node '{node_title}' references unknown node '{target}'"
                 )));
             }
             Stmt::If {
@@ -30,19 +30,19 @@ fn validate_stmts(stmts: &[Stmt], program: &Program) -> Result<()> {
                 else_body,
             } => {
                 for b in branches {
-                    validate_stmts(&b.body, program)?;
+                    validate_stmts(&b.body, program, node_title)?;
                 }
-                validate_stmts(else_body, program)?;
+                validate_stmts(else_body, program, node_title)?;
             }
             Stmt::Once {
                 body, else_body, ..
             } => {
-                validate_stmts(body, program)?;
-                validate_stmts(else_body, program)?;
+                validate_stmts(body, program, node_title)?;
+                validate_stmts(else_body, program, node_title)?;
             }
             Stmt::Options(items) => {
                 for item in items {
-                    validate_stmts(&item.body, program)?;
+                    validate_stmts(&item.body, program, node_title)?;
                 }
             }
             _ => {}
