@@ -67,7 +67,12 @@ fn duplicate_node_title_is_an_error() {
         ("file_a", "title: Dup\n---\n===\n"),
         ("file_b", "title: Dup\n---\n===\n"),
     ]);
-    assert!(result.is_err());
+    let err = result.unwrap_err().to_string();
+    assert!(err.contains("Dup"), "got: {err}");
+    assert!(
+        err.contains("when:"),
+        "duplicate node errors should mention `when:` grouping, got: {err}"
+    );
 }
 
 #[test]
@@ -207,6 +212,22 @@ fn error_invalid_expression_in_once_if() {
         err.contains("<<once if>>") || err.contains("once if"),
         "got: {err}"
     );
+}
+
+#[test]
+fn error_missing_endif() {
+    let err = compile("title: A\n---\n<<if true>>\n    Hello.\n===\n")
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("<<endif>>"), "got: {err}");
+}
+
+#[test]
+fn error_missing_endonce() {
+    let err = compile("title: A\n---\n<<once>>\n    Hello.\n===\n")
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("<<endonce>>"), "got: {err}");
 }
 
 #[test]
@@ -404,6 +425,10 @@ fn compile_rejects_unknown_jump_target() {
         err.to_string().contains("Missing"),
         "error should mention the unknown target, got: {err}"
     );
+    assert!(
+        err.to_string().contains("'A'"),
+        "error should mention the node containing the bad jump, got: {err}"
+    );
 }
 
 #[test]
@@ -429,6 +454,12 @@ fn compile_many_accepts_cross_file_jump() {
         ("b", "title: B\n---\nHello.\n===\n"),
     ]);
     assert!(result.is_ok());
+}
+
+#[test]
+fn compile_does_not_require_variables_to_be_declared() {
+    let src = "title: A\n---\n<<if $host_flag>>\n    Host-controlled branch.\n<<endif>>\n===\n";
+    compile(src).expect("host-controlled variables should compile without declarations");
 }
 
 #[test]

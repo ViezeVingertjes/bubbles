@@ -66,7 +66,9 @@ impl ErrorOverlay {
             },
             DialogueError::UndefinedVariable(name) => Self {
                 title: "Undefined variable".to_owned(),
-                message: format!("undefined variable '{name}'"),
+                message: format!(
+                    "undefined variable '{name}' - add `<<declare {name} = ...>>` or seed it in storage before playback"
+                ),
                 location: None,
                 excerpt: None,
             },
@@ -88,7 +90,7 @@ impl ErrorOverlay {
                 context,
             } => Self {
                 title: "Type mismatch".to_owned(),
-                message: format!("in {context}: expected {expected}, got {got}"),
+                message: format!("in expression {context}: expected {expected}, got {got}"),
                 location: None,
                 excerpt: None,
             },

@@ -75,10 +75,16 @@ impl Parser<'_> {
                 _ => break,
             }
         }
-        if let Some((_, l)) = self.peek()
-            && l.trim() == "<<endif>>"
-        {
-            self.advance();
+        match self.peek() {
+            Some((_, l)) if l.trim() == "<<endif>>" => {
+                self.advance();
+            }
+            Some((line, l)) => {
+                return Err(self.err(line, format!("expected `<<endif>>`, got `{}`", l.trim())));
+            }
+            None => {
+                return Err(self.err(if_lineno, "unexpected end of file, expected `<<endif>>`"));
+            }
         }
         Ok(Stmt::If {
             branches,
@@ -105,10 +111,19 @@ impl Parser<'_> {
         } else {
             Vec::new()
         };
-        if let Some((_, l)) = self.peek()
-            && l.trim() == "<<endonce>>"
-        {
-            self.advance();
+        match self.peek() {
+            Some((_, l)) if l.trim() == "<<endonce>>" => {
+                self.advance();
+            }
+            Some((line, l)) => {
+                return Err(self.err(line, format!("expected `<<endonce>>`, got `{}`", l.trim())));
+            }
+            None => {
+                return Err(self.err(
+                    once_lineno,
+                    "unexpected end of file, expected `<<endonce>>`",
+                ));
+            }
         }
         Ok(Stmt::Once {
             block_id,

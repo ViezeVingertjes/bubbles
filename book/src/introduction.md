@@ -20,7 +20,7 @@ No async. No global state. No engine lock-in. Bubbles runs wherever Rust runs - 
 - Inline markup (`[b]text[/b]`, `[wave]text[/wave]`, `[pause /]`) stripped to byte-precise spans your renderer consumes
 - Line groups and node groups for variety (no more hearing the same bark twice)
 - A pluggable localisation seam, custom functions, and custom saliency strategies
-- Save/load via serde snapshots
+- Save/load snapshots, with serde support for persistence
 - An allocation-conscious runtime with zero async primitives
 
 ## Who Bubbles is for

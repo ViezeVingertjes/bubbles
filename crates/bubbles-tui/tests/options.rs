@@ -54,6 +54,32 @@ fn focus_next_wraps_and_select_option_commits_by_index() {
 }
 
 #[test]
+fn focus_navigation_skips_unavailable_options() {
+    let src = "\
+title: A
+---
+Pick one.
+-> First
+    first.
+-> Locked <<if false>>
+    locked.
+-> Third
+    third.
+===
+";
+    let mut state = AppState::from_source(src, "A").unwrap();
+    advance_until_options(&mut state);
+
+    assert_eq!(state.focused_option(), Some(0));
+    state.apply(Intent::FocusNext);
+    assert_eq!(state.focused_option(), Some(2));
+    state.apply(Intent::FocusNext);
+    assert_eq!(state.focused_option(), Some(0));
+    state.apply(Intent::FocusPrev);
+    assert_eq!(state.focused_option(), Some(2));
+}
+
+#[test]
 fn advance_commits_the_focused_option_when_options_are_showing() {
     let mut state = AppState::from_source(BRANCH, "A").unwrap();
     advance_until_options(&mut state);
