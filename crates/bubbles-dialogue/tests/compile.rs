@@ -215,6 +215,22 @@ fn error_invalid_expression_in_once_if() {
 }
 
 #[test]
+fn error_missing_endif() {
+    let err = compile("title: A\n---\n<<if true>>\n    Hello.\n===\n")
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("<<endif>>"), "got: {err}");
+}
+
+#[test]
+fn error_missing_endonce() {
+    let err = compile("title: A\n---\n<<once>>\n    Hello.\n===\n")
+        .unwrap_err()
+        .to_string();
+    assert!(err.contains("<<endonce>>"), "got: {err}");
+}
+
+#[test]
 fn error_unexpected_eof_before_body_delimiter() {
     let err = compile("title: A\n").unwrap_err().to_string();
     assert!(
