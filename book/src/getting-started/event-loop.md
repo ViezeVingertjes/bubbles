@@ -106,7 +106,7 @@ Games run on frames. Dialogue runs on beats. A push-based callback system would 
 
 - You poll the runner when you're ready - usually when the player presses a key.
 - The runner never allocates on its own. The event you get back owns its data; the runner moves on.
-- Saving and loading is trivial: snapshot the runner, come back next Tuesday.
+- Saving and loading is explicit: snapshot the runner and persist your variable storage beside it.
 
 This is also why you won't find `async` anywhere. Bubbles is meant to be called from a fixed-timestep `update()` with no tears.
 

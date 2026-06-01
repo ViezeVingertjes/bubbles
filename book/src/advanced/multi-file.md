@@ -91,8 +91,9 @@ validate(&program)?;
 Catches things like:
 
 - `<<jump>>`/`<<detour>>` to an unknown node.
-- References to undeclared variables in expressions (where possible).
 - Duplicate group titles that aren't `when:`-differentiated.
+
+It does not require every variable to be declared. Host-supplied variables are a normal integration pattern, and `<<declare>>` is for script defaults and introspection rather than a compile-time requirement.
 
 ## Introspection
 

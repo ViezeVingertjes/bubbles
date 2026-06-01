@@ -432,6 +432,12 @@ fn compile_many_accepts_cross_file_jump() {
 }
 
 #[test]
+fn compile_does_not_require_variables_to_be_declared() {
+    let src = "title: A\n---\n<<if $host_flag>>\n    Host-controlled branch.\n<<endif>>\n===\n";
+    compile(src).expect("host-controlled variables should compile without declarations");
+}
+
+#[test]
 fn compile_rejects_empty_source() {
     let err = compile("").unwrap_err();
     assert!(matches!(err, DialogueError::Validation(_)));
