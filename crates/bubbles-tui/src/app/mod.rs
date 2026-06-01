@@ -256,11 +256,16 @@ impl AppState {
             return;
         }
         let current = self.focused_option.unwrap_or(0);
-        let next = match delta {
-            FocusShift::Next => (current + 1) % len,
-            FocusShift::Prev => (current + len - 1) % len,
-        };
-        self.focused_option = Some(next);
+        for step in 1..=len {
+            let next = match delta {
+                FocusShift::Next => (current + step) % len,
+                FocusShift::Prev => (current + len - (step % len)) % len,
+            };
+            if self.options[next].available {
+                self.focused_option = Some(next);
+                return;
+            }
+        }
     }
 
     const fn toggle_focus(&mut self) {
