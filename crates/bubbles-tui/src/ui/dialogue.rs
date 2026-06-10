@@ -19,13 +19,13 @@ const UNFOCUSED_MARKER: &str = "  ";
 const LOCKED_MARKER: &str = " \u{2717}";
 
 /// Height of the options list widget (rows + 2 border lines).
-pub fn options_height(state: &AppState) -> u16 {
+pub(super) fn options_height(state: &AppState) -> u16 {
     let rows = u16::try_from(state.options().len()).unwrap_or(u16::MAX);
     rows.saturating_add(2)
 }
 
 /// Renders the options list into `area`.
-pub fn render_options(state: &AppState, frame: &mut Frame<'_>, area: Rect) {
+pub(super) fn render_options(state: &AppState, frame: &mut Frame<'_>, area: Rect) {
     frame.render_widget(options_list(state), area);
 }
 

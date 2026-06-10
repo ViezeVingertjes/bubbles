@@ -31,6 +31,13 @@ pub fn line_mode_from_tags(tags: &[String]) -> LineMode {
     }
 }
 
+fn tag_value(tags: &[String], prefix: &str) -> Option<String> {
+    tags.iter()
+        .find_map(|t| t.strip_prefix(prefix))
+        .map(str::to_owned)
+        .filter(|s| !s.is_empty())
+}
+
 /// Returns the group from a `#group:<name>` tag in `tags`, if any (first match wins).
 ///
 /// Used for UI constraints (radio-button semantics, mutually exclusive option sets).
@@ -38,10 +45,7 @@ pub fn line_mode_from_tags(tags: &[String]) -> LineMode {
 /// the `group` field for constraint logic and `tags` for styling/metadata.
 #[must_use]
 pub fn option_group_from_tags(tags: &[String]) -> Option<String> {
-    tags.iter()
-        .find_map(|t| t.strip_prefix("group:"))
-        .map(ToOwned::to_owned)
-        .filter(|s| !s.is_empty())
+    tag_value(tags, "group:")
 }
 
 /// A resolved inline markup span: a named annotation over a byte range in the
@@ -76,10 +80,7 @@ pub struct MarkupSpan {
 /// without re-parsing [`DialogueEvent::Line::tags`] or [`DialogueOption::tags`].
 #[must_use]
 pub fn line_id_from_tags(tags: &[String]) -> Option<String> {
-    tags.iter()
-        .find_map(|t| t.strip_prefix("line:"))
-        .map(str::to_owned)
-        .filter(|s| !s.is_empty())
+    tag_value(tags, "line:")
 }
 
 /// An option presented to the player.

@@ -1,7 +1,5 @@
 //! Integration tests for shortcut options.
 
-mod common;
-
 use bubbles::{DialogueError, DialogueEvent, HashMapStorage, Runner, RunnerPhase, compile};
 
 fn play_select(source: &str, node: &str, choice: usize) -> Vec<DialogueEvent> {

@@ -15,6 +15,68 @@ type OpenTag = (String, Vec<(String, String)>, usize);
 
 use super::Runner;
 
+fn owned_properties<K, V>(properties: impl IntoIterator<Item = (K, V)>) -> Vec<(String, String)>
+where
+    K: Into<String>,
+    V: Into<String>,
+{
+    properties
+        .into_iter()
+        .map(|(key, value)| (key.into(), value.into()))
+        .collect()
+}
+
+fn open_markup(
+    open_stack: &mut Vec<OpenTag>,
+    name: impl Into<String>,
+    properties: Vec<(String, String)>,
+    start: usize,
+) {
+    open_stack.push((name.into(), properties, start));
+}
+
+fn close_markup(
+    open_stack: &mut Vec<OpenTag>,
+    spans: &mut Vec<MarkupSpan>,
+    name: &str,
+    end: usize,
+) {
+    if let Some(pos) = open_stack.iter().rposition(|(n, _, _)| n == name) {
+        let (open_name, properties, start) = open_stack.remove(pos);
+        spans.push(MarkupSpan {
+            name: open_name,
+            start,
+            length: end - start,
+            properties,
+        });
+    }
+}
+
+fn self_closing_markup(
+    spans: &mut Vec<MarkupSpan>,
+    name: impl Into<String>,
+    properties: Vec<(String, String)>,
+    start: usize,
+) {
+    spans.push(MarkupSpan {
+        name: name.into(),
+        start,
+        length: 0,
+        properties,
+    });
+}
+
+fn finish_open_markup(open_stack: Vec<OpenTag>, spans: &mut Vec<MarkupSpan>) {
+    for (name, properties, start) in open_stack {
+        spans.push(MarkupSpan {
+            name,
+            start,
+            length: 0,
+            properties,
+        });
+    }
+}
+
 impl<S: VariableStorage> Runner<S> {
     /// Evaluates a compile-time-parsed expression against current storage and the
     /// function library.
@@ -70,43 +132,18 @@ impl<S: VariableStorage> Runner<S> {
                 TextSegment::Literal(s) => out.push_str(s),
                 TextSegment::Expr(e) => out.push_str(&self.eval_expr(e.as_ref())?.to_string()),
                 TextSegment::MarkupOpen { name, properties } => {
-                    open_stack.push((name.clone(), properties.clone(), out.len()));
+                    open_markup(&mut open_stack, name.clone(), properties.clone(), out.len());
                 }
                 TextSegment::MarkupClose { name } => {
-                    // Search from the top of the stack for the matching open tag.
-                    if let Some(pos) = open_stack.iter().rposition(|(n, _, _)| n == name) {
-                        let (open_name, properties, start) = open_stack.remove(pos);
-                        spans.push(MarkupSpan {
-                            name: open_name,
-                            start,
-                            length: out.len() - start,
-                            properties,
-                        });
-                    }
-                    // Unmatched close tags (can arise in translated templates) are ignored.
+                    close_markup(&mut open_stack, &mut spans, name, out.len());
                 }
                 TextSegment::MarkupSelfClose { name, properties } => {
-                    spans.push(MarkupSpan {
-                        name: name.clone(),
-                        start: out.len(),
-                        length: 0,
-                        properties: properties.clone(),
-                    });
+                    self_closing_markup(&mut spans, name.clone(), properties.clone(), out.len());
                 }
             }
         }
 
-        // Any still-open tags (no matching close) are finalised as zero-length spans.
-        // This keeps leniency for translated templates; compile-time sources already
-        // caught unclosed brackets as parse errors.
-        for (name, properties, start) in open_stack {
-            spans.push(MarkupSpan {
-                name,
-                start,
-                length: 0,
-                properties,
-            });
-        }
+        finish_open_markup(open_stack, &mut spans);
 
         Ok((out, spans))
     }
@@ -159,49 +196,25 @@ impl<S: VariableStorage> Runner<S> {
                     let expr = parse_expr_at(src, "<translation>", 0)?;
                     out.push_str(&self.eval_expr(&expr)?.to_string());
                 }
-                TextToken::MarkupOpen { name, properties } => {
-                    open_stack.push((
-                        name.to_owned(),
-                        properties
-                            .iter()
-                            .map(|(k, v)| (k.to_string(), v.to_string()))
-                            .collect(),
-                        out.len(),
-                    ));
-                }
+                TextToken::MarkupOpen { name, properties } => open_markup(
+                    &mut open_stack,
+                    name,
+                    owned_properties(properties.iter().map(|(k, v)| (*k, *v))),
+                    out.len(),
+                ),
                 TextToken::MarkupClose { name } => {
-                    if let Some(pos) = open_stack.iter().rposition(|(n, _, _)| n == name) {
-                        let (open_name, properties, start) = open_stack.remove(pos);
-                        spans.push(MarkupSpan {
-                            name: open_name,
-                            start,
-                            length: out.len() - start,
-                            properties,
-                        });
-                    }
+                    close_markup(&mut open_stack, &mut spans, name, out.len());
                 }
-                TextToken::MarkupSelfClose { name, properties } => {
-                    spans.push(MarkupSpan {
-                        name: name.to_owned(),
-                        start: out.len(),
-                        length: 0,
-                        properties: properties
-                            .iter()
-                            .map(|(k, v)| (k.to_string(), v.to_string()))
-                            .collect(),
-                    });
-                }
+                TextToken::MarkupSelfClose { name, properties } => self_closing_markup(
+                    &mut spans,
+                    name,
+                    owned_properties(properties.iter().map(|(k, v)| (*k, *v))),
+                    out.len(),
+                ),
             }
         }
 
-        for (name, properties, start) in open_stack {
-            spans.push(MarkupSpan {
-                name,
-                start,
-                length: 0,
-                properties,
-            });
-        }
+        finish_open_markup(open_stack, &mut spans);
 
         Ok((out, spans))
     }

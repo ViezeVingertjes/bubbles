@@ -8,8 +8,6 @@
 
 use bubbles::{DialogueEvent, HashMapStorage, Runner, compile};
 
-mod assertions;
-
 /// Compiles `source` and drives the runner from `start_node` to completion,
 /// collecting all events. Panics on any compile or runtime error.
 pub fn play(source: &str, start_node: &str) -> Vec<DialogueEvent> {
@@ -57,4 +55,43 @@ pub fn line_texts(events: &[DialogueEvent]) -> Vec<&str> {
             }
         })
         .collect()
+}
+
+/// Drains `runner` and returns every emitted line text.
+pub fn drain_line_texts(runner: &mut Runner<HashMapStorage>) -> Vec<String> {
+    drain(runner)
+        .into_iter()
+        .filter_map(|e| {
+            if let DialogueEvent::Line { text, .. } = e {
+                Some(text)
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+/// Advances until the next options event and returns its options.
+pub fn next_options(runner: &mut Runner<HashMapStorage>) -> Vec<bubbles::DialogueOption> {
+    loop {
+        match runner.next_event().unwrap() {
+            Some(DialogueEvent::Options(options)) => return options,
+            Some(_) => {}
+            None => panic!("expected options"),
+        }
+    }
+}
+
+/// Returns the first line event's text and markup spans.
+pub fn first_line(events: &[DialogueEvent]) -> (&str, &[bubbles::MarkupSpan]) {
+    events
+        .iter()
+        .find_map(|e| {
+            if let DialogueEvent::Line { text, spans, .. } = e {
+                Some((text.as_str(), spans.as_slice()))
+            } else {
+                None
+            }
+        })
+        .expect("no Line event")
 }

@@ -85,10 +85,12 @@ impl<S: VariableStorage> RunnerBuilder<S> {
     /// execution.
     #[must_use]
     pub fn build(self) -> Runner<S> {
-        let mut runner = Runner::new(self.program, self.storage);
-        runner.set_saliency_box(self.saliency);
-        runner.set_provider_box(self.provider);
-        *runner.library_mut() = self.library;
-        runner
+        Runner::with_parts(
+            self.program,
+            self.storage,
+            self.saliency,
+            self.provider,
+            self.library,
+        )
     }
 }

@@ -6,7 +6,7 @@ use bubbles::{
     DialogueEvent, HashMapProvider, HashMapStorage, RunnerBuilder, Value, VariableStorage, compile,
 };
 
-use common::{drain, play};
+use common::{drain, first_line, play};
 
 // ── compile-time acceptance ───────────────────────────────────────────────────
 
@@ -234,19 +234,4 @@ fn markup_on_line_group_variant_produces_span() {
     assert_eq!(text, "Hi");
     assert_eq!(spans.len(), 1);
     assert_eq!(spans[0].name, "wave");
-}
-
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-fn first_line(events: &[DialogueEvent]) -> (String, Vec<bubbles::MarkupSpan>) {
-    events
-        .iter()
-        .find_map(|e| {
-            if let DialogueEvent::Line { text, spans, .. } = e {
-                Some((text.clone(), spans.clone()))
-            } else {
-                None
-            }
-        })
-        .expect("no Line event")
 }

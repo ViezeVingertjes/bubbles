@@ -1,7 +1,5 @@
 //! End-to-end test for the harbour example scripts.
 
-mod common;
-
 use bubbles::{DialogueEvent, HashMapStorage, Runner, RunnerPhase, compile_many};
 
 #[test]
