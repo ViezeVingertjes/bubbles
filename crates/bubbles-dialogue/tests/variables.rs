@@ -1,7 +1,5 @@
 //! Integration tests for <<set>>, <<declare>>, and variable storage.
 
-mod common;
-
 use bubbles::{DialogueEvent, HashMapStorage, Runner, Value, VariableStorage, compile};
 
 #[test]

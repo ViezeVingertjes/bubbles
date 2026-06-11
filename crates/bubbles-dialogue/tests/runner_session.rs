@@ -1,7 +1,5 @@
 //! Runner session hygiene: `start` clears stale queues, and read-only introspection.
 
-mod common;
-
 use bubbles::{DialogueError, DialogueEvent, HashMapStorage, Runner, RunnerPhase, compile};
 
 #[test]

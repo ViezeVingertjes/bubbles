@@ -25,10 +25,18 @@ pub(crate) unsafe fn str_from_parts<'a>(
 /// `BUBBLES_OK`. Sets the thread-local error and returns `BUBBLES_ERR` if `s` contains an
 /// interior NUL byte.
 pub(crate) fn write_cstring_out(out: *mut *mut c_char, s: String) -> c_int {
+    write_cstring_out_with_error(out, s, "string contained interior NUL")
+}
+
+pub(crate) fn write_cstring_out_with_error(
+    out: *mut *mut c_char,
+    s: String,
+    interior_nul_error: &'static str,
+) -> c_int {
     let cs = match CString::new(s) {
         Ok(c) => c,
         Err(_) => {
-            set_err("string contained interior NUL");
+            set_err(interior_nul_error);
             return BUBBLES_ERR;
         }
     };

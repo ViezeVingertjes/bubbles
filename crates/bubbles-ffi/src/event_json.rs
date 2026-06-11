@@ -1,11 +1,20 @@
 //! Serialize [`DialogueEvent`] to JSON for the C ABI without adding serde to the core crate.
 
-use bubbles::DialogueEvent;
-use serde_json::json;
+use bubbles::{DialogueEvent, MarkupSpan};
+use serde_json::{Value, json};
+
+fn markup_span_to_json(span: &MarkupSpan) -> Value {
+    json!({
+        "name": span.name,
+        "start": span.start,
+        "length": span.length,
+        "properties": span.properties,
+    })
+}
 
 /// Serializes a runtime event to a JSON object string for the C ABI.
 #[must_use]
-pub fn dialogue_event_to_json(ev: &DialogueEvent) -> String {
+pub(crate) fn dialogue_event_to_json(ev: &DialogueEvent) -> String {
     match ev {
         DialogueEvent::NodeStarted(node) => json!({
             "kind": "NodeStarted",
@@ -30,12 +39,7 @@ pub fn dialogue_event_to_json(ev: &DialogueEvent) -> String {
                 bubbles::LineMode::Narration => "narration",
                 bubbles::LineMode::Debug => "debug",
             },
-            "spans": spans.iter().map(|s| json!({
-                "name": s.name,
-                "start": s.start,
-                "length": s.length,
-                "properties": s.properties,
-            })).collect::<Vec<_>>(),
+            "spans": spans.iter().map(markup_span_to_json).collect::<Vec<_>>(),
         })
         .to_string(),
         DialogueEvent::Options(opts) => json!({
@@ -47,12 +51,7 @@ pub fn dialogue_event_to_json(ev: &DialogueEvent) -> String {
                     "line_id": o.line_id,
                     "tags": o.tags,
                     "group": o.group,
-                    "spans": o.spans.iter().map(|s| json!({
-                        "name": s.name,
-                        "start": s.start,
-                        "length": s.length,
-                        "properties": s.properties,
-                    })).collect::<Vec<_>>(),
+                    "spans": o.spans.iter().map(markup_span_to_json).collect::<Vec<_>>(),
                 })
             }).collect::<Vec<_>>(),
         })

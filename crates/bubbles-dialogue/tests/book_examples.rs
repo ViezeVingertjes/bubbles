@@ -3,7 +3,7 @@
 mod common;
 
 use bubbles::{DialogueEvent, HashMapStorage, Runner, compile};
-use common::drain;
+use common::{drain, next_options};
 
 const FIRST_DIALOGUE: &str = r"
 title: Start
@@ -77,14 +77,4 @@ fn options_snippet_demonstrates_once_options() {
         !second_options[rules_idx].available,
         "the rules option should be unavailable after it has been selected"
     );
-}
-
-fn next_options(runner: &mut Runner<HashMapStorage>) -> Vec<bubbles::DialogueOption> {
-    loop {
-        match runner.next_event().unwrap() {
-            Some(DialogueEvent::Options(options)) => return options,
-            Some(_) => {}
-            None => panic!("expected options"),
-        }
-    }
 }

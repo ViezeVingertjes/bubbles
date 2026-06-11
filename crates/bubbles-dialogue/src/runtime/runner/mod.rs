@@ -109,6 +109,22 @@ impl<S: VariableStorage> Runner<S> {
     /// Creates a new runner for the given program and variable storage.
     #[must_use]
     pub fn new(program: Program, storage: S) -> Self {
+        Self::with_parts(
+            program,
+            storage,
+            Box::new(FirstAvailable),
+            Box::new(PassthroughProvider),
+            FunctionLibrary::new(),
+        )
+    }
+
+    pub(super) fn with_parts(
+        program: Program,
+        storage: S,
+        saliency: Box<dyn SaliencyStrategy>,
+        provider: Box<dyn LineProvider>,
+        library: FunctionLibrary,
+    ) -> Self {
         Self {
             program,
             storage,
@@ -116,11 +132,11 @@ impl<S: VariableStorage> Runner<S> {
             stack: Vec::new(),
             pending: VecDeque::new(),
             option_bodies: Vec::new(),
-            library: FunctionLibrary::new(),
+            library,
             visits: HashMap::new(),
             once_seen: HashSet::new(),
-            saliency: Box::new(FirstAvailable),
-            provider: Box::new(PassthroughProvider),
+            saliency,
+            provider,
         }
     }
 
@@ -278,19 +294,5 @@ impl<S: VariableStorage> Runner<S> {
     /// Sets the line provider used for localisation lookup.
     pub fn set_provider(&mut self, provider: impl LineProvider) {
         self.provider = Box::new(provider);
-    }
-
-    /// Replaces the saliency strategy from an already-boxed value.
-    ///
-    /// Used by [`crate::runtime::RunnerBuilder`] to avoid double-boxing.
-    pub(crate) fn set_saliency_box(&mut self, strategy: Box<dyn SaliencyStrategy>) {
-        self.saliency = strategy;
-    }
-
-    /// Sets the line provider from an already-boxed value.
-    ///
-    /// Used by [`crate::runtime::RunnerBuilder`] to avoid double-boxing.
-    pub(crate) fn set_provider_box(&mut self, provider: Box<dyn LineProvider>) {
-        self.provider = provider;
     }
 }

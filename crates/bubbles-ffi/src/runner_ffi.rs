@@ -1,6 +1,6 @@
 //! Runner lifecycle and stepping.
 
-use std::ffi::{CString, c_char, c_int, c_void};
+use std::ffi::{c_char, c_int, c_void};
 use std::ptr;
 
 use bubbles::{HashMapStorage, Runner};
@@ -8,7 +8,7 @@ use bubbles::{HashMapStorage, Runner};
 use crate::error::{clear_err, set_err};
 use crate::event_json;
 use crate::runner_config::build_runner;
-use crate::util::str_from_parts;
+use crate::util::{str_from_parts, write_cstring_out_with_error};
 use crate::{BUBBLES_DONE, BUBBLES_ERR, BUBBLES_OK};
 
 /// Creates a runner. **Consumes** `program`; do not free the program handle afterward.
@@ -91,18 +91,11 @@ pub unsafe extern "C" fn bubbles_runner_next_event(
     match runner.next_event() {
         Ok(Some(ev)) => {
             let json = event_json::dialogue_event_to_json(&ev);
-            let cs = match CString::new(json) {
-                Ok(s) => s,
-                Err(_) => {
-                    set_err("failed to build event JSON (interior NUL)");
-                    return BUBBLES_ERR;
-                }
-            };
-            let ptr = cs.into_raw();
-            unsafe {
-                *out_event_json = ptr;
-            }
-            BUBBLES_OK
+            write_cstring_out_with_error(
+                out_event_json,
+                json,
+                "failed to build event JSON (interior NUL)",
+            )
         }
         Ok(None) => {
             unsafe {

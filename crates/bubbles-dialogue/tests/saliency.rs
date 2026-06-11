@@ -2,18 +2,11 @@
 //! `RandomAvailable`, and `BestLeastRecentlyViewed`, used with line groups
 //! and node groups.
 
-use bubbles::saliency::{BestLeastRecentlyViewed, FirstAvailable};
-use bubbles::{DialogueEvent, HashMapStorage, Runner, compile};
+mod common;
 
-fn line_texts(runner: &mut Runner<HashMapStorage>) -> Vec<String> {
-    let mut out = Vec::new();
-    while let Some(ev) = runner.next_event().unwrap() {
-        if let DialogueEvent::Line { text, .. } = ev {
-            out.push(text);
-        }
-    }
-    out
-}
+use bubbles::saliency::{BestLeastRecentlyViewed, FirstAvailable};
+use bubbles::{HashMapStorage, Runner, compile};
+use common::drain_line_texts;
 
 // ── FirstAvailable (default) ──────────────────────────────────────────────────
 
@@ -30,9 +23,9 @@ title: Bark
     let prog = compile(src).unwrap();
     let mut runner = Runner::new(prog, HashMapStorage::new());
     runner.start("Bark").unwrap();
-    assert_eq!(line_texts(&mut runner), ["Line A."]);
+    assert_eq!(drain_line_texts(&mut runner), ["Line A."]);
     runner.start("Bark").unwrap();
-    assert_eq!(line_texts(&mut runner), ["Line A."]);
+    assert_eq!(drain_line_texts(&mut runner), ["Line A."]);
 }
 
 // ── BestLeastRecentlyViewed ────────────────────────────────────────────────────
@@ -52,17 +45,17 @@ title: Bark
     runner.set_saliency(BestLeastRecentlyViewed::new());
 
     runner.start("Bark").unwrap();
-    assert_eq!(line_texts(&mut runner), ["Line A."]);
+    assert_eq!(drain_line_texts(&mut runner), ["Line A."]);
 
     runner.start("Bark").unwrap();
-    assert_eq!(line_texts(&mut runner), ["Line B."]);
+    assert_eq!(drain_line_texts(&mut runner), ["Line B."]);
 
     runner.start("Bark").unwrap();
-    assert_eq!(line_texts(&mut runner), ["Line C."]);
+    assert_eq!(drain_line_texts(&mut runner), ["Line C."]);
 
     // Fourth visit wraps back to A (oldest).
     runner.start("Bark").unwrap();
-    assert_eq!(line_texts(&mut runner), ["Line A."]);
+    assert_eq!(drain_line_texts(&mut runner), ["Line A."]);
 }
 
 #[test]
@@ -84,10 +77,10 @@ Almost empty.
     runner.set_saliency(BestLeastRecentlyViewed::new());
 
     runner.start("Shop").unwrap();
-    let t1 = line_texts(&mut runner);
+    let t1 = drain_line_texts(&mut runner);
 
     runner.start("Shop").unwrap();
-    let t2 = line_texts(&mut runner);
+    let t2 = drain_line_texts(&mut runner);
 
     // The two visits should yield different lines.
     assert_ne!(t1, t2, "BLRV should alternate between node variants");
@@ -108,7 +101,7 @@ title: Bark
 
     runner.start("Bark").unwrap();
     // Line A is guarded false, so BLRV picks Line B even though A is "newer".
-    assert_eq!(line_texts(&mut runner), ["Line B."]);
+    assert_eq!(drain_line_texts(&mut runner), ["Line B."]);
 }
 
 // ── custom strategy ────────────────────────────────────────────────────────────
@@ -142,7 +135,7 @@ title: Lines
     runner.set_saliency(AlwaysLast);
 
     runner.start("Lines").unwrap();
-    assert_eq!(line_texts(&mut runner), ["Third."]);
+    assert_eq!(drain_line_texts(&mut runner), ["Third."]);
 }
 
 // ── line provider ─────────────────────────────────────────────────────────────
@@ -163,13 +156,7 @@ Greetings! #line:greeting_id
     let mut runner = Runner::new(prog.clone(), HashMapStorage::new());
     runner.set_provider(PassthroughProvider);
     runner.start("Intro").unwrap();
-    let mut default_text = String::new();
-    while let Some(ev) = runner.next_event().unwrap() {
-        if let DialogueEvent::Line { text, .. } = ev {
-            default_text = text;
-        }
-    }
-    assert_eq!(default_text, "Greetings!");
+    assert_eq!(drain_line_texts(&mut runner), ["Greetings!"]);
 
     // HashMapProvider returns the translated string.
     let mut provider = HashMapProvider::new();
@@ -177,13 +164,7 @@ Greetings! #line:greeting_id
     let mut runner2 = Runner::new(prog, HashMapStorage::new());
     runner2.set_provider(provider);
     runner2.start("Intro").unwrap();
-    let mut translated = String::new();
-    while let Some(ev) = runner2.next_event().unwrap() {
-        if let DialogueEvent::Line { text, .. } = ev {
-            translated = text;
-        }
-    }
-    assert_eq!(translated, "Hallo!");
+    assert_eq!(drain_line_texts(&mut runner2), ["Hallo!"]);
 }
 
 // ── FirstAvailable public strategy type ──────────────────────────────────────
@@ -202,5 +183,5 @@ title: T
     runner.set_saliency(FirstAvailable);
 
     runner.start("T").unwrap();
-    assert_eq!(line_texts(&mut runner), ["Alpha."]);
+    assert_eq!(drain_line_texts(&mut runner), ["Alpha."]);
 }
