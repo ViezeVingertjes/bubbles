@@ -195,13 +195,24 @@ impl AppState {
                 self.session = Some(session);
                 self.error_overlay = None;
             }
-            Err(err) => {
-                let excerpt = self.sources.source_for_error(&err);
-                self.error_overlay = Some(ErrorOverlay::from_error(&err, excerpt));
-                self.session = None;
-            }
+            Err(err) => self.fail(&err),
         }
         self.transcript = Transcript::new();
+        self.clear_prompt();
+    }
+
+    /// Tears down the session and raises an [`ErrorOverlay`] for `err`.
+    pub(super) fn fail(&mut self, err: &DialogueError) {
+        self.error_overlay = Some(ErrorOverlay::from_error(
+            err,
+            self.sources.source_for_error(err),
+        ));
+        self.session = None;
+        self.clear_prompt();
+    }
+
+    /// Clears the line / option prompt currently on screen.
+    fn clear_prompt(&mut self) {
         self.current_line = None;
         self.options.clear();
         self.focused_option = None;
@@ -212,12 +223,7 @@ impl AppState {
         F: FnOnce(&mut Self) -> Result<(), DialogueError>,
     {
         if let Err(err) = f(self) {
-            let excerpt = self.sources.source_for_error(&err);
-            self.error_overlay = Some(ErrorOverlay::from_error(&err, excerpt));
-            self.session = None;
-            self.current_line = None;
-            self.options.clear();
-            self.focused_option = None;
+            self.fail(&err);
         }
     }
 
@@ -290,9 +296,7 @@ impl AppState {
         session.select_option(index)?;
         self.transcript
             .push(TranscriptEntry::OptionChosen { text, index });
-        self.options.clear();
-        self.focused_option = None;
-        self.current_line = None;
+        self.clear_prompt();
         Ok(())
     }
 
@@ -306,20 +310,12 @@ impl AppState {
 
         match result {
             Some(Ok(())) => self.error_overlay = None,
-            Some(Err(err)) => {
-                let excerpt = self.sources.source_for_error(&err);
-                self.error_overlay = Some(ErrorOverlay::from_error(&err, excerpt));
-                self.session = None;
-            }
-            None => {
-                // No active session (compile error on load) - full reload.
-                self.reset_runtime_state();
-            }
+            Some(Err(err)) => self.fail(&err),
+            // No active session (compile error on load) - full reload.
+            None => self.reset_runtime_state(),
         }
         self.transcript = Transcript::new();
-        self.current_line = None;
-        self.options.clear();
-        self.focused_option = None;
+        self.clear_prompt();
         self.history.clear();
     }
 }

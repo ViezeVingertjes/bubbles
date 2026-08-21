@@ -3,12 +3,10 @@
 use std::ffi::{c_char, c_int, c_void};
 use std::ptr;
 
-use bubbles::{HashMapStorage, Runner};
-
 use crate::error::{clear_err, set_err};
 use crate::event_json;
-use crate::runner_config::build_runner;
-use crate::util::{str_from_parts, write_cstring_out_with_error};
+use crate::runner_config::{BUBBLES_SALIENCY_FIRST_AVAILABLE, build_runner};
+use crate::util::{FfiRunner, ffi_try, runner_mut, str_from_parts, write_cstring_out_with_error};
 use crate::{BUBBLES_DONE, BUBBLES_ERR, BUBBLES_OK};
 
 /// Creates a runner. **Consumes** `program`; do not free the program handle afterward.
@@ -21,7 +19,7 @@ pub unsafe extern "C" fn bubbles_runner_new(
     program: *mut c_void,
     out_runner: *mut *mut c_void,
 ) -> c_int {
-    unsafe { build_runner(program, 0, out_runner) }
+    unsafe { build_runner(program, BUBBLES_SALIENCY_FIRST_AVAILABLE, out_runner) }
 }
 
 /// Drops a runner.
@@ -34,7 +32,7 @@ pub unsafe extern "C" fn bubbles_runner_free(runner: *mut c_void) {
     if runner.is_null() {
         return;
     }
-    drop(unsafe { Box::from_raw(runner.cast::<Runner<HashMapStorage>>()) });
+    drop(unsafe { Box::from_raw(runner.cast::<FfiRunner>()) });
 }
 
 /// Starts dialogue at `node_name` (UTF-8, byte length).
@@ -48,19 +46,9 @@ pub unsafe extern "C" fn bubbles_runner_start(
     node_ptr: *const c_char,
     node_len: usize,
 ) -> c_int {
-    if runner.is_null() {
-        set_err("runner was null");
-        return BUBBLES_ERR;
-    }
-    let node = match unsafe { str_from_parts(node_ptr, node_len) } {
-        Ok(s) => s,
-        Err(e) => {
-            set_err(e);
-            return BUBBLES_ERR;
-        }
-    };
+    let runner = ffi_try!(unsafe { runner_mut(runner) });
+    let node = ffi_try!(unsafe { str_from_parts(node_ptr, node_len) });
     clear_err();
-    let runner = unsafe { &mut *runner.cast::<Runner<HashMapStorage>>() };
     match runner.start(node) {
         Ok(()) => BUBBLES_OK,
         Err(e) => {
@@ -82,12 +70,12 @@ pub unsafe extern "C" fn bubbles_runner_next_event(
     runner: *mut c_void,
     out_event_json: *mut *mut c_char,
 ) -> c_int {
-    if runner.is_null() || out_event_json.is_null() {
-        set_err("runner or out_event_json was null");
+    if out_event_json.is_null() {
+        set_err("out_event_json was null");
         return BUBBLES_ERR;
     }
+    let runner = ffi_try!(unsafe { runner_mut(runner) });
     clear_err();
-    let runner = unsafe { &mut *runner.cast::<Runner<HashMapStorage>>() };
     match runner.next_event() {
         Ok(Some(ev)) => {
             let json = event_json::dialogue_event_to_json(&ev);
@@ -117,12 +105,8 @@ pub unsafe extern "C" fn bubbles_runner_next_event(
 /// `runner` must be non-null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn bubbles_runner_select_option(runner: *mut c_void, index: usize) -> c_int {
-    if runner.is_null() {
-        set_err("runner was null");
-        return BUBBLES_ERR;
-    }
+    let runner = ffi_try!(unsafe { runner_mut(runner) });
     clear_err();
-    let runner = unsafe { &mut *runner.cast::<Runner<HashMapStorage>>() };
     match runner.select_option(index) {
         Ok(()) => BUBBLES_OK,
         Err(e) => {

@@ -18,18 +18,9 @@ fn json_to_value(v: &serde_json::Value) -> Result<Value, String> {
             .map(Value::Number)
             .ok_or_else(|| "number out of range".to_string()),
         serde_json::Value::String(s) => Ok(Value::Text(s.clone())),
-        serde_json::Value::Object(map) => {
-            if let Some(n) = map.get("Number").and_then(serde_json::Value::as_f64) {
-                return Ok(Value::Number(n));
-            }
-            if let Some(s) = map.get("Text").and_then(serde_json::Value::as_str) {
-                return Ok(Value::Text(s.to_owned()));
-            }
-            if let Some(b) = map.get("Bool").and_then(serde_json::Value::as_bool) {
-                return Ok(Value::Bool(b));
-            }
-            Err("unknown Value object shape (expected Number, Text, or Bool key)".into())
-        }
+        // Externally-tagged form produced by `Value`'s own `Serialize` impl.
+        serde_json::Value::Object(_) => serde_json::from_value(v.clone())
+            .map_err(|_| "unknown Value object shape (expected Number, Text, or Bool key)".into()),
         serde_json::Value::Array(_) => Err("arrays are not valid single Values".into()),
     }
 }

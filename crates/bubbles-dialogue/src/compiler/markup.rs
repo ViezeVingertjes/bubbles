@@ -38,6 +38,28 @@ pub enum MarkupScanError {
     UnclosedBracket(usize),
 }
 
+impl MarkupScanError {
+    /// Renders a human-readable message naming the unclosed delimiter, the
+    /// `context` it occurred in (e.g. `"line text"`), and the offending `raw` text.
+    #[must_use]
+    pub fn describe(&self, context: &str, raw: &str) -> String {
+        let delimiter = match self {
+            Self::UnclosedBrace(_) => '{',
+            Self::UnclosedBracket(_) => '[',
+        };
+        format!("unclosed `{delimiter}` in {context}: `{raw}`")
+    }
+}
+
+/// Converts borrowed `(key, value)` markup properties into owned pairs.
+#[must_use]
+pub fn owned_properties(properties: &[(&str, &str)]) -> Vec<(String, String)> {
+    properties
+        .iter()
+        .map(|&(key, value)| (key.to_owned(), value.to_owned()))
+        .collect()
+}
+
 /// Scans `text` for `{expr}` and `[markup]` syntax, yielding tokens in order.
 ///
 /// **Markup rules:**

@@ -42,24 +42,20 @@ pub fn markup_line(text: &str, spans: &[MarkupSpan]) -> Line<'static> {
         }
     }
 
-    // Compress adjacent bytes with identical styles into one Span each.
+    // Compress runs of characters with identical styles into one Span each.
+    // Styles are sampled at each character's first byte so a run never splits
+    // a multi-byte character.
     let mut ratatui_spans: Vec<Span<'static>> = Vec::new();
-    let chars: Vec<(usize, char)> = text.char_indices().collect();
-    let mut i = 0;
-    while i < chars.len() {
-        let (byte_start, _) = chars[i];
-        let style = styles[byte_start];
-        let mut j = i + 1;
-        while j < chars.len() {
-            if styles[chars[j].0] != style {
-                break;
-            }
-            j += 1;
+    let mut run_start = 0;
+    let mut run_style = styles[0];
+    for (byte, _) in text.char_indices().skip(1) {
+        if styles[byte] != run_style {
+            ratatui_spans.push(Span::styled(text[run_start..byte].to_owned(), run_style));
+            run_start = byte;
+            run_style = styles[byte];
         }
-        let byte_end = if j < chars.len() { chars[j].0 } else { len };
-        ratatui_spans.push(Span::styled(text[byte_start..byte_end].to_owned(), style));
-        i = j;
     }
+    ratatui_spans.push(Span::styled(text[run_start..].to_owned(), run_style));
 
     Line::from(ratatui_spans)
 }

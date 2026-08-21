@@ -31,36 +31,24 @@ impl<S: VariableStorage> Runner<S> {
             return Ok(StmtList::clone(&group[0].body));
         }
 
-        // Snapshot candidate metadata so the `&self.program` borrow can be
-        // released before we mutably borrow `self.saliency`.  Each body is
-        // cloned as an `Arc` so this loop is O(group_len) regardless of body
-        // size.
-        let candidate_info: Vec<(String, bool, StmtList)> = group
-            .iter()
-            .map(|n| {
-                let available = n
-                    .when
-                    .as_ref()
-                    .is_none_or(|e| self.eval_expr(e.as_ref()).is_ok_and(|v| v.is_truthy()));
-                (n.title.clone(), available, StmtList::clone(&n.body))
-            })
-            .collect();
-
+        // Snapshot candidate bodies (O(1) `Arc` bumps) and availability so the
+        // `&self.program` borrow is released before `self.saliency` is borrowed
+        // mutably.
+        //
         // Candidate IDs must be unique within the group.  Nodes in a group
         // share the same title, so we append the index to make IDs stable
         // across calls (`BestLeastRecentlyViewed` uses them as history keys).
-        let candidate_ids: Vec<String> = candidate_info
+        let bodies: Vec<StmtList> = group.iter().map(|n| StmtList::clone(&n.body)).collect();
+        let candidate_ids: Vec<String> = (0..group.len()).map(|i| format!("{title}#{i}")).collect();
+        let candidates: Vec<Candidate<'_>> = group
             .iter()
-            .enumerate()
-            .map(|(i, (t, _, _))| format!("{t}#{i}"))
-            .collect();
-
-        let candidates: Vec<Candidate<'_>> = candidate_ids
-            .iter()
-            .zip(candidate_info.iter())
-            .map(|(id, (_, available, _))| Candidate {
-                id: id.as_str(),
-                available: *available,
+            .zip(&candidate_ids)
+            .map(|(n, id)| Candidate {
+                id,
+                available: n
+                    .when
+                    .as_ref()
+                    .is_none_or(|e| self.eval_expr(e.as_ref()).is_ok_and(|v| v.is_truthy())),
             })
             .collect();
 
@@ -69,16 +57,12 @@ impl<S: VariableStorage> Runner<S> {
                 "node group '{title}' has no available candidate"
             ))
         })?;
-        let len = candidate_info.len();
-        candidate_info
-            .into_iter()
-            .nth(idx)
-            .map(|(_, _, body)| body)
-            .ok_or_else(|| {
-                DialogueError::ProtocolViolation(format!(
-                    "saliency strategy returned index {idx} but node group '{title}' \
-                     only has {len} candidate(s)"
-                ))
-            })
+        let len = bodies.len();
+        bodies.into_iter().nth(idx).ok_or_else(|| {
+            DialogueError::ProtocolViolation(format!(
+                "saliency strategy returned index {idx} but node group '{title}' \
+                 only has {len} candidate(s)"
+            ))
+        })
     }
 }

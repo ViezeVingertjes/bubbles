@@ -32,15 +32,6 @@ pub enum RunnerPhase {
     Done,
 }
 
-/// Execution state of the runner.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum State {
-    Idle,
-    Running,
-    AwaitingOption,
-    Done,
-}
-
 /// A frame on the call stack.
 ///
 /// Frames reference a shared [`StmtList`] and advance a program counter.
@@ -72,7 +63,7 @@ type OptionBodies = Vec<(bool, Option<String>, StmtList)>;
 pub struct Runner<S: VariableStorage> {
     pub(super) program: Program,
     pub(super) storage: S,
-    pub(super) state: State,
+    pub(super) state: RunnerPhase,
     pub(super) stack: Vec<Frame>,
     pub(super) pending: VecDeque<DialogueEvent>,
     pub(super) option_bodies: OptionBodies,
@@ -98,12 +89,7 @@ impl<S: VariableStorage> Runner<S> {
     /// Returns the runner’s current phase for UI or protocol guards.
     #[must_use]
     pub const fn phase(&self) -> RunnerPhase {
-        match self.state {
-            State::Idle => RunnerPhase::Idle,
-            State::Running => RunnerPhase::Running,
-            State::AwaitingOption => RunnerPhase::AwaitingOption,
-            State::Done => RunnerPhase::Done,
-        }
+        self.state
     }
 
     /// Creates a new runner for the given program and variable storage.
@@ -128,7 +114,7 @@ impl<S: VariableStorage> Runner<S> {
         Self {
             program,
             storage,
-            state: State::Idle,
+            state: RunnerPhase::Idle,
             stack: Vec::new(),
             pending: VecDeque::new(),
             option_bodies: Vec::new(),
@@ -149,16 +135,12 @@ impl<S: VariableStorage> Runner<S> {
     /// # Errors
     /// Returns [`DialogueError::UnknownNode`] if the title does not exist in the program.
     pub fn start(&mut self, node: &str) -> Result<()> {
-        if !self.program.node_exists(node) {
-            return Err(DialogueError::UnknownNode(node.to_owned()));
-        }
         let body = self.pick_node_body(node)?;
         self.clear_event_queues();
-        let title: Arc<str> = Arc::from(node);
         self.stack.clear();
-        self.stack.push(Frame::new(title, body));
-        self.state = State::Running;
-        *self.visits.entry(node.to_owned()).or_insert(0) += 1;
+        self.push_node_frame(node, body);
+        self.state = RunnerPhase::Running;
+        self.record_visit(node);
         self.pending
             .push_back(DialogueEvent::NodeStarted(node.to_owned()));
         Ok(())
@@ -173,15 +155,15 @@ impl<S: VariableStorage> Runner<S> {
             return Ok(Some(ev));
         }
         match self.state {
-            State::Idle | State::Done => Ok(None),
-            State::AwaitingOption => Err(DialogueError::ProtocolViolation(
+            RunnerPhase::Idle | RunnerPhase::Done => Ok(None),
+            RunnerPhase::AwaitingOption => Err(DialogueError::ProtocolViolation(
                 "call select_option() before next_event()".into(),
             )),
-            State::Running => loop {
+            RunnerPhase::Running => loop {
                 if let Some(ev) = self.pending.pop_front() {
                     return Ok(Some(ev));
                 }
-                if self.state != State::Running {
+                if self.state != RunnerPhase::Running {
                     return Ok(None);
                 }
                 if let Some(ev) = self.step()? {
@@ -198,28 +180,27 @@ impl<S: VariableStorage> Runner<S> {
     /// Returns [`DialogueError::ProtocolViolation`] if called when not awaiting an option
     /// selection, if `index` is out of range, or if the option guard is not satisfied.
     pub fn select_option(&mut self, index: usize) -> Result<()> {
-        if self.state != State::AwaitingOption {
+        if self.state != RunnerPhase::AwaitingOption {
             return Err(DialogueError::ProtocolViolation(
                 "select_option() called when not awaiting an option".into(),
             ));
         }
-        let (available, once_id, body) =
-            self.option_bodies.get(index).cloned().ok_or_else(|| {
-                DialogueError::ProtocolViolation(format!(
-                    "option index {index} out of range ({})",
-                    self.option_bodies.len()
-                ))
-            })?;
+        let Some(&(available, _, _)) = self.option_bodies.get(index) else {
+            return Err(DialogueError::ProtocolViolation(format!(
+                "option index {index} out of range ({})",
+                self.option_bodies.len()
+            )));
+        };
         if !available {
             return Err(DialogueError::ProtocolViolation(format!(
                 "option index {index} is unavailable (guard not satisfied)"
             )));
         }
+        let (_, once_id, body) = std::mem::take(&mut self.option_bodies).swap_remove(index);
         if let Some(id) = once_id {
             self.once_seen.insert(id);
         }
-        self.option_bodies.clear();
-        self.state = State::Running;
+        self.state = RunnerPhase::Running;
         self.push_inline_frame(body);
         Ok(())
     }
@@ -246,6 +227,16 @@ impl<S: VariableStorage> Runner<S> {
     /// frame in one call.
     pub(super) fn push_node_frame(&mut self, node: &str, body: StmtList) {
         self.stack.push(Frame::new(Arc::from(node), body));
+    }
+
+    /// Increments the visit counter for `node` without allocating when the
+    /// node has been visited before.
+    pub(super) fn record_visit(&mut self, node: &str) {
+        if let Some(count) = self.visits.get_mut(node) {
+            *count += 1;
+        } else {
+            self.visits.insert(node.to_owned(), 1);
+        }
     }
 
     /// Returns a shared reference to the variable storage.

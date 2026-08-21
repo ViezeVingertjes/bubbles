@@ -4,10 +4,10 @@ use std::ffi::{c_char, c_int, c_void};
 
 use bubbles::{Program, compile, compile_many};
 
+use crate::BUBBLES_ERR;
 use crate::BubblesSourceFile;
 use crate::error::{clear_err, set_err};
-use crate::util::str_from_parts;
-use crate::{BUBBLES_ERR, BUBBLES_OK};
+use crate::util::{ffi_try, str_from_parts, write_handle_out};
 
 /// Compile a single `.bub` document. On success writes a program handle to `*out_program`.
 ///
@@ -25,27 +25,10 @@ pub unsafe extern "C" fn bubbles_compile(
         set_err("out_program was null");
         return BUBBLES_ERR;
     }
-    let text = match unsafe { str_from_parts(text_ptr, text_len) } {
-        Ok(s) => s,
-        Err(e) => {
-            set_err(e);
-            return BUBBLES_ERR;
-        }
-    };
+    let text = ffi_try!(unsafe { str_from_parts(text_ptr, text_len) });
     clear_err();
-    match compile(text) {
-        Ok(program) => {
-            let raw = Box::into_raw(Box::new(program)).cast::<c_void>();
-            unsafe {
-                *out_program = raw;
-            }
-            BUBBLES_OK
-        }
-        Err(e) => {
-            set_err(e.to_string());
-            BUBBLES_ERR
-        }
-    }
+    let program = ffi_try!(compile(text).map_err(|e| e.to_string()));
+    unsafe { write_handle_out(out_program, program) }
 }
 
 /// Compile multiple `.bub` sources into one program (same as Rust [`bubbles::compile_many`]).
@@ -99,19 +82,8 @@ pub unsafe extern "C" fn bubbles_compile_files(
         .collect();
 
     clear_err();
-    match compile_many(&refs) {
-        Ok(program) => {
-            let raw = Box::into_raw(Box::new(program)).cast::<c_void>();
-            unsafe {
-                *out_program = raw;
-            }
-            BUBBLES_OK
-        }
-        Err(e) => {
-            set_err(e.to_string());
-            BUBBLES_ERR
-        }
-    }
+    let program = ffi_try!(compile_many(&refs).map_err(|e| e.to_string()));
+    unsafe { write_handle_out(out_program, program) }
 }
 
 /// Drops a program obtained from [`bubbles_compile`] or [`bubbles_compile_files`].

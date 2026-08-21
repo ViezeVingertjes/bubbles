@@ -2,6 +2,29 @@
 
 use logos::Logos;
 
+/// Resolves the `\"`, `\\`, and `\n` escapes in a string-literal body in a
+/// single pass. Unknown escapes are kept verbatim.
+fn unescape(body: &str) -> String {
+    let mut out = String::with_capacity(body.len());
+    let mut chars = body.chars();
+    while let Some(c) = chars.next() {
+        if c != '\\' {
+            out.push(c);
+            continue;
+        }
+        match chars.next() {
+            Some('"') => out.push('"'),
+            Some('n') => out.push('\n'),
+            Some('\\') | None => out.push('\\'),
+            Some(other) => {
+                out.push('\\');
+                out.push(other);
+            }
+        }
+    }
+    out
+}
+
 /// A lexical token produced by the lexer.
 #[derive(Logos, Debug, Clone, PartialEq)]
 #[logos(skip r"[ \t\r\f]+")] // skip horizontal whitespace; newlines are significant in the parser
@@ -14,7 +37,7 @@ pub enum Token {
     /// Double-quoted string literal.
     #[regex(r#""([^"\\]|\\.)*""#, |lex| {
         let s = lex.slice();
-        Some(s[1..s.len()-1].replace("\\\"", "\"").replace("\\\\", "\\").replace("\\n", "\n"))
+        Some(unescape(&s[1..s.len() - 1]))
     })]
     Str(String),
 

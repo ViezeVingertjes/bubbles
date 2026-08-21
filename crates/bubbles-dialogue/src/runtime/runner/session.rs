@@ -1,4 +1,4 @@
-use super::{Runner, State};
+use super::{Runner, RunnerPhase};
 use crate::error::Result;
 
 impl<S: crate::value::VariableStorage> Runner<S> {
@@ -35,7 +35,7 @@ impl<S: crate::value::VariableStorage> Runner<S> {
         self.once_seen = snapshot.once_seen;
         self.stack.clear();
         self.clear_event_queues();
-        self.state = State::Idle;
+        self.state = RunnerPhase::Idle;
         if let Some(node) = snapshot.current_node {
             self.start(&node)?;
         }

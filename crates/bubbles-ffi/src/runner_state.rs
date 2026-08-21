@@ -3,10 +3,10 @@
 use std::ffi::{CString, c_char, c_int, c_void};
 use std::mem;
 
-use bubbles::{HashMapStorage, Runner, RunnerSnapshot, VariableStorage};
+use bubbles::{HashMapStorage, RunnerSnapshot, VariableStorage};
 
 use crate::error::{clear_err, set_err};
-use crate::util::{str_from_parts, write_cstring_out};
+use crate::util::{ffi_try, runner_mut, runner_ref, str_from_parts, write_cstring_out};
 use crate::value_json::{value_from_json_slice, value_to_json_string};
 use crate::{BUBBLES_ERR, BUBBLES_OK};
 
@@ -23,7 +23,7 @@ pub unsafe extern "C" fn bubbles_copy_utf8(ptr: *const c_char, len: usize) -> *m
             .ok()
             .map_or(std::ptr::null_mut(), |c| c.into_raw()),
         Err(e) => {
-            crate::error::set_err(e);
+            set_err(e);
             std::ptr::null_mut()
         }
     }
@@ -41,19 +41,13 @@ pub unsafe extern "C" fn bubbles_runner_variable_get_json(
     name_len: usize,
     out_json: *mut *mut c_char,
 ) -> c_int {
-    if runner.is_null() || out_json.is_null() {
-        set_err("runner or out_json was null");
+    if out_json.is_null() {
+        set_err("out_json was null");
         return BUBBLES_ERR;
     }
-    let key = match unsafe { str_from_parts(name_ptr, name_len) } {
-        Ok(s) => s,
-        Err(e) => {
-            set_err(e);
-            return BUBBLES_ERR;
-        }
-    };
+    let runner = ffi_try!(unsafe { runner_ref(runner) });
+    let key = ffi_try!(unsafe { str_from_parts(name_ptr, name_len) });
     clear_err();
-    let runner = unsafe { &*runner.cast::<Runner<HashMapStorage>>() };
     let j = match runner.storage().get(key) {
         Some(v) => value_to_json_string(&v).unwrap_or_else(|_| "null".into()),
         None => "null".into(),
@@ -74,33 +68,11 @@ pub unsafe extern "C" fn bubbles_runner_variable_set_json(
     value_json_ptr: *const c_char,
     value_json_len: usize,
 ) -> c_int {
-    if runner.is_null() {
-        set_err("runner was null");
-        return BUBBLES_ERR;
-    }
-    let key = match unsafe { str_from_parts(name_ptr, name_len) } {
-        Ok(s) => s,
-        Err(e) => {
-            set_err(e);
-            return BUBBLES_ERR;
-        }
-    };
-    let val_str = match unsafe { str_from_parts(value_json_ptr, value_json_len) } {
-        Ok(s) => s,
-        Err(e) => {
-            set_err(e);
-            return BUBBLES_ERR;
-        }
-    };
+    let runner = ffi_try!(unsafe { runner_mut(runner) });
+    let key = ffi_try!(unsafe { str_from_parts(name_ptr, name_len) });
+    let val_str = ffi_try!(unsafe { str_from_parts(value_json_ptr, value_json_len) });
     clear_err();
-    let value = match value_from_json_slice(val_str.as_bytes()) {
-        Ok(v) => v,
-        Err(e) => {
-            set_err(e);
-            return BUBBLES_ERR;
-        }
-    };
-    let runner = unsafe { &mut *runner.cast::<Runner<HashMapStorage>>() };
+    let value = ffi_try!(value_from_json_slice(val_str.as_bytes()));
     runner.storage_mut().set(key, value);
     BUBBLES_OK
 }
@@ -115,20 +87,14 @@ pub unsafe extern "C" fn bubbles_runner_snapshot_session_json(
     runner: *mut c_void,
     out_json: *mut *mut c_char,
 ) -> c_int {
-    if runner.is_null() || out_json.is_null() {
-        set_err("runner or out_json was null");
+    if out_json.is_null() {
+        set_err("out_json was null");
         return BUBBLES_ERR;
     }
+    let runner = ffi_try!(unsafe { runner_ref(runner) });
     clear_err();
-    let runner = unsafe { &*runner.cast::<Runner<HashMapStorage>>() };
     let snap = runner.snapshot();
-    let j = match serde_json::to_string(&snap) {
-        Ok(s) => s,
-        Err(e) => {
-            set_err(e.to_string());
-            return BUBBLES_ERR;
-        }
-    };
+    let j = ffi_try!(serde_json::to_string(&snap).map_err(|e| e.to_string()));
     write_cstring_out(out_json, j)
 }
 
@@ -142,19 +108,13 @@ pub unsafe extern "C" fn bubbles_runner_snapshot_storage_json(
     runner: *mut c_void,
     out_json: *mut *mut c_char,
 ) -> c_int {
-    if runner.is_null() || out_json.is_null() {
-        set_err("runner or out_json was null");
+    if out_json.is_null() {
+        set_err("out_json was null");
         return BUBBLES_ERR;
     }
+    let runner = ffi_try!(unsafe { runner_ref(runner) });
     clear_err();
-    let runner = unsafe { &*runner.cast::<Runner<HashMapStorage>>() };
-    let j = match serde_json::to_string(runner.storage()) {
-        Ok(s) => s,
-        Err(e) => {
-            set_err(e.to_string());
-            return BUBBLES_ERR;
-        }
-    };
+    let j = ffi_try!(serde_json::to_string(runner.storage()).map_err(|e| e.to_string()));
     write_cstring_out(out_json, j)
 }
 
@@ -169,26 +129,11 @@ pub unsafe extern "C" fn bubbles_runner_restore_storage_json(
     json_ptr: *const c_char,
     json_len: usize,
 ) -> c_int {
-    if runner.is_null() {
-        set_err("runner was null");
-        return BUBBLES_ERR;
-    }
-    let json_str = match unsafe { str_from_parts(json_ptr, json_len) } {
-        Ok(s) => s,
-        Err(e) => {
-            set_err(e);
-            return BUBBLES_ERR;
-        }
-    };
+    let runner = ffi_try!(unsafe { runner_mut(runner) });
+    let json_str = ffi_try!(unsafe { str_from_parts(json_ptr, json_len) });
     clear_err();
-    let mut new_storage: HashMapStorage = match serde_json::from_str(json_str) {
-        Ok(s) => s,
-        Err(e) => {
-            set_err(format!("storage JSON: {e}"));
-            return BUBBLES_ERR;
-        }
-    };
-    let runner = unsafe { &mut *runner.cast::<Runner<HashMapStorage>>() };
+    let mut new_storage: HashMapStorage =
+        ffi_try!(serde_json::from_str(json_str).map_err(|e| format!("storage JSON: {e}")));
     mem::swap(runner.storage_mut(), &mut new_storage);
     BUBBLES_OK
 }
@@ -204,26 +149,11 @@ pub unsafe extern "C" fn bubbles_runner_restore_session_json(
     json_ptr: *const c_char,
     json_len: usize,
 ) -> c_int {
-    if runner.is_null() {
-        set_err("runner was null");
-        return BUBBLES_ERR;
-    }
-    let json_str = match unsafe { str_from_parts(json_ptr, json_len) } {
-        Ok(s) => s,
-        Err(e) => {
-            set_err(e);
-            return BUBBLES_ERR;
-        }
-    };
+    let runner = ffi_try!(unsafe { runner_mut(runner) });
+    let json_str = ffi_try!(unsafe { str_from_parts(json_ptr, json_len) });
     clear_err();
-    let snap: RunnerSnapshot = match serde_json::from_str(json_str) {
-        Ok(s) => s,
-        Err(e) => {
-            set_err(format!("session JSON: {e}"));
-            return BUBBLES_ERR;
-        }
-    };
-    let runner = unsafe { &mut *runner.cast::<Runner<HashMapStorage>>() };
+    let snap: RunnerSnapshot =
+        ffi_try!(serde_json::from_str(json_str).map_err(|e| format!("session JSON: {e}")));
     match runner.restore(snap) {
         Ok(()) => BUBBLES_OK,
         Err(e) => {

@@ -24,6 +24,21 @@ fn lex_string_literal() {
 }
 
 #[test]
+fn lex_string_escapes() {
+    assert_eq!(
+        tokens(r#""say \"hi\"""#),
+        vec![Token::Str("say \"hi\"".into())]
+    );
+    assert_eq!(tokens(r#""a\nb""#), vec![Token::Str("a\nb".into())]);
+    // An escaped backslash followed by `n` is a literal backslash + `n`,
+    // not a newline.
+    assert_eq!(tokens(r#""a\\nb""#), vec![Token::Str("a\\nb".into())]);
+    assert_eq!(tokens(r#""C:\\new""#), vec![Token::Str("C:\\new".into())]);
+    // Unknown escapes pass through verbatim.
+    assert_eq!(tokens(r#""a\tb""#), vec![Token::Str("a\\tb".into())]);
+}
+
+#[test]
 fn lex_variable() {
     assert_eq!(tokens("$gold"), vec![Token::Var("$gold".into())]);
 }
