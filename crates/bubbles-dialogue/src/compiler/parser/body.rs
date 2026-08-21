@@ -83,15 +83,9 @@ impl Parser<'_> {
             self.advance();
             let rest = t[2..].trim();
             let (text_part, cond_str, once) = parse_option_text(rest);
-            let cond = match cond_str {
-                None => None,
-                Some(s) => Some(parse_expr_arc(
-                    &s,
-                    "shortcut option `<<if>>`",
-                    lineno,
-                    file,
-                )?),
-            };
+            let cond = cond_str
+                .map(|s| parse_expr_arc(&s, "shortcut option `<<if>>`", lineno, file))
+                .transpose()?;
             let (raw, tags) = split_trailing_tags(&text_part);
             let text = parse_interpolated(&raw, "option text", lineno, file)?;
             let id = self.next_id();
@@ -123,10 +117,9 @@ impl Parser<'_> {
             let rest = t[2..].trim();
             let id = self.next_id();
             let (line_text, cond_str, once) = parse_option_text(rest);
-            let cond = match cond_str {
-                None => None,
-                Some(s) => Some(parse_expr_arc(&s, "line group `<<if>>`", lineno, file)?),
-            };
+            let cond = cond_str
+                .map(|s| parse_expr_arc(&s, "line group `<<if>>`", lineno, file))
+                .transpose()?;
             let (speaker, raw) = split_speaker(&line_text);
             let (raw, tags) = split_trailing_tags(&raw);
             let text = parse_interpolated(&raw, "line group text", lineno, file)?;

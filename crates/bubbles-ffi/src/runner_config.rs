@@ -10,15 +10,15 @@ use bubbles::{
 };
 
 use crate::error::{clear_err, set_err};
-use crate::util::str_from_parts;
+use crate::util::{FfiRunner, ffi_try, runner_mut, str_from_parts, write_handle_out};
 use crate::value_json::{value_from_json_slice, values_to_json_array};
 use crate::{BUBBLES_ERR, BUBBLES_OK};
 
-/// [`BUBBLES_SALIENCY_FIRST_AVAILABLE`](crate::BUBBLES_SALIENCY_FIRST_AVAILABLE)
+/// Saliency kind: pick the first available candidate ([`FirstAvailable`]).
 pub const BUBBLES_SALIENCY_FIRST_AVAILABLE: c_int = 0;
-/// [`BUBBLES_SALIENCY_BLRV`](crate::BUBBLES_SALIENCY_BLRV)
+/// Saliency kind: best least-recently-viewed candidate ([`BestLeastRecentlyViewed`]).
 pub const BUBBLES_SALIENCY_BLRV: c_int = 1;
-/// [`BUBBLES_SALIENCY_RANDOM_AVAILABLE`](crate::BUBBLES_SALIENCY_RANDOM_AVAILABLE)
+/// Saliency kind: uniformly random available candidate ([`RandomAvailable`]).
 pub const BUBBLES_SALIENCY_RANDOM_AVAILABLE: c_int = 2;
 
 /// Host function: on [`BUBBLES_OK`], set `*out_result_json` to a JSON [`Value`] (bool, number, or string)
@@ -47,22 +47,15 @@ pub(crate) unsafe fn build_runner(
     clear_err();
     let program = unsafe { *Box::from_raw(program.cast::<Program>()) };
     let mut runner = Runner::new(program, HashMapStorage::new());
-    if let Err(e) = apply_saliency(&mut runner, saliency) {
-        set_err(e);
-        return BUBBLES_ERR;
-    }
-    let raw = Box::into_raw(Box::new(runner)).cast::<c_void>();
-    unsafe {
-        *out_runner = raw;
-    }
-    BUBBLES_OK
+    ffi_try!(apply_saliency(&mut runner, saliency));
+    unsafe { write_handle_out(out_runner, runner) }
 }
 
-fn apply_saliency(runner: &mut Runner<HashMapStorage>, kind: c_int) -> Result<(), &'static str> {
+fn apply_saliency(runner: &mut FfiRunner, kind: c_int) -> Result<(), &'static str> {
     match kind {
-        0 => runner.set_saliency(FirstAvailable),
-        1 => runner.set_saliency(BestLeastRecentlyViewed::default()),
-        2 => runner.set_saliency(RandomAvailable),
+        BUBBLES_SALIENCY_FIRST_AVAILABLE => runner.set_saliency(FirstAvailable),
+        BUBBLES_SALIENCY_BLRV => runner.set_saliency(BestLeastRecentlyViewed::default()),
+        BUBBLES_SALIENCY_RANDOM_AVAILABLE => runner.set_saliency(RandomAvailable),
         _ => return Err("invalid saliency kind (use BUBBLES_SALIENCY_*)"),
     }
     Ok(())
@@ -92,19 +85,10 @@ pub unsafe extern "C" fn bubbles_runner_set_saliency(
     runner: *mut c_void,
     saliency_kind: c_int,
 ) -> c_int {
-    if runner.is_null() {
-        set_err("runner was null");
-        return BUBBLES_ERR;
-    }
+    let runner = ffi_try!(unsafe { runner_mut(runner) });
     clear_err();
-    let runner = unsafe { &mut *runner.cast::<Runner<HashMapStorage>>() };
-    match apply_saliency(runner, saliency_kind) {
-        Ok(()) => BUBBLES_OK,
-        Err(e) => {
-            set_err(e);
-            BUBBLES_ERR
-        }
-    }
+    ffi_try!(apply_saliency(runner, saliency_kind));
+    BUBBLES_OK
 }
 
 /// Line localisation from JSON `{"line_id":"template", ...}`. Prefer before [`crate::bubbles_runner_start`].
@@ -118,30 +102,15 @@ pub unsafe extern "C" fn bubbles_runner_set_locale_json(
     json_ptr: *const c_char,
     json_len: usize,
 ) -> c_int {
-    if runner.is_null() {
-        set_err("runner was null");
-        return BUBBLES_ERR;
-    }
-    let json_str = match unsafe { str_from_parts(json_ptr, json_len) } {
-        Ok(s) => s,
-        Err(e) => {
-            set_err(e);
-            return BUBBLES_ERR;
-        }
-    };
+    let runner = ffi_try!(unsafe { runner_mut(runner) });
+    let json_str = ffi_try!(unsafe { str_from_parts(json_ptr, json_len) });
     clear_err();
-    let map: std::collections::HashMap<String, String> = match serde_json::from_str(json_str) {
-        Ok(m) => m,
-        Err(e) => {
-            set_err(format!("locale JSON: {e}"));
-            return BUBBLES_ERR;
-        }
-    };
+    let map: std::collections::HashMap<String, String> =
+        ffi_try!(serde_json::from_str(json_str).map_err(|e| format!("locale JSON: {e}")));
     let mut provider = HashMapProvider::new();
     for (k, v) in map {
         provider.insert(k, v);
     }
-    let runner = unsafe { &mut *runner.cast::<Runner<HashMapStorage>>() };
     runner.set_provider(provider);
     BUBBLES_OK
 }
@@ -159,21 +128,11 @@ pub unsafe extern "C" fn bubbles_runner_register_function(
     cb: BubblesHostFn,
     userdata: *mut c_void,
 ) -> c_int {
-    if runner.is_null() {
-        set_err("runner was null");
-        return BUBBLES_ERR;
-    }
-    let name = match unsafe { str_from_parts(name_ptr, name_len) } {
-        Ok(s) => s.to_owned(),
-        Err(e) => {
-            set_err(e);
-            return BUBBLES_ERR;
-        }
-    };
+    let runner = ffi_try!(unsafe { runner_mut(runner) });
+    let name = ffi_try!(unsafe { str_from_parts(name_ptr, name_len) }).to_owned();
     clear_err();
     let name_for_errors = name.clone();
     let userdata_bits = userdata as usize;
-    let runner = unsafe { &mut *runner.cast::<Runner<HashMapStorage>>() };
     runner.library_mut().register(name, move |args| {
         let userdata = userdata_bits as *mut c_void;
         host_callback_bridge(&name_for_errors, cb, userdata, args)

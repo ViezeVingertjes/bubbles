@@ -2,20 +2,11 @@
 
 use std::ffi::{c_char, c_int, c_void};
 
-use bubbles::Program;
 use serde_json::json;
 
 use crate::error::{clear_err, set_err};
-use crate::util::{str_from_parts, write_cstring_out};
+use crate::util::{ffi_try, program_ref, str_from_parts, write_cstring_out};
 use crate::{BUBBLES_ERR, BUBBLES_OK};
-
-unsafe fn program_ref<'a>(program: *mut c_void) -> Option<&'a Program> {
-    if program.is_null() {
-        None
-    } else {
-        Some(unsafe { &*program.cast::<Program>() })
-    }
-}
 
 /// Returns whether `node_name` exists. Writes `0` or `1` to `*out_exists`.
 ///
@@ -33,17 +24,8 @@ pub unsafe extern "C" fn bubbles_program_node_exists(
         set_err("out_exists was null");
         return BUBBLES_ERR;
     }
-    let Some(prog) = (unsafe { program_ref(program) }) else {
-        set_err("program was null");
-        return BUBBLES_ERR;
-    };
-    let name = match unsafe { str_from_parts(node_ptr, node_len) } {
-        Ok(s) => s,
-        Err(e) => {
-            set_err(e);
-            return BUBBLES_ERR;
-        }
-    };
+    let prog = ffi_try!(unsafe { program_ref(program) });
+    let name = ffi_try!(unsafe { str_from_parts(node_ptr, node_len) });
     clear_err();
     unsafe {
         *out_exists = if prog.node_exists(name) { 1 } else { 0 };
@@ -66,10 +48,7 @@ pub unsafe extern "C" fn bubbles_program_node_titles_json(
         set_err("out_json was null");
         return BUBBLES_ERR;
     }
-    let Some(prog) = (unsafe { program_ref(program) }) else {
-        set_err("program was null");
-        return BUBBLES_ERR;
-    };
+    let prog = ffi_try!(unsafe { program_ref(program) });
     clear_err();
     let titles: Vec<&str> = prog.node_titles().collect();
     let j = serde_json::to_string(&titles).unwrap_or_else(|_| "[]".into());
@@ -92,17 +71,8 @@ pub unsafe extern "C" fn bubbles_program_node_tags_json(
         set_err("out_json was null");
         return BUBBLES_ERR;
     }
-    let Some(prog) = (unsafe { program_ref(program) }) else {
-        set_err("program was null");
-        return BUBBLES_ERR;
-    };
-    let title = match unsafe { str_from_parts(title_ptr, title_len) } {
-        Ok(s) => s,
-        Err(e) => {
-            set_err(e);
-            return BUBBLES_ERR;
-        }
-    };
+    let prog = ffi_try!(unsafe { program_ref(program) });
+    let title = ffi_try!(unsafe { str_from_parts(title_ptr, title_len) });
     clear_err();
     let j = match prog.node_tags(title) {
         Some(tags) => serde_json::to_string(tags).unwrap_or_else(|_| "null".into()),
@@ -125,10 +95,7 @@ pub unsafe extern "C" fn bubbles_program_variable_declarations_json(
         set_err("out_json was null");
         return BUBBLES_ERR;
     }
-    let Some(prog) = (unsafe { program_ref(program) }) else {
-        set_err("program was null");
-        return BUBBLES_ERR;
-    };
+    let prog = ffi_try!(unsafe { program_ref(program) });
     clear_err();
     let decls: Vec<_> = prog
         .variable_declarations()

@@ -12,22 +12,21 @@ pub(super) fn leading_spaces(s: &str) -> usize {
 
 /// Extracts trailing ` #tag` tokens from the end of a string.
 pub(super) fn split_trailing_tags(s: &str) -> (String, Vec<String>) {
-    let mut text = s.trim_end().to_owned();
+    let mut text = s.trim_end();
     let mut tags = Vec::new();
     loop {
-        let trimmed = text.trim_end();
-        if let Some(hash_pos) = trimmed.rfind(" #") {
-            let tag_candidate = &trimmed[hash_pos + 2..];
+        if let Some(hash_pos) = text.rfind(" #") {
+            let tag_candidate = &text[hash_pos + 2..];
             if !tag_candidate.is_empty() && !tag_candidate.contains(' ') {
                 tags.push(tag_candidate.to_owned());
-                text = trimmed[..hash_pos].trim_end().to_owned();
+                text = text[..hash_pos].trim_end();
                 continue;
             }
         }
         break;
     }
     tags.reverse();
-    (text, tags)
+    (text.to_owned(), tags)
 }
 
 /// Splits a line into `(speaker, text)` if it looks like `Name: text`.

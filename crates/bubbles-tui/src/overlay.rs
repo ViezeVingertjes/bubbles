@@ -46,61 +46,45 @@ impl ErrorOverlay {
                 }),
                 excerpt: source.and_then(|s| excerpt_at(s, *line)),
             },
-            DialogueError::UnknownNode(name) => Self {
-                title: "Unknown node".to_owned(),
-                message: format!("unknown node '{name}'"),
-                location: None,
-                excerpt: None,
-            },
-            DialogueError::DuplicateNode(name) => Self {
-                title: "Duplicate node".to_owned(),
-                message: format!("duplicate node title '{name}'"),
-                location: None,
-                excerpt: None,
-            },
-            DialogueError::Validation(msg) => Self {
-                title: "Validation error".to_owned(),
-                message: msg.clone(),
-                location: None,
-                excerpt: None,
-            },
-            DialogueError::UndefinedVariable(name) => Self {
-                title: "Undefined variable".to_owned(),
-                message: format!(
+            DialogueError::UnknownNode(_) => Self::plain("Unknown node", error),
+            DialogueError::DuplicateNode(_) => Self::plain("Duplicate node", error),
+            DialogueError::Validation(msg) => Self::with_message("Validation error", msg.clone()),
+            DialogueError::UndefinedVariable(name) => Self::with_message(
+                "Undefined variable",
+                format!(
                     "undefined variable '{name}' - add `<<declare {name} = ...>>` or seed it in storage before playback"
                 ),
-                location: None,
-                excerpt: None,
-            },
-            DialogueError::Function { name, message } => Self {
-                title: "Function error".to_owned(),
-                message: format!("function '{name}': {message}"),
-                location: None,
-                excerpt: None,
-            },
-            DialogueError::ProtocolViolation(msg) => Self {
-                title: "Protocol violation".to_owned(),
-                message: msg.clone(),
-                location: None,
-                excerpt: None,
-            },
+            ),
+            DialogueError::Function { .. } => Self::plain("Function error", error),
+            DialogueError::ProtocolViolation(msg) => {
+                Self::with_message("Protocol violation", msg.clone())
+            }
+            // Worded for writers: point at the expression rather than the operator.
             DialogueError::TypeMismatch {
                 expected,
                 got,
                 context,
-            } => Self {
-                title: "Type mismatch".to_owned(),
-                message: format!("in expression {context}: expected {expected}, got {got}"),
-                location: None,
-                excerpt: None,
-            },
+            } => Self::with_message(
+                "Type mismatch",
+                format!("in expression {context}: expected {expected}, got {got}"),
+            ),
             // Forward-compatible fallback for future variants (#[non_exhaustive]).
-            _ => Self {
-                title: "Error".to_owned(),
-                message: error.to_string(),
-                location: None,
-                excerpt: None,
-            },
+            _ => Self::plain("Error", error),
+        }
+    }
+
+    /// Overlay with `title` and the error's own `Display` text, no location.
+    fn plain(title: &str, error: &DialogueError) -> Self {
+        Self::with_message(title, error.to_string())
+    }
+
+    /// Overlay with `title` and `message`, no location or excerpt.
+    fn with_message(title: &str, message: String) -> Self {
+        Self {
+            title: title.to_owned(),
+            message,
+            location: None,
+            excerpt: None,
         }
     }
 

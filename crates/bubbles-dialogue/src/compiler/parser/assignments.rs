@@ -4,7 +4,7 @@
 use std::sync::Arc;
 
 use crate::compiler::ast::{Expr, Stmt, TextSegment};
-use crate::compiler::markup::{MarkupScanError, TextToken, scan_text_segments};
+use crate::compiler::markup::{TextToken, owned_properties, scan_text_segments};
 use crate::error::{DialogueError, Result};
 
 use super::command::split_first_word;
@@ -48,18 +48,10 @@ pub(super) fn parse_interpolated(
     line: usize,
     file: &str,
 ) -> Result<Vec<TextSegment>> {
-    let tokens = scan_text_segments(raw).map_err(|e| {
-        let msg = match e {
-            MarkupScanError::UnclosedBrace(_) => format!("unclosed `{{` in {context}: `{raw}`"),
-            MarkupScanError::UnclosedBracket(_) => {
-                format!("unclosed `[` in {context}: `{raw}`")
-            }
-        };
-        DialogueError::Parse {
-            file: file.to_owned(),
-            line,
-            message: msg,
-        }
+    let tokens = scan_text_segments(raw).map_err(|e| DialogueError::Parse {
+        file: file.to_owned(),
+        line,
+        message: e.describe(context, raw),
     })?;
 
     let mut segments = Vec::with_capacity(tokens.len());
@@ -72,10 +64,7 @@ pub(super) fn parse_interpolated(
             TextToken::MarkupOpen { name, properties } => {
                 segments.push(TextSegment::MarkupOpen {
                     name: name.to_owned(),
-                    properties: properties
-                        .into_iter()
-                        .map(|(k, v)| (k.to_owned(), v.to_owned()))
-                        .collect(),
+                    properties: owned_properties(&properties),
                 });
             }
             TextToken::MarkupClose { name } => {
@@ -86,10 +75,7 @@ pub(super) fn parse_interpolated(
             TextToken::MarkupSelfClose { name, properties } => {
                 segments.push(TextSegment::MarkupSelfClose {
                     name: name.to_owned(),
-                    properties: properties
-                        .into_iter()
-                        .map(|(k, v)| (k.to_owned(), v.to_owned()))
-                        .collect(),
+                    properties: owned_properties(&properties),
                 });
             }
         }

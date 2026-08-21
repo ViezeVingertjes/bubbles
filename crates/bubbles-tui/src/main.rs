@@ -78,15 +78,14 @@ fn parse_args() -> Result<Args, String> {
     }
 
     // The optional trailing start-node argument does not have a .bub extension.
-    let (start_node, file_args) = if raw.last().is_some_and(|s| {
-        !std::path::Path::new(s)
+    let is_bub = |s: &String| {
+        std::path::Path::new(s)
             .extension()
             .is_some_and(|ext| ext.eq_ignore_ascii_case("bub"))
-    }) {
-        let node = raw.last().unwrap().clone();
-        (node, &raw[..raw.len() - 1])
-    } else {
-        ("Start".to_owned(), raw.as_slice())
+    };
+    let (start_node, file_args) = match raw.split_last() {
+        Some((last, rest)) if !is_bub(last) => (last.clone(), rest),
+        _ => ("Start".to_owned(), raw.as_slice()),
     };
 
     if file_args.is_empty() {

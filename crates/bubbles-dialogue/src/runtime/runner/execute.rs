@@ -3,14 +3,14 @@
 use std::sync::Arc;
 
 use crate::compiler::ast::{Expr, IfBranch, Stmt, StmtList, TextSegment};
-use crate::error::{DialogueError, Result};
+use crate::error::Result;
 use crate::runtime::event::{
-    DialogueEvent, DialogueOption, line_id_from_tags, line_mode_from_tags, option_group_from_tags,
+    DialogueEvent, DialogueOption, line_mode_from_tags, option_group_from_tags,
 };
 use crate::saliency::Candidate;
 use crate::value::VariableStorage;
 
-use super::{Runner, State};
+use super::{Runner, RunnerPhase};
 
 impl<S: VariableStorage> Runner<S> {
     pub(super) fn step(&mut self) -> Result<Option<DialogueEvent>> {
@@ -21,7 +21,7 @@ impl<S: VariableStorage> Runner<S> {
         // checker is satisfied without cloning the Stmt itself.
         let (body, ip) = loop {
             let Some(frame) = self.stack.last_mut() else {
-                self.state = State::Done;
+                self.state = RunnerPhase::Done;
                 return Ok(Some(DialogueEvent::DialogueComplete));
             };
             if frame.ip < frame.body.len() {
@@ -33,7 +33,7 @@ impl<S: VariableStorage> Runner<S> {
             let finished_node = frame.node.as_ref().to_owned();
             self.stack.pop();
             if self.stack.is_empty() {
-                self.state = State::Done;
+                self.state = RunnerPhase::Done;
                 self.pending.push_back(DialogueEvent::DialogueComplete);
                 return Ok(Some(DialogueEvent::NodeComplete(finished_node)));
             }
@@ -83,7 +83,7 @@ impl<S: VariableStorage> Runner<S> {
                 self.stack.clear();
                 self.pending.clear();
                 self.option_bodies.clear();
-                self.state = State::Done;
+                self.state = RunnerPhase::Done;
                 Ok(Some(DialogueEvent::DialogueComplete))
             }
             Stmt::Command { name, args, tags } => {
@@ -103,8 +103,7 @@ impl<S: VariableStorage> Runner<S> {
         text: &[TextSegment],
         tags: Vec<String>,
     ) -> Result<Option<DialogueEvent>> {
-        let (text, spans) = self.eval_line_text(text, &tags)?;
-        let line_id = line_id_from_tags(&tags);
+        let (text, spans, line_id) = self.eval_line_text(text, &tags)?;
         let line_mode = line_mode_from_tags(&tags);
         Ok(Some(DialogueEvent::Line {
             speaker,
@@ -120,43 +119,27 @@ impl<S: VariableStorage> Runner<S> {
         &mut self,
         variants: &[crate::compiler::ast::LineVariant],
     ) -> Result<Option<DialogueEvent>> {
-        // Collect availability into a local Vec so `self.saliency` can be mutably
-        // borrowed during `select` without conflicting with the prior immutable reads.
-        let availability: Vec<bool> = variants
-            .iter()
-            .map(|v| {
-                v.cond
-                    .as_ref()
-                    .is_none_or(|e| self.eval_expr(e.as_ref()).is_ok_and(|val| val.is_truthy()))
-                    && !(v.once && self.once_seen.contains(&v.id))
-            })
-            .collect();
+        // Candidates borrow `variants` (not `self`), so `self.saliency` can be
+        // mutably borrowed during `select` once this Vec is built.
+        let candidates: Vec<Candidate<'_>> =
+            variants
+                .iter()
+                .map(|v| Candidate {
+                    id: v.id.as_str(),
+                    available: v.cond.as_ref().is_none_or(|e| {
+                        self.eval_expr(e.as_ref()).is_ok_and(|val| val.is_truthy())
+                    }) && !(v.once && self.once_seen.contains(&v.id)),
+                })
+                .collect();
 
-        let candidate_ids: Vec<&str> = variants.iter().map(|v| v.id.as_str()).collect();
-        let candidates: Vec<Candidate<'_>> = candidate_ids
-            .iter()
-            .zip(availability.iter())
-            .map(|(&id, &available)| Candidate { id, available })
-            .collect();
-
-        if let Some(idx) = self.saliency.select(&candidates) {
-            let chosen = &variants[idx];
-            if chosen.once {
-                self.once_seen.insert(chosen.id.clone());
-            }
-            let (text, spans) = self.eval_line_text(&chosen.text, &chosen.tags)?;
-            let line_id = line_id_from_tags(&chosen.tags);
-            let line_mode = line_mode_from_tags(&chosen.tags);
-            return Ok(Some(DialogueEvent::Line {
-                speaker: chosen.speaker.clone(),
-                text,
-                line_id,
-                tags: chosen.tags.clone(),
-                line_mode,
-                spans,
-            }));
+        let Some(idx) = self.saliency.select(&candidates) else {
+            return Ok(None);
+        };
+        let chosen = &variants[idx];
+        if chosen.once {
+            self.once_seen.insert(chosen.id.clone());
         }
-        Ok(None)
+        self.exec_line(chosen.speaker.clone(), &chosen.text, chosen.tags.clone())
     }
 
     fn exec_options(
@@ -172,8 +155,7 @@ impl<S: VariableStorage> Runner<S> {
             };
             let once_available = !(item.once && self.once_seen.contains(&item.id));
             let available = guard_available && once_available;
-            let (text, spans) = self.eval_line_text(&item.text, &item.tags)?;
-            let line_id = line_id_from_tags(&item.tags);
+            let (text, spans, line_id) = self.eval_line_text(&item.text, &item.tags)?;
             let group = option_group_from_tags(&item.tags);
             options.push(DialogueOption {
                 text,
@@ -187,7 +169,7 @@ impl<S: VariableStorage> Runner<S> {
             bodies.push((available, once_id, item.body.clone())); // Arc<[Stmt]> - O(1)
         }
         self.option_bodies = bodies;
-        self.state = State::AwaitingOption;
+        self.state = RunnerPhase::AwaitingOption;
         Ok(Some(DialogueEvent::Options(options)))
     }
 
@@ -247,14 +229,11 @@ impl<S: VariableStorage> Runner<S> {
     /// (`<<jump>>` semantics); otherwise the new frame is pushed on top
     /// (`<<detour>>` semantics).
     fn enter_node(&mut self, target: &str, replace_stack: bool) -> Result<Option<DialogueEvent>> {
-        if !self.program.node_exists(target) {
-            return Err(DialogueError::UnknownNode(target.to_owned()));
-        }
         let body = self.pick_node_body(target)?;
         if replace_stack {
             self.stack.clear();
         }
-        *self.visits.entry(target.to_owned()).or_insert(0) += 1;
+        self.record_visit(target);
         self.push_node_frame(target, body);
         self.pending
             .push_front(DialogueEvent::NodeStarted(target.to_owned()));

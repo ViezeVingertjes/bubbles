@@ -2,7 +2,6 @@
 
 pub mod ast;
 pub mod expr;
-pub mod interpolation;
 pub mod lexer;
 pub mod markup;
 pub(crate) mod parser;

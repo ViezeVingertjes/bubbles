@@ -5,14 +5,13 @@
 //! ignorant of pull-event details and makes it obvious where every
 //! `next_event` / `select_option` call happens.
 
-use bubbles::{DialogueError, DialogueEvent, HashMapStorage, Runner, compile_many};
+use bubbles::{DialogueError, DialogueEvent, HashMapStorage, Runner, RunnerPhase, compile_many};
 
 use crate::source_set::SourceSet;
 
 /// Wraps a compiled program and its runner.
 pub struct Session {
     runner: Runner<HashMapStorage>,
-    done: bool,
 }
 
 impl Session {
@@ -26,28 +25,18 @@ impl Session {
         let program = compile_many(&slices)?;
         let mut runner = Runner::new(program, HashMapStorage::new());
         runner.start(start_node)?;
-        Ok(Self {
-            runner,
-            done: false,
-        })
+        Ok(Self { runner })
     }
 
     /// Returns `true` once the underlying dialogue has fully completed.
-    pub const fn is_done(&self) -> bool {
-        self.done
+    pub fn is_done(&self) -> bool {
+        self.runner.phase() == RunnerPhase::Done
     }
 
-    /// Pulls the next event from the runner, marking the session done on
-    /// `DialogueComplete` or `None`.
+    /// Pulls the next event from the runner; yields `None` once the dialogue
+    /// is finished.
     pub fn next_event(&mut self) -> Result<Option<DialogueEvent>, DialogueError> {
-        if self.done {
-            return Ok(None);
-        }
-        let event = self.runner.next_event()?;
-        if matches!(event, None | Some(DialogueEvent::DialogueComplete)) {
-            self.done = true;
-        }
-        Ok(event)
+        self.runner.next_event()
     }
 
     /// Runs again from `start_node` without clearing variables or once-seen
@@ -57,9 +46,7 @@ impl Session {
     /// # Errors
     /// Returns [`DialogueError::UnknownNode`] if `start_node` does not exist.
     pub fn rerun(&mut self, start_node: &str) -> Result<(), DialogueError> {
-        self.runner.start(start_node)?;
-        self.done = false;
-        Ok(())
+        self.runner.start(start_node)
     }
 
     /// Commits an option choice to the runner.

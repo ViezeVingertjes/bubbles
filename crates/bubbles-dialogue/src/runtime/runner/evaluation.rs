@@ -4,10 +4,10 @@
 
 use crate::compiler::ast::{Expr, TextSegment};
 use crate::compiler::expr::parse_expr_at;
-use crate::compiler::markup::{MarkupScanError, TextToken, scan_text_segments};
+use crate::compiler::markup::{TextToken, owned_properties, scan_text_segments};
 use crate::error::{DialogueError, Result};
 use crate::runtime::eval::eval;
-use crate::runtime::event::MarkupSpan;
+use crate::runtime::event::{MarkupSpan, line_id_from_tags};
 use crate::value::{Value, VariableStorage};
 
 /// Stack entry used while resolving open markup tags: (name, properties, `start_byte`).
@@ -15,24 +15,10 @@ type OpenTag = (String, Vec<(String, String)>, usize);
 
 use super::Runner;
 
-fn owned_properties<K, V>(properties: impl IntoIterator<Item = (K, V)>) -> Vec<(String, String)>
-where
-    K: Into<String>,
-    V: Into<String>,
-{
-    properties
-        .into_iter()
-        .map(|(key, value)| (key.into(), value.into()))
-        .collect()
-}
-
-fn open_markup(
-    open_stack: &mut Vec<OpenTag>,
-    name: impl Into<String>,
-    properties: Vec<(String, String)>,
-    start: usize,
-) {
-    open_stack.push((name.into(), properties, start));
+/// Appends the display form of `value` to `out` without an intermediate `String`.
+fn push_value(out: &mut String, value: &Value) {
+    use std::fmt::Write as _;
+    write!(out, "{value}").expect("writing to a String cannot fail");
 }
 
 fn close_markup(
@@ -54,12 +40,12 @@ fn close_markup(
 
 fn self_closing_markup(
     spans: &mut Vec<MarkupSpan>,
-    name: impl Into<String>,
+    name: String,
     properties: Vec<(String, String)>,
     start: usize,
 ) {
     spans.push(MarkupSpan {
-        name: name.into(),
+        name,
         start,
         length: 0,
         properties,
@@ -130,9 +116,9 @@ impl<S: VariableStorage> Runner<S> {
         for seg in segments {
             match seg {
                 TextSegment::Literal(s) => out.push_str(s),
-                TextSegment::Expr(e) => out.push_str(&self.eval_expr(e.as_ref())?.to_string()),
+                TextSegment::Expr(e) => push_value(&mut out, &self.eval_expr(e.as_ref())?),
                 TextSegment::MarkupOpen { name, properties } => {
-                    open_markup(&mut open_stack, name.clone(), properties.clone(), out.len());
+                    open_stack.push((name.clone(), properties.clone(), out.len()));
                 }
                 TextSegment::MarkupClose { name } => {
                     close_markup(&mut open_stack, &mut spans, name, out.len());
@@ -154,9 +140,6 @@ impl<S: VariableStorage> Runner<S> {
     /// Returns an empty `Vec` when all segments are empty or whitespace-only.
     pub(super) fn eval_segments_as_args(&self, segments: &[TextSegment]) -> Result<Vec<String>> {
         let (text, _spans) = self.eval_segments(segments)?;
-        if text.trim().is_empty() {
-            return Ok(Vec::new());
-        }
         Ok(text.split_whitespace().map(str::to_owned).collect())
     }
 
@@ -169,20 +152,10 @@ impl<S: VariableStorage> Runner<S> {
     /// translated strings is processed with the same scanner as source markup;
     /// mismatched or unclosed tags are handled leniently (silently dropped).
     pub(super) fn eval_template(&self, template: &str) -> Result<(String, Vec<MarkupSpan>)> {
-        let tokens = scan_text_segments(template).map_err(|e| {
-            let msg = match e {
-                MarkupScanError::UnclosedBrace(_) => {
-                    format!("unclosed `{{` in translated template: `{template}`")
-                }
-                MarkupScanError::UnclosedBracket(_) => {
-                    format!("unclosed `[` in translated template: `{template}`")
-                }
-            };
-            DialogueError::Parse {
-                file: "<translation>".into(),
-                line: 0,
-                message: msg,
-            }
+        let tokens = scan_text_segments(template).map_err(|e| DialogueError::Parse {
+            file: "<translation>".into(),
+            line: 0,
+            message: e.describe("translated template", template),
         })?;
 
         let mut out = String::with_capacity(template.len());
@@ -194,21 +167,18 @@ impl<S: VariableStorage> Runner<S> {
                 TextToken::Literal(s) => out.push_str(s),
                 TextToken::Expr(src) => {
                     let expr = parse_expr_at(src, "<translation>", 0)?;
-                    out.push_str(&self.eval_expr(&expr)?.to_string());
+                    push_value(&mut out, &self.eval_expr(&expr)?);
                 }
-                TextToken::MarkupOpen { name, properties } => open_markup(
-                    &mut open_stack,
-                    name,
-                    owned_properties(properties.iter().map(|(k, v)| (*k, *v))),
-                    out.len(),
-                ),
+                TextToken::MarkupOpen { name, properties } => {
+                    open_stack.push((name.to_owned(), owned_properties(&properties), out.len()));
+                }
                 TextToken::MarkupClose { name } => {
                     close_markup(&mut open_stack, &mut spans, name, out.len());
                 }
                 TextToken::MarkupSelfClose { name, properties } => self_closing_markup(
                     &mut spans,
-                    name,
-                    owned_properties(properties.iter().map(|(k, v)| (*k, *v))),
+                    name.to_owned(),
+                    owned_properties(&properties),
                     out.len(),
                 ),
             }
@@ -219,22 +189,24 @@ impl<S: VariableStorage> Runner<S> {
         Ok((out, spans))
     }
 
-    /// Resolves the final `(text, spans)` for a line: looks up the provider
-    /// first so that translators receive raw templates they can still use
-    /// `{expr}` and `[markup]` in, then falls back to evaluating the
-    /// compile-time-parsed segments.
+    /// Resolves the final `(text, spans, line_id)` for a line: looks up the
+    /// provider first so that translators receive raw templates they can still
+    /// use `{expr}` and `[markup]` in, then falls back to evaluating the
+    /// compile-time-parsed segments. The line id extracted from `tags` is
+    /// returned so callers do not have to scan the tags a second time.
     pub(super) fn eval_line_text(
         &self,
         segments: &[TextSegment],
         tags: &[String],
-    ) -> Result<(String, Vec<MarkupSpan>)> {
-        let line_id = crate::runtime::event::line_id_from_tags(tags);
-        line_id
+    ) -> Result<(String, Vec<MarkupSpan>, Option<String>)> {
+        let line_id = line_id_from_tags(tags);
+        let (text, spans) = line_id
             .as_deref()
             .and_then(|id| self.provider.get(id))
             .map_or_else(
                 || self.eval_segments(segments),
                 |template| self.eval_template(&template),
-            )
+            )?;
+        Ok((text, spans, line_id))
     }
 }

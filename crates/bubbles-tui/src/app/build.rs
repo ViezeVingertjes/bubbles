@@ -5,7 +5,6 @@
 
 use super::AppState;
 use crate::display::FocusPanel;
-use crate::overlay::ErrorOverlay;
 use crate::session::Session;
 use crate::source_set::SourceSet;
 use crate::transcript::Transcript;
@@ -41,11 +40,12 @@ impl AppState {
     /// Propagates any compile or start-time runtime error.
     pub fn from_source_set(sources: SourceSet, start_node: &str) -> Result<Self, DialogueError> {
         let session = Session::from_source_set(&sources, start_node)?;
-        Ok(Self::new(Some(session), sources, start_node, None))
+        Ok(Self::new(Some(session), sources, start_node))
     }
 
     /// Infallible counterpart to [`Self::from_source`]: on compile error the
-    /// returned state carries an [`ErrorOverlay`] and has no active session.
+    /// returned state carries an [`crate::overlay::ErrorOverlay`] and has no
+    /// active session.
     #[must_use]
     pub fn load(source: &str, start_node: &str) -> Self {
         let sources = SourceSet::single("<source>", source);
@@ -53,7 +53,8 @@ impl AppState {
     }
 
     /// Infallible counterpart to [`Self::from_sources`]: on compile error the
-    /// returned state carries an [`ErrorOverlay`] and has no active session.
+    /// returned state carries an [`crate::overlay::ErrorOverlay`] and has no
+    /// active session.
     #[must_use]
     pub fn load_many(sources: &[(&str, &str)], start_node: &str) -> Self {
         let set = SourceSet::many(sources.iter().copied());
@@ -64,21 +65,16 @@ impl AppState {
     #[must_use]
     pub fn load_source_set(sources: SourceSet, start_node: &str) -> Self {
         match Session::from_source_set(&sources, start_node) {
-            Ok(session) => Self::new(Some(session), sources, start_node, None),
+            Ok(session) => Self::new(Some(session), sources, start_node),
             Err(err) => {
-                let excerpt = sources.source_for_error(&err);
-                let overlay = ErrorOverlay::from_error(&err, excerpt);
-                Self::new(None, sources, start_node, Some(overlay))
+                let mut state = Self::new(None, sources, start_node);
+                state.fail(&err);
+                state
             }
         }
     }
 
-    pub(super) fn new(
-        session: Option<Session>,
-        sources: SourceSet,
-        start_node: &str,
-        error_overlay: Option<ErrorOverlay>,
-    ) -> Self {
+    fn new(session: Option<Session>, sources: SourceSet, start_node: &str) -> Self {
         Self {
             session,
             sources,
@@ -88,7 +84,7 @@ impl AppState {
             focused_option: None,
             transcript: Transcript::new(),
             focus: FocusPanel::Options,
-            error_overlay,
+            error_overlay: None,
             history: Vec::new(),
             recording: true,
             quit_requested: false,

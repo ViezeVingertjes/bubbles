@@ -126,11 +126,7 @@ impl Parser<'_> {
         let title = headers
             .get("title")
             .cloned()
-            .ok_or_else(|| DialogueError::Parse {
-                file: self.file.to_owned(),
-                line: self.last_lineno(),
-                message: "node is missing a `title:` header".into(),
-            })?;
+            .ok_or_else(|| self.err(self.last_lineno(), "node is missing a `title:` header"))?;
         let tags = headers
             .get("tags")
             .map(|s| s.split_whitespace().map(str::to_owned).collect())
