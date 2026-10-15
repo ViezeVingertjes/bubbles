@@ -1,8 +1,8 @@
 //! One-line footer with the keybind hints that apply to the current state.
 //!
 //! Six hints is all that reliably fits, so the footer carries the verbs you
-//! reach for mid-scene and ends with `?` for the rest.  `Ctrl+R` is spelled
-//! out as destructive wherever it appears: it is the only key that throws
+//! reach for mid-scene and ends with `?` for the rest.  The `Ctrl+R` hint
+//! here spells out that it is destructive: it is the only key that throws
 //! variables away, and it does so without a confirmation step.
 
 use ratatui::style::{Modifier, Style};

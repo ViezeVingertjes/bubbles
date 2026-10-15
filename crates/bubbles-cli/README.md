@@ -12,6 +12,10 @@ cargo install bubbles-cli --no-default-features
 bubbles check dialogue/*.bub
 ```
 
+This crate is not on the index yet. Until the next release publishes it, install from git —
+`cargo install --git https://github.com/ViezeVingertjes/bubbles bubbles-cli`, with the same
+flags wherever this page says `cargo install bubbles-cli`.
+
 `check` compiles every file you give it as one programme — node titles merge and
 `<<jump>>`/`<<detour>>` targets resolve across files, the same way they do at runtime —
 then prints one diagnostic per line and exits non-zero if anything failed:
@@ -53,4 +57,6 @@ reruns from the start node and keeps them, which is how you reach second-visit l
 The [CLI chapter](https://viezevingertjes.github.io/bubbles/getting-started/cli.html) of
 the guide covers both verbs in full. If you are embedding dialogue in a Rust or
 WebAssembly program, you want [`bubbles-dialogue`](https://crates.io/crates/bubbles-dialogue);
-if your host is not Rust, [`bubbles-ffi`](https://crates.io/crates/bubbles-ffi).
+if your host is not Rust, [`bubbles-ffi`](https://github.com/ViezeVingertjes/bubbles/tree/main/crates/bubbles-ffi)
+is a C ABI wrapper with [prebuilt binaries](https://github.com/ViezeVingertjes/bubbles/releases)
+for Windows, macOS, and Linux.
