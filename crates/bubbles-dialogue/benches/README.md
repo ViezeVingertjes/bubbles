@@ -95,12 +95,15 @@ that stopped compiling or started panicking.
 
 What is gated are the two things that do not depend on how busy the machine is:
 
-- `tests/allocation_budget.rs` — allocation counts on the hot paths. These are
-  machine-independent only because the counter is per thread: a process-global
-  one also counts whatever else the process allocates in the same window, which
-  failed a zero-headroom budget on one platform of three while the same
-  measurement was reproducibly exact on another. The file asserts that property
-  directly rather than assuming it.
+- `tests/allocation_budget.rs` — allocation counts on the hot paths. Two things
+  had to be true before these were worth asserting, and running them on three
+  platforms is what established both. The counter is per thread, because a
+  process-global one also counts whatever else the process allocates in the same
+  window; the file asserts that property directly rather than assuming it. And
+  every budget is measured on a warmed path, because a *first* call is not
+  machine-independent even though a steady-state one is: the first read of a
+  session's random stream costs one allocation on macOS that Linux and Windows
+  do not charge, for initialising std's mutex.
 - `scripts/measure-footprint.sh --check` — wasm and binary size, which are
   deterministic for a given toolchain. Each artifact has a floor as well as a
   ceiling, because a module that shrinks sharply has usually lost code it

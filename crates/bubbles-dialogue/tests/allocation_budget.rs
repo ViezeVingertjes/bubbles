@@ -9,18 +9,23 @@
 //! What this file does instead of restating a slogan: it puts a **budget** on
 //! each hot path. Budgets are upper bounds, so a genuine improvement does not
 //! fail the suite, but adding a clone to the per-event path does. The numbers
-//! are allocation *counts*, not timings, so they are machine-independent and
-//! safe to assert on in CI - unlike the figures in `benches/`.
+//! are allocation *counts*, not timings, so they are stable enough to assert on
+//! in CI - unlike the figures in `benches/`.
 //!
-//! The counters are **per thread**, not global. A global counter attributes
+//! "Machine-independent" needs one qualification, found by running these on
+//! three platforms rather than assumed: a *steady-state* count is the same
+//! everywhere, but a first call is not. The first time a session reads its
+//! random stream, macOS charges one allocation for initialising std's mutex
+//! that Linux and Windows do not. So every budget here is measured after the
+//! path has been exercised once, and the warm-up is not incidental tidiness.
+//!
+//! The counters are also **per thread**, not global. A global counter attributes
 //! every allocation made anywhere in the process during the measured window to
 //! the closure being measured, including the test harness's own bookkeeping on
-//! its main thread. That is not a theoretical hazard: with a global counter the
-//! `snapshot` budget, which has no headroom, failed on one platform of three
-//! with exactly one allocation more than the other two measured, while the same
-//! measurement was reproducibly exact locally. Counting only this thread's
-//! allocations makes the figures a property of the code under test rather than
-//! of what else the process happened to be doing.
+//! its main thread, which would make a zero-headroom budget a measurement of
+//! how busy the machine was. That is latent rather than observed - the macOS
+//! figure above was the cold lock, not a race - so the last test in this file
+//! asserts the property instead of leaving it to be assumed.
 
 // A counting global allocator cannot be written in safe Rust, and the crate
 // denies unsafe everywhere else. This is a dev-only test binary and the unsafe
@@ -151,8 +156,8 @@ const INTERPOLATED_LINE_BUDGET: usize = 8;
 /// Budget for `snapshot()` on a session that has visited three nodes. Measured
 /// at 4: one node for the cloned visits map and one `String` per key. The
 /// once-seen set is empty and the random stream's position is a plain `u64`, so
-/// neither costs anything. No headroom, which is why the counter has to be
-/// per-thread to be worth asserting.
+/// neither costs anything. No headroom, which is why this one is measured on a
+/// warmed path and with a per-thread counter.
 const SNAPSHOT_BUDGET: usize = 4;
 
 /// The `examples/harbour/` sources, embedded so no measured region does file IO.
@@ -246,18 +251,34 @@ fn hot_paths_stay_within_allocation_budget() {
     session.start("A").unwrap();
     while session.next_event().unwrap().is_some() {}
 
+    // Both of these are measured on the second call, and the first call is
+    // reported rather than asserted on. `snapshot` reads the random stream's
+    // position and `restore` writes it, so each takes its runner's lock for the
+    // first time, and on macOS a first lock costs one allocation that Linux and
+    // Windows do not charge - std initialises its mutex lazily there. That is a
+    // one-off per runner, not a per-save cost, so budgeting the first call would
+    // be budgeting the platform rather than the code.
+    let (first_snapshot_allocations, _, first) = measure(|| session.snapshot());
+    drop(first);
+
     let (snapshot_allocations, _, snapshot) = measure(|| session.snapshot());
     assert!(
         snapshot_allocations <= SNAPSHOT_BUDGET,
-        "snapshot took {snapshot_allocations} allocations, budget is {SNAPSHOT_BUDGET}"
+        "snapshot took {snapshot_allocations} allocations, budget is {SNAPSHOT_BUDGET} \
+         (the first snapshot of this session took {first_snapshot_allocations}; if both are \
+         over budget, snapshot started allocating rather than a lock initialising)"
     );
 
     let mut target = Runner::new(chained, HashMapStorage::new());
+    let (first_restore_allocations, _, warm_up) = measure(|| target.restore(session.snapshot()));
+    warm_up.unwrap();
+
     let (restore_allocations, _, result) = measure(|| target.restore(snapshot));
     result.unwrap();
     assert_eq!(
         restore_allocations, 0,
-        "restore moves the snapshot's maps into the runner and should not allocate"
+        "restore moves the snapshot's maps into the runner and should not allocate; the first \
+         restore into this runner took {first_restore_allocations}"
     );
 
     // ── program clone against compile ────────────────────────────────────────
