@@ -24,7 +24,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - name: Determinism and snapshot continuation
-        run: cargo test -p bubbles-dialogue --all-features --test determinism --test snapshot_continuation
+        run: cargo test -p bubbles-dialogue --all-features --test determinism --test determinism_proptest --test snapshot_continuation
 
       # Allocation counts are machine-independent, unlike the timings in
       # benches/, so they are safe to assert on a shared runner.
