@@ -24,7 +24,7 @@ REPO="$PWD"
 BUDGET_WASM_MINIMAL_KIB=235
 BUDGET_WASM_SERDE_KIB=300
 BUDGET_WASM_DEFAULT_KIB=265
-BUDGET_TUI_BINARY_KIB=1850
+BUDGET_CLI_BINARY_KIB=1850
 
 # Floors, at roughly 0.85x the measured values. A module that suddenly gets
 # much smaller has usually lost code it needed rather than got leaner: if
@@ -36,7 +36,7 @@ BUDGET_TUI_BINARY_KIB=1850
 FLOOR_WASM_MINIMAL_KIB=154
 FLOOR_WASM_SERDE_KIB=158
 FLOOR_WASM_DEFAULT_KIB=170
-FLOOR_TUI_BINARY_KIB=1200
+FLOOR_CLI_BINARY_KIB=1200
 
 CHECK=0
 [[ "${1:-}" == "--check" ]] && CHECK=1
@@ -158,8 +158,10 @@ getrandom = { version = \"0.4\", features = [\"wasm_js\"] }" \
 report "wasm, default (rand)" "$DEFAULT" "$BUDGET_WASM_DEFAULT_KIB" "$FLOOR_WASM_DEFAULT_KIB"
 
 echo
-cargo build --release --quiet -p bubbles-tui >&2
-report "bubbles-tui native binary" "target/release/bubbles-tui" "$BUDGET_TUI_BINARY_KIB" "$FLOOR_TUI_BINARY_KIB"
+# The package is bubbles-cli and the binary it installs is `bubbles`, so the
+# two names differ and the path is the one that has to be right.
+cargo build --release --quiet -p bubbles-cli >&2
+report "bubbles CLI native binary" "target/release/bubbles" "$BUDGET_CLI_BINARY_KIB" "$FLOOR_CLI_BINARY_KIB"
 
 echo
 if [[ "$CHECK" -eq 1 ]]; then
