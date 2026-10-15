@@ -25,6 +25,8 @@ cargo publish -p bubbles-cli
 
 CI runs `cargo publish --dry-run` for both on every commit — `bubbles-cli` with verification, `bubbles-ffi` without, for the reason in step 9 — so the only thing left to decide at release time is whether to push them at all.
 
+If you do push `bubbles-cli`, drop the three "not on the index yet, install from git" notes that stand beside the `cargo install bubbles-cli` lines in **`README.md`**, **`book/src/getting-started/cli.md`**, and **`crates/bubbles-cli/README.md`**. They are true only while the crate is unpublished, and the last of those three is the crate's own landing page on the index. Do it before `cargo publish`, since the README is packaged into the tarball.
+
 Patch releases (`0.6.0` → `0.6.1`) follow the same steps; the book and README stay on the exact semver shown above.
 
 ## The C ABI

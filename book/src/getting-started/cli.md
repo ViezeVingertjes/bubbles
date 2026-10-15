@@ -6,6 +6,8 @@
 cargo install bubbles-cli
 ```
 
+The crate is not on crates.io yet. Until the next release publishes it, install from git instead — `cargo install --git https://github.com/ViezeVingertjes/bubbles bubbles-cli`, with the same flags wherever this page says `cargo install bubbles-cli`.
+
 Working inside this repository, swap `bubbles` for `cargo run -p bubbles-cli --` in every command below.
 
 ## `bubbles check`
