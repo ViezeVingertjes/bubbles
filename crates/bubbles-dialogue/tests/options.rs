@@ -101,7 +101,7 @@ title: Start
     while let Some(ev) = runner.next_event().unwrap() {
         if let DialogueEvent::Options(opts) = ev {
             assert_eq!(opts[0].tags, vec!["a", "b", "c"]);
-            assert!(opts[1].tags.is_empty());
+            assert_eq!(opts[1].tags, Vec::<String>::new());
             break;
         }
     }

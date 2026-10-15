@@ -38,12 +38,12 @@ fn rerun_clears_transcript_and_history() {
     let mut state = AppState::from_source(WITH_ONCE, "Start").unwrap();
     state.apply(Intent::Advance); // line 1
     state.apply(Intent::Advance); // finish
-    assert!(!state.transcript().is_empty());
+    assert_ne!(state.transcript(), []);
     assert!(state.can_step_back());
 
     state.apply(Intent::Rerun);
 
-    assert!(state.transcript().is_empty());
+    assert_eq!(state.transcript(), []);
     assert!(!state.can_step_back());
 }
 

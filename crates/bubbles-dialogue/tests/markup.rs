@@ -57,7 +57,7 @@ fn open_close_tag_produces_span() {
     assert_eq!(spans[0].name, "wave");
     assert_eq!(spans[0].start, 0);
     assert_eq!(spans[0].length, 5);
-    assert!(spans[0].properties.is_empty());
+    assert_eq!(spans[0].properties, Vec::<(String, String)>::new());
 }
 
 #[test]
@@ -132,7 +132,7 @@ fn no_markup_produces_empty_spans() {
     let events = play(src, "A");
     let (text, spans) = first_line(&events);
     assert_eq!(text, "Hello world.");
-    assert!(spans.is_empty());
+    assert_eq!(spans, []);
 }
 
 #[test]
@@ -142,7 +142,7 @@ fn non_markup_brackets_stay_in_text() {
     let events = play(src, "A");
     let (text, spans) = first_line(&events);
     assert_eq!(text, "[has spaces]");
-    assert!(spans.is_empty());
+    assert_eq!(spans, []);
 }
 
 #[test]

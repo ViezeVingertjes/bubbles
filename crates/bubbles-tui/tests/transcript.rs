@@ -53,7 +53,7 @@ fn transcript_records_nodes_lines_and_commands_in_order() {
         .expect("expected a Command entry");
     assert_eq!(cmd.0, "play_sfx");
     assert_eq!(cmd.1, &vec!["beep".to_string(), "tag1".to_string()]);
-    assert!(cmd.2.is_empty());
+    assert_eq!(cmd.2, &Vec::<String>::new());
 }
 
 #[test]

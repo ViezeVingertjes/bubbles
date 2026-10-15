@@ -35,7 +35,7 @@ fn load_captures_parse_errors_with_file_and_line() {
 
     // The state exists, but playback is not possible.
     assert!(state.current_line().is_none());
-    assert!(state.options().is_empty());
+    assert_eq!(state.options(), []);
     assert!(state.is_errored());
 }
 

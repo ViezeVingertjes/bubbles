@@ -45,7 +45,7 @@ fn focus_next_wraps_and_select_option_commits_by_index() {
     assert_eq!(state.focused_option(), Some(1));
 
     state.apply(Intent::SelectOption(1));
-    assert!(state.options().is_empty());
+    assert_eq!(state.options(), []);
 
     state.apply(Intent::Advance);
     let line = state.current_line().expect("expected line after selection");
@@ -109,7 +109,7 @@ fn selecting_an_unavailable_option_is_a_noop() {
     );
 
     state.apply(Intent::SelectOption(0));
-    assert!(state.options().is_empty());
+    assert_eq!(state.options(), []);
 }
 
 #[test]
