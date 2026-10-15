@@ -132,18 +132,37 @@ any of them locally. (`check-version-sync.sh` also wants **`jq`** on your
 | File size | `bash scripts/check-file-sizes.sh` |
 | Sign-off | `bash scripts/check-dco.sh` |
 
-Three more gates run in CI and each need a tool the rest do not. **You are not
+Four more gates run in CI and each need a tool the rest do not. **You are not
 expected to run these before opening a pull request**, since CI is the normal
 place to find out. If one of them goes red on your PR, this is where to look:
 
 | Gate | Where | Running it yourself |
 |---|---|---|
 | Dependency audit | `cargo-deny` step in `ci.yml` | `cargo install cargo-deny`, then `cargo deny check`. Licences and advisories are configured in `deny.toml`. |
+| Public API | `bash scripts/check-public-api.sh` | Needs the pinned nightly (`rustup toolchain install nightly-2026-10-15`) and `cargo install cargo-public-api`. See [The public API is checked in](#the-public-api-is-checked-in). |
 | .NET FFI smoke test | `bubbles-ffi P/Invoke smoke` step in `ci.yml` | Needs the .NET 10 SDK. `cargo build -p bubbles-ffi --release`, then run `dotnet run -c Release` in `crates/bubbles-ffi/tests/dotnet_smoke/` with `LD_LIBRARY_PATH` pointing at `target/release`. CI runs it on Linux only, so the exact invocation differs on macOS and Windows. |
 | MSRV build | separate `msrv` job in `ci.yml` | `rustup toolchain install 1.94`, then `cargo +1.94 check --workspace --all-features`. This catches code that compiles on current stable but not on our oldest supported Rust. |
 
 A red CI run is normal and is not a verdict on your work. Push a fix-up commit;
 nobody is counting.
+
+### The public API is checked in
+
+`crates/bubbles-dialogue/public-api.txt` lists every public entry in the
+library, and `scripts/check-public-api.sh` regenerates it and fails if it
+differs. Adding, removing or changing anything public therefore means editing
+that file in the same commit.
+
+That is the point. Half of the 2.0.0 surface was published by accident - four
+compiler modules that were public only because the fuzz harness is a separate
+crate - and nothing in CI would have told us. If your change moves the surface
+on purpose, regenerate the file and say why in the commit message. If it moves
+the surface by accident, the diff is the first you will hear of it, which is the
+cheapest moment to find out.
+
+rustdoc JSON is nightly-only and its format changes between releases, so both
+the toolchain and `cargo-public-api` are pinned in `ci.yml`. Bumping them is a
+deliberate commit that regenerates the listing in the same breath.
 
 ### About clippy
 

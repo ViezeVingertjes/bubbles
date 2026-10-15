@@ -1,0 +1,360 @@
+pub mod bubbles
+pub mod bubbles::compiler
+pub struct bubbles::compiler::Program
+impl bubbles::Program
+pub fn bubbles::Program::node_exists(&self, title: &str) -> bool
+pub fn bubbles::Program::node_tags(&self, title: &str) -> core::option::Option<&[alloc::string::String]>
+pub fn bubbles::Program::node_titles(&self) -> impl core::iter::traits::iterator::Iterator<Item = &str>
+pub fn bubbles::Program::variable_declarations(&self) -> &[bubbles::compiler::VariableDecl]
+pub struct bubbles::compiler::VariableDecl
+pub bubbles::compiler::VariableDecl::default_src: alloc::string::String
+pub bubbles::compiler::VariableDecl::name: alloc::string::String
+pub fn bubbles::compiler::compile(source: &str) -> bubbles::error::Result<bubbles::Program>
+pub fn bubbles::compiler::compile_many(sources: &[(&str, &str)]) -> bubbles::error::Result<bubbles::Program>
+pub mod bubbles::error
+#[non_exhaustive] pub enum bubbles::error::DialogueError
+pub bubbles::error::DialogueError::DuplicateNode(alloc::string::String)
+pub bubbles::error::DialogueError::Function
+pub bubbles::error::DialogueError::Function::message: alloc::string::String
+pub bubbles::error::DialogueError::Function::name: alloc::string::String
+pub bubbles::error::DialogueError::Parse
+pub bubbles::error::DialogueError::Parse::file: alloc::string::String
+pub bubbles::error::DialogueError::Parse::line: usize
+pub bubbles::error::DialogueError::Parse::message: alloc::string::String
+pub bubbles::error::DialogueError::ProtocolViolation(alloc::string::String)
+pub bubbles::error::DialogueError::TypeMismatch
+pub bubbles::error::DialogueError::TypeMismatch::context: alloc::string::String
+pub bubbles::error::DialogueError::TypeMismatch::expected: alloc::string::String
+pub bubbles::error::DialogueError::TypeMismatch::got: alloc::string::String
+pub bubbles::error::DialogueError::UndefinedVariable(alloc::string::String)
+pub bubbles::error::DialogueError::UnknownNode(alloc::string::String)
+pub bubbles::error::DialogueError::Validation(alloc::string::String)
+pub type bubbles::error::Result<T> = core::result::Result<T, bubbles::error::DialogueError>
+pub mod bubbles::library
+pub struct bubbles::library::FunctionLibrary
+impl bubbles::library::FunctionLibrary
+pub fn bubbles::library::FunctionLibrary::call(&self, name: &str, args: alloc::vec::Vec<bubbles::Value>) -> bubbles::error::Result<bubbles::Value>
+pub fn bubbles::library::FunctionLibrary::new() -> Self
+pub fn bubbles::library::FunctionLibrary::register<F>(&mut self, name: impl core::convert::Into<alloc::string::String>, f: F) where F: core::ops::function::Fn(alloc::vec::Vec<bubbles::Value>) -> bubbles::error::Result<bubbles::Value> + core::marker::Send + core::marker::Sync + 'static
+impl core::default::Default for bubbles::library::FunctionLibrary
+pub fn bubbles::library::FunctionLibrary::default() -> Self
+impl core::fmt::Debug for bubbles::library::FunctionLibrary
+pub fn bubbles::library::FunctionLibrary::fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+pub type bubbles::library::HostFn = alloc::boxed::Box<(dyn core::ops::function::Fn(alloc::vec::Vec<bubbles::Value>) -> bubbles::error::Result<bubbles::Value> + core::marker::Send + core::marker::Sync + 'static)>
+pub mod bubbles::runtime
+#[non_exhaustive] pub enum bubbles::runtime::DialogueEvent
+pub bubbles::runtime::DialogueEvent::Command
+pub bubbles::runtime::DialogueEvent::Command::args: alloc::vec::Vec<alloc::string::String>
+pub bubbles::runtime::DialogueEvent::Command::name: alloc::string::String
+pub bubbles::runtime::DialogueEvent::Command::tags: alloc::vec::Vec<alloc::string::String>
+pub bubbles::runtime::DialogueEvent::DialogueComplete
+pub bubbles::runtime::DialogueEvent::Line
+pub bubbles::runtime::DialogueEvent::Line::line_id: core::option::Option<alloc::string::String>
+pub bubbles::runtime::DialogueEvent::Line::line_mode: bubbles::LineMode
+pub bubbles::runtime::DialogueEvent::Line::spans: alloc::vec::Vec<bubbles::MarkupSpan>
+pub bubbles::runtime::DialogueEvent::Line::speaker: core::option::Option<alloc::string::String>
+pub bubbles::runtime::DialogueEvent::Line::tags: alloc::vec::Vec<alloc::string::String>
+pub bubbles::runtime::DialogueEvent::Line::text: alloc::string::String
+pub bubbles::runtime::DialogueEvent::NodeComplete(alloc::string::String)
+pub bubbles::runtime::DialogueEvent::NodeStarted(alloc::string::String)
+pub bubbles::runtime::DialogueEvent::Options(alloc::vec::Vec<bubbles::DialogueOption>)
+pub enum bubbles::runtime::LineMode
+pub bubbles::runtime::LineMode::Debug
+pub bubbles::runtime::LineMode::Narration
+pub bubbles::runtime::LineMode::Normal
+pub enum bubbles::runtime::RunnerPhase
+pub bubbles::runtime::RunnerPhase::AwaitingOption
+pub bubbles::runtime::RunnerPhase::Done
+pub bubbles::runtime::RunnerPhase::Idle
+pub bubbles::runtime::RunnerPhase::Running
+pub struct bubbles::runtime::DialogueOption
+pub bubbles::runtime::DialogueOption::available: bool
+pub bubbles::runtime::DialogueOption::group: core::option::Option<alloc::string::String>
+pub bubbles::runtime::DialogueOption::line_id: core::option::Option<alloc::string::String>
+pub bubbles::runtime::DialogueOption::spans: alloc::vec::Vec<bubbles::MarkupSpan>
+pub bubbles::runtime::DialogueOption::tags: alloc::vec::Vec<alloc::string::String>
+pub bubbles::runtime::DialogueOption::text: alloc::string::String
+pub struct bubbles::runtime::DialogueRng
+impl bubbles::DialogueRng
+pub fn bubbles::DialogueRng::choose_index(&self, len: usize) -> core::option::Option<usize>
+pub fn bubbles::DialogueRng::from_seed(seed: u64) -> Self
+pub fn bubbles::DialogueRng::next_f64(&self) -> f64
+pub fn bubbles::DialogueRng::next_u64(&self) -> u64
+pub fn bubbles::DialogueRng::range_inclusive(&self, lo: i64, hi: i64) -> i64
+pub fn bubbles::DialogueRng::state(&self) -> bubbles::RngState
+impl core::default::Default for bubbles::DialogueRng
+pub fn bubbles::DialogueRng::default() -> Self
+impl core::fmt::Debug for bubbles::DialogueRng
+pub fn bubbles::DialogueRng::fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+pub struct bubbles::runtime::HashMapProvider
+impl bubbles::HashMapProvider
+pub fn bubbles::HashMapProvider::insert(&mut self, id: impl core::convert::Into<alloc::string::String>, text: impl core::convert::Into<alloc::string::String>)
+pub fn bubbles::HashMapProvider::new() -> Self
+impl bubbles::LineProvider for bubbles::HashMapProvider
+pub fn bubbles::HashMapProvider::get(&self, line_id: &str) -> core::option::Option<alloc::string::String>
+pub struct bubbles::runtime::MarkupSpan
+pub bubbles::runtime::MarkupSpan::length: usize
+pub bubbles::runtime::MarkupSpan::name: alloc::string::String
+pub bubbles::runtime::MarkupSpan::properties: alloc::vec::Vec<(alloc::string::String, alloc::string::String)>
+pub bubbles::runtime::MarkupSpan::start: usize
+pub struct bubbles::runtime::PassthroughProvider
+impl bubbles::LineProvider for bubbles::PassthroughProvider
+pub fn bubbles::PassthroughProvider::get(&self, _line_id: &str) -> core::option::Option<alloc::string::String>
+pub struct bubbles::runtime::RngState(_)
+impl core::default::Default for bubbles::RngState
+pub fn bubbles::RngState::default() -> Self
+pub struct bubbles::runtime::Runner<S: bubbles::VariableStorage>
+impl<S: bubbles::VariableStorage> bubbles::Runner<S>
+pub fn bubbles::Runner<S>::all_variables(&self) -> alloc::vec::Vec<(alloc::string::String, bubbles::Value)>
+pub const fn bubbles::Runner<S>::library_mut(&mut self) -> &mut bubbles::library::FunctionLibrary
+pub fn bubbles::Runner<S>::new(program: bubbles::Program, storage: S) -> Self
+pub fn bubbles::Runner<S>::next_event(&mut self) -> bubbles::error::Result<core::option::Option<bubbles::DialogueEvent>>
+pub const fn bubbles::Runner<S>::phase(&self) -> bubbles::RunnerPhase
+pub const fn bubbles::Runner<S>::program(&self) -> &bubbles::Program
+pub const fn bubbles::Runner<S>::rng(&self) -> &bubbles::DialogueRng
+pub fn bubbles::Runner<S>::select_option(&mut self, index: usize) -> bubbles::error::Result<()>
+pub fn bubbles::Runner<S>::set_provider(&mut self, provider: impl bubbles::LineProvider)
+pub fn bubbles::Runner<S>::set_saliency(&mut self, strategy: impl bubbles::saliency::SaliencyStrategy)
+pub fn bubbles::Runner<S>::start(&mut self, node: &str) -> bubbles::error::Result<()>
+pub const fn bubbles::Runner<S>::storage(&self) -> &S
+pub const fn bubbles::Runner<S>::storage_mut(&mut self) -> &mut S
+pub fn bubbles::Runner<S>::variable(&self, name: &str) -> core::option::Option<bubbles::Value>
+impl<S: bubbles::VariableStorage> bubbles::Runner<S>
+pub fn bubbles::Runner<S>::restore(&mut self, snapshot: bubbles::RunnerSnapshot) -> bubbles::error::Result<()>
+pub fn bubbles::Runner<S>::snapshot(&self) -> bubbles::RunnerSnapshot
+pub struct bubbles::runtime::RunnerBuilder<S: bubbles::VariableStorage>
+impl<S: bubbles::VariableStorage> bubbles::RunnerBuilder<S>
+pub fn bubbles::RunnerBuilder<S>::build(self) -> bubbles::Runner<S>
+pub fn bubbles::RunnerBuilder<S>::new(program: bubbles::Program, storage: S) -> Self
+pub fn bubbles::RunnerBuilder<S>::with_function<F>(self, name: &str, f: F) -> Self where F: core::ops::function::Fn(alloc::vec::Vec<bubbles::Value>) -> bubbles::error::Result<bubbles::Value> + core::marker::Send + core::marker::Sync + 'static
+pub fn bubbles::RunnerBuilder<S>::with_provider(self, provider: impl bubbles::LineProvider) -> Self
+pub fn bubbles::RunnerBuilder<S>::with_saliency(self, strategy: impl bubbles::saliency::SaliencyStrategy) -> Self
+pub fn bubbles::RunnerBuilder<S>::with_seed(self, seed: u64) -> Self
+pub struct bubbles::runtime::RunnerSnapshot
+pub bubbles::runtime::RunnerSnapshot::current_node: core::option::Option<alloc::string::String>
+pub bubbles::runtime::RunnerSnapshot::once_seen: alloc::collections::btree::set::BTreeSet<alloc::string::String>
+pub bubbles::runtime::RunnerSnapshot::rng: bubbles::RngState
+pub bubbles::runtime::RunnerSnapshot::visits: alloc::collections::btree::map::BTreeMap<alloc::string::String, u32>
+pub trait bubbles::runtime::LineProvider: core::marker::Send + core::marker::Sync + 'static
+pub fn bubbles::runtime::LineProvider::get(&self, line_id: &str) -> core::option::Option<alloc::string::String>
+impl bubbles::LineProvider for bubbles::HashMapProvider
+pub fn bubbles::HashMapProvider::get(&self, line_id: &str) -> core::option::Option<alloc::string::String>
+impl bubbles::LineProvider for bubbles::PassthroughProvider
+pub fn bubbles::PassthroughProvider::get(&self, _line_id: &str) -> core::option::Option<alloc::string::String>
+pub mod bubbles::saliency
+pub struct bubbles::saliency::BestLeastRecentlyViewed
+impl bubbles::saliency::BestLeastRecentlyViewed
+pub fn bubbles::saliency::BestLeastRecentlyViewed::new() -> Self
+impl bubbles::saliency::SaliencyStrategy for bubbles::saliency::BestLeastRecentlyViewed
+pub fn bubbles::saliency::BestLeastRecentlyViewed::select(&mut self, candidates: &[bubbles::saliency::Candidate<'_>], _rng: &bubbles::DialogueRng) -> core::option::Option<usize>
+pub struct bubbles::saliency::Candidate<'a>
+pub bubbles::saliency::Candidate::available: bool
+pub bubbles::saliency::Candidate::id: &'a str
+pub struct bubbles::saliency::FirstAvailable
+impl bubbles::saliency::SaliencyStrategy for bubbles::saliency::FirstAvailable
+pub fn bubbles::saliency::FirstAvailable::select(&mut self, candidates: &[bubbles::saliency::Candidate<'_>], _rng: &bubbles::DialogueRng) -> core::option::Option<usize>
+pub struct bubbles::saliency::RandomAvailable
+impl bubbles::saliency::SaliencyStrategy for bubbles::saliency::RandomAvailable
+pub fn bubbles::saliency::RandomAvailable::select(&mut self, candidates: &[bubbles::saliency::Candidate<'_>], rng: &bubbles::DialogueRng) -> core::option::Option<usize>
+pub trait bubbles::saliency::SaliencyStrategy: core::marker::Send + core::marker::Sync + 'static
+pub fn bubbles::saliency::SaliencyStrategy::select(&mut self, candidates: &[bubbles::saliency::Candidate<'_>], rng: &bubbles::DialogueRng) -> core::option::Option<usize>
+impl bubbles::saliency::SaliencyStrategy for bubbles::saliency::BestLeastRecentlyViewed
+pub fn bubbles::saliency::BestLeastRecentlyViewed::select(&mut self, candidates: &[bubbles::saliency::Candidate<'_>], _rng: &bubbles::DialogueRng) -> core::option::Option<usize>
+impl bubbles::saliency::SaliencyStrategy for bubbles::saliency::FirstAvailable
+pub fn bubbles::saliency::FirstAvailable::select(&mut self, candidates: &[bubbles::saliency::Candidate<'_>], _rng: &bubbles::DialogueRng) -> core::option::Option<usize>
+impl bubbles::saliency::SaliencyStrategy for bubbles::saliency::RandomAvailable
+pub fn bubbles::saliency::RandomAvailable::select(&mut self, candidates: &[bubbles::saliency::Candidate<'_>], rng: &bubbles::DialogueRng) -> core::option::Option<usize>
+pub mod bubbles::value
+pub enum bubbles::value::Value
+pub bubbles::value::Value::Bool(bool)
+pub bubbles::value::Value::Number(f64)
+pub bubbles::value::Value::Text(alloc::string::String)
+impl bubbles::Value
+pub fn bubbles::Value::is_truthy(&self) -> bool
+impl core::convert::From<&str> for bubbles::Value
+pub fn bubbles::Value::from(v: &str) -> Self
+impl core::convert::From<alloc::string::String> for bubbles::Value
+pub fn bubbles::Value::from(v: alloc::string::String) -> Self
+impl core::convert::From<bool> for bubbles::Value
+pub fn bubbles::Value::from(v: bool) -> Self
+impl core::convert::From<f64> for bubbles::Value
+pub fn bubbles::Value::from(v: f64) -> Self
+impl core::fmt::Display for bubbles::Value
+pub fn bubbles::Value::fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+pub struct bubbles::value::HashMapStorage
+impl bubbles::HashMapStorage
+pub fn bubbles::HashMapStorage::new() -> Self
+impl bubbles::VariableStorage for bubbles::HashMapStorage
+pub fn bubbles::HashMapStorage::all_variables(&self) -> alloc::vec::Vec<(alloc::string::String, bubbles::Value)>
+pub fn bubbles::HashMapStorage::get(&self, name: &str) -> core::option::Option<bubbles::Value>
+pub fn bubbles::HashMapStorage::get_ref(&self, name: &str) -> core::option::Option<alloc::borrow::Cow<'_, bubbles::Value>>
+pub fn bubbles::HashMapStorage::set(&mut self, name: &str, value: bubbles::Value)
+pub trait bubbles::value::VariableStorage
+pub fn bubbles::value::VariableStorage::all_variables(&self) -> alloc::vec::Vec<(alloc::string::String, bubbles::Value)>
+pub fn bubbles::value::VariableStorage::get(&self, name: &str) -> core::option::Option<bubbles::Value>
+pub fn bubbles::value::VariableStorage::get_ref(&self, name: &str) -> core::option::Option<alloc::borrow::Cow<'_, bubbles::Value>>
+pub fn bubbles::value::VariableStorage::set(&mut self, name: &str, value: bubbles::Value)
+impl bubbles::VariableStorage for bubbles::HashMapStorage
+pub fn bubbles::HashMapStorage::all_variables(&self) -> alloc::vec::Vec<(alloc::string::String, bubbles::Value)>
+pub fn bubbles::HashMapStorage::get(&self, name: &str) -> core::option::Option<bubbles::Value>
+pub fn bubbles::HashMapStorage::get_ref(&self, name: &str) -> core::option::Option<alloc::borrow::Cow<'_, bubbles::Value>>
+pub fn bubbles::HashMapStorage::set(&mut self, name: &str, value: bubbles::Value)
+#[non_exhaustive] pub enum bubbles::DialogueError
+pub bubbles::DialogueError::DuplicateNode(alloc::string::String)
+pub bubbles::DialogueError::Function
+pub bubbles::DialogueError::Function::message: alloc::string::String
+pub bubbles::DialogueError::Function::name: alloc::string::String
+pub bubbles::DialogueError::Parse
+pub bubbles::DialogueError::Parse::file: alloc::string::String
+pub bubbles::DialogueError::Parse::line: usize
+pub bubbles::DialogueError::Parse::message: alloc::string::String
+pub bubbles::DialogueError::ProtocolViolation(alloc::string::String)
+pub bubbles::DialogueError::TypeMismatch
+pub bubbles::DialogueError::TypeMismatch::context: alloc::string::String
+pub bubbles::DialogueError::TypeMismatch::expected: alloc::string::String
+pub bubbles::DialogueError::TypeMismatch::got: alloc::string::String
+pub bubbles::DialogueError::UndefinedVariable(alloc::string::String)
+pub bubbles::DialogueError::UnknownNode(alloc::string::String)
+pub bubbles::DialogueError::Validation(alloc::string::String)
+#[non_exhaustive] pub enum bubbles::DialogueEvent
+pub bubbles::DialogueEvent::Command
+pub bubbles::DialogueEvent::Command::args: alloc::vec::Vec<alloc::string::String>
+pub bubbles::DialogueEvent::Command::name: alloc::string::String
+pub bubbles::DialogueEvent::Command::tags: alloc::vec::Vec<alloc::string::String>
+pub bubbles::DialogueEvent::DialogueComplete
+pub bubbles::DialogueEvent::Line
+pub bubbles::DialogueEvent::Line::line_id: core::option::Option<alloc::string::String>
+pub bubbles::DialogueEvent::Line::line_mode: bubbles::LineMode
+pub bubbles::DialogueEvent::Line::spans: alloc::vec::Vec<bubbles::MarkupSpan>
+pub bubbles::DialogueEvent::Line::speaker: core::option::Option<alloc::string::String>
+pub bubbles::DialogueEvent::Line::tags: alloc::vec::Vec<alloc::string::String>
+pub bubbles::DialogueEvent::Line::text: alloc::string::String
+pub bubbles::DialogueEvent::NodeComplete(alloc::string::String)
+pub bubbles::DialogueEvent::NodeStarted(alloc::string::String)
+pub bubbles::DialogueEvent::Options(alloc::vec::Vec<bubbles::DialogueOption>)
+pub enum bubbles::LineMode
+pub bubbles::LineMode::Debug
+pub bubbles::LineMode::Narration
+pub bubbles::LineMode::Normal
+pub enum bubbles::RunnerPhase
+pub bubbles::RunnerPhase::AwaitingOption
+pub bubbles::RunnerPhase::Done
+pub bubbles::RunnerPhase::Idle
+pub bubbles::RunnerPhase::Running
+pub enum bubbles::Value
+pub bubbles::Value::Bool(bool)
+pub bubbles::Value::Number(f64)
+pub bubbles::Value::Text(alloc::string::String)
+impl bubbles::Value
+pub fn bubbles::Value::is_truthy(&self) -> bool
+impl core::convert::From<&str> for bubbles::Value
+pub fn bubbles::Value::from(v: &str) -> Self
+impl core::convert::From<alloc::string::String> for bubbles::Value
+pub fn bubbles::Value::from(v: alloc::string::String) -> Self
+impl core::convert::From<bool> for bubbles::Value
+pub fn bubbles::Value::from(v: bool) -> Self
+impl core::convert::From<f64> for bubbles::Value
+pub fn bubbles::Value::from(v: f64) -> Self
+impl core::fmt::Display for bubbles::Value
+pub fn bubbles::Value::fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+pub struct bubbles::DialogueOption
+pub bubbles::DialogueOption::available: bool
+pub bubbles::DialogueOption::group: core::option::Option<alloc::string::String>
+pub bubbles::DialogueOption::line_id: core::option::Option<alloc::string::String>
+pub bubbles::DialogueOption::spans: alloc::vec::Vec<bubbles::MarkupSpan>
+pub bubbles::DialogueOption::tags: alloc::vec::Vec<alloc::string::String>
+pub bubbles::DialogueOption::text: alloc::string::String
+pub struct bubbles::DialogueRng
+impl bubbles::DialogueRng
+pub fn bubbles::DialogueRng::choose_index(&self, len: usize) -> core::option::Option<usize>
+pub fn bubbles::DialogueRng::from_seed(seed: u64) -> Self
+pub fn bubbles::DialogueRng::next_f64(&self) -> f64
+pub fn bubbles::DialogueRng::next_u64(&self) -> u64
+pub fn bubbles::DialogueRng::range_inclusive(&self, lo: i64, hi: i64) -> i64
+pub fn bubbles::DialogueRng::state(&self) -> bubbles::RngState
+impl core::default::Default for bubbles::DialogueRng
+pub fn bubbles::DialogueRng::default() -> Self
+impl core::fmt::Debug for bubbles::DialogueRng
+pub fn bubbles::DialogueRng::fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+pub struct bubbles::HashMapProvider
+impl bubbles::HashMapProvider
+pub fn bubbles::HashMapProvider::insert(&mut self, id: impl core::convert::Into<alloc::string::String>, text: impl core::convert::Into<alloc::string::String>)
+pub fn bubbles::HashMapProvider::new() -> Self
+impl bubbles::LineProvider for bubbles::HashMapProvider
+pub fn bubbles::HashMapProvider::get(&self, line_id: &str) -> core::option::Option<alloc::string::String>
+pub struct bubbles::HashMapStorage
+impl bubbles::HashMapStorage
+pub fn bubbles::HashMapStorage::new() -> Self
+impl bubbles::VariableStorage for bubbles::HashMapStorage
+pub fn bubbles::HashMapStorage::all_variables(&self) -> alloc::vec::Vec<(alloc::string::String, bubbles::Value)>
+pub fn bubbles::HashMapStorage::get(&self, name: &str) -> core::option::Option<bubbles::Value>
+pub fn bubbles::HashMapStorage::get_ref(&self, name: &str) -> core::option::Option<alloc::borrow::Cow<'_, bubbles::Value>>
+pub fn bubbles::HashMapStorage::set(&mut self, name: &str, value: bubbles::Value)
+pub struct bubbles::MarkupSpan
+pub bubbles::MarkupSpan::length: usize
+pub bubbles::MarkupSpan::name: alloc::string::String
+pub bubbles::MarkupSpan::properties: alloc::vec::Vec<(alloc::string::String, alloc::string::String)>
+pub bubbles::MarkupSpan::start: usize
+pub struct bubbles::PassthroughProvider
+impl bubbles::LineProvider for bubbles::PassthroughProvider
+pub fn bubbles::PassthroughProvider::get(&self, _line_id: &str) -> core::option::Option<alloc::string::String>
+pub struct bubbles::Program
+impl bubbles::Program
+pub fn bubbles::Program::node_exists(&self, title: &str) -> bool
+pub fn bubbles::Program::node_tags(&self, title: &str) -> core::option::Option<&[alloc::string::String]>
+pub fn bubbles::Program::node_titles(&self) -> impl core::iter::traits::iterator::Iterator<Item = &str>
+pub fn bubbles::Program::variable_declarations(&self) -> &[bubbles::compiler::VariableDecl]
+pub struct bubbles::RngState(_)
+impl core::default::Default for bubbles::RngState
+pub fn bubbles::RngState::default() -> Self
+pub struct bubbles::Runner<S: bubbles::VariableStorage>
+impl<S: bubbles::VariableStorage> bubbles::Runner<S>
+pub fn bubbles::Runner<S>::all_variables(&self) -> alloc::vec::Vec<(alloc::string::String, bubbles::Value)>
+pub const fn bubbles::Runner<S>::library_mut(&mut self) -> &mut bubbles::library::FunctionLibrary
+pub fn bubbles::Runner<S>::new(program: bubbles::Program, storage: S) -> Self
+pub fn bubbles::Runner<S>::next_event(&mut self) -> bubbles::error::Result<core::option::Option<bubbles::DialogueEvent>>
+pub const fn bubbles::Runner<S>::phase(&self) -> bubbles::RunnerPhase
+pub const fn bubbles::Runner<S>::program(&self) -> &bubbles::Program
+pub const fn bubbles::Runner<S>::rng(&self) -> &bubbles::DialogueRng
+pub fn bubbles::Runner<S>::select_option(&mut self, index: usize) -> bubbles::error::Result<()>
+pub fn bubbles::Runner<S>::set_provider(&mut self, provider: impl bubbles::LineProvider)
+pub fn bubbles::Runner<S>::set_saliency(&mut self, strategy: impl bubbles::saliency::SaliencyStrategy)
+pub fn bubbles::Runner<S>::start(&mut self, node: &str) -> bubbles::error::Result<()>
+pub const fn bubbles::Runner<S>::storage(&self) -> &S
+pub const fn bubbles::Runner<S>::storage_mut(&mut self) -> &mut S
+pub fn bubbles::Runner<S>::variable(&self, name: &str) -> core::option::Option<bubbles::Value>
+impl<S: bubbles::VariableStorage> bubbles::Runner<S>
+pub fn bubbles::Runner<S>::restore(&mut self, snapshot: bubbles::RunnerSnapshot) -> bubbles::error::Result<()>
+pub fn bubbles::Runner<S>::snapshot(&self) -> bubbles::RunnerSnapshot
+pub struct bubbles::RunnerBuilder<S: bubbles::VariableStorage>
+impl<S: bubbles::VariableStorage> bubbles::RunnerBuilder<S>
+pub fn bubbles::RunnerBuilder<S>::build(self) -> bubbles::Runner<S>
+pub fn bubbles::RunnerBuilder<S>::new(program: bubbles::Program, storage: S) -> Self
+pub fn bubbles::RunnerBuilder<S>::with_function<F>(self, name: &str, f: F) -> Self where F: core::ops::function::Fn(alloc::vec::Vec<bubbles::Value>) -> bubbles::error::Result<bubbles::Value> + core::marker::Send + core::marker::Sync + 'static
+pub fn bubbles::RunnerBuilder<S>::with_provider(self, provider: impl bubbles::LineProvider) -> Self
+pub fn bubbles::RunnerBuilder<S>::with_saliency(self, strategy: impl bubbles::saliency::SaliencyStrategy) -> Self
+pub fn bubbles::RunnerBuilder<S>::with_seed(self, seed: u64) -> Self
+pub struct bubbles::RunnerSnapshot
+pub bubbles::RunnerSnapshot::current_node: core::option::Option<alloc::string::String>
+pub bubbles::RunnerSnapshot::once_seen: alloc::collections::btree::set::BTreeSet<alloc::string::String>
+pub bubbles::RunnerSnapshot::rng: bubbles::RngState
+pub bubbles::RunnerSnapshot::visits: alloc::collections::btree::map::BTreeMap<alloc::string::String, u32>
+pub trait bubbles::LineProvider: core::marker::Send + core::marker::Sync + 'static
+pub fn bubbles::LineProvider::get(&self, line_id: &str) -> core::option::Option<alloc::string::String>
+impl bubbles::LineProvider for bubbles::HashMapProvider
+pub fn bubbles::HashMapProvider::get(&self, line_id: &str) -> core::option::Option<alloc::string::String>
+impl bubbles::LineProvider for bubbles::PassthroughProvider
+pub fn bubbles::PassthroughProvider::get(&self, _line_id: &str) -> core::option::Option<alloc::string::String>
+pub trait bubbles::VariableStorage
+pub fn bubbles::VariableStorage::all_variables(&self) -> alloc::vec::Vec<(alloc::string::String, bubbles::Value)>
+pub fn bubbles::VariableStorage::get(&self, name: &str) -> core::option::Option<bubbles::Value>
+pub fn bubbles::VariableStorage::get_ref(&self, name: &str) -> core::option::Option<alloc::borrow::Cow<'_, bubbles::Value>>
+pub fn bubbles::VariableStorage::set(&mut self, name: &str, value: bubbles::Value)
+impl bubbles::VariableStorage for bubbles::HashMapStorage
+pub fn bubbles::HashMapStorage::all_variables(&self) -> alloc::vec::Vec<(alloc::string::String, bubbles::Value)>
+pub fn bubbles::HashMapStorage::get(&self, name: &str) -> core::option::Option<bubbles::Value>
+pub fn bubbles::HashMapStorage::get_ref(&self, name: &str) -> core::option::Option<alloc::borrow::Cow<'_, bubbles::Value>>
+pub fn bubbles::HashMapStorage::set(&mut self, name: &str, value: bubbles::Value)
+pub fn bubbles::compile(source: &str) -> bubbles::error::Result<bubbles::Program>
+pub fn bubbles::compile_many(sources: &[(&str, &str)]) -> bubbles::error::Result<bubbles::Program>
+pub type bubbles::Result<T> = core::result::Result<T, bubbles::error::DialogueError>

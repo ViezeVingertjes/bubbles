@@ -5,7 +5,8 @@
 #
 # Runs:    version sync, cargo fmt, clippy (all features, and bubbles-dialogue
 #          with no default features), rustdoc, file sizes.
-# Skipped: cargo test, scripts/check-wasm.sh, cargo-deny, the .NET P/Invoke
+# Skipped: cargo test, scripts/check-wasm.sh, cargo-deny, the public API check
+#          (needs a pinned nightly and cargo-public-api), the .NET P/Invoke
 #          smoke test, the MSRV build, and the DCO sign-off check.
 #
 # A clean run here is therefore not a promise of green CI. Keep the two lists
