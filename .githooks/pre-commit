@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
-# Pre-commit hook: mirrors the checks in .github/workflows/ci.yml so CI
-# failures are caught locally before a push. Version sync runs first (cheap).
+# Pre-commit hook: runs the fast subset of .github/workflows/ci.yml, so the
+# cheapest CI failures are caught locally before a push. Version sync runs
+# first (cheap).
+#
+# Runs:    version sync, cargo fmt, clippy (all features, and bubbles-dialogue
+#          with no default features), rustdoc, file sizes.
+# Skipped: cargo test, scripts/check-wasm.sh, cargo-deny, the .NET P/Invoke
+#          smoke test, the MSRV build, and the DCO sign-off check.
+#
+# A clean run here is therefore not a promise of green CI. Keep the two lists
+# above in step with ci.yml and the gate tables in CONTRIBUTING.md.
+#
 # Install once with: git config core.hooksPath .githooks
 
 set -euo pipefail

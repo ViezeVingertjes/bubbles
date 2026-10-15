@@ -112,7 +112,9 @@ reason to reject a change.
 
 ## The quality gates
 
-Every one of these runs in CI, and all of them run locally:
+These nine run in CI and need nothing beyond your Rust toolchain, so you can run
+any of them locally. (`check-version-sync.sh` also wants **`jq`** on your
+`PATH`; `check-wasm.sh` installs the `wasm32-unknown-unknown` target itself.)
 
 | Gate | Command |
 |---|---|
@@ -125,6 +127,16 @@ Every one of these runs in CI, and all of them run locally:
 | Doc warnings | `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps` |
 | File size | `bash scripts/check-file-sizes.sh` |
 | Sign-off | `bash scripts/check-dco.sh` |
+
+Three more gates run in CI and each need a tool the rest do not. **You are not
+expected to run these before opening a pull request**, since CI is the normal
+place to find out. If one of them goes red on your PR, this is where to look:
+
+| Gate | Where | Running it yourself |
+|---|---|---|
+| Dependency audit | `cargo-deny` step in `ci.yml` | `cargo install cargo-deny`, then `cargo deny check`. Licences and advisories are configured in `deny.toml`. |
+| .NET FFI smoke test | `bubbles-ffi P/Invoke smoke` step in `ci.yml` | Needs the .NET 10 SDK. `cargo build -p bubbles-ffi --release`, then run `dotnet run -c Release` in `crates/bubbles-ffi/tests/dotnet_smoke/` with `LD_LIBRARY_PATH` pointing at `target/release`. CI runs it on Linux only, so the exact invocation differs on macOS and Windows. |
+| MSRV build | separate `msrv` job in `ci.yml` | `rustup toolchain install 1.94`, then `cargo +1.94 check --workspace --all-features`. This catches code that compiles on current stable but not on our oldest supported Rust. |
 
 A red CI run is normal and is not a verdict on your work. Push a fix-up commit;
 nobody is counting.
