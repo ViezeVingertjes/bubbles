@@ -7,8 +7,7 @@
 //! on deeply nested expressions before OOM is reached.
 #![no_main]
 
-use bubbles::compiler::expr::parse_expr_at;
-use bubbles::compiler::tokenise;
+use bubbles::__fuzz::{parse_expr_at, tokenise};
 use libfuzzer_sys::fuzz_target;
 
 fuzz_target!(|data: &[u8]| {
