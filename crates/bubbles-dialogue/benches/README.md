@@ -97,7 +97,11 @@ What is gated are the two things that do not depend on how busy the machine is:
 - `tests/allocation_budget.rs` — allocation counts on the hot paths, which are
   machine-independent.
 - `scripts/measure-footprint.sh --check` — wasm and binary size, which are
-  deterministic for a given toolchain.
+  deterministic for a given toolchain. Each artifact has a floor as well as a
+  ceiling, because a module that shrinks sharply has usually lost code it
+  needed: if anything the probe calls diverges unconditionally on the target,
+  the optimiser proves the rest unreachable and deletes it, so the artifact
+  gets smaller instead of failing to build.
 
 To compare two commits, run `cargo bench` on both on the same idle machine and
 read criterion's own change report, which is what it is designed for. Do not
