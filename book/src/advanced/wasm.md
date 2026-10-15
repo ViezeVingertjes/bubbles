@@ -152,9 +152,9 @@ Measured with those profile settings, on a cdylib that compiles a script and pum
 
 | Features | `.wasm` | gzipped |
 |---|---|---|
-| `default-features = false` | 181 KiB | 76 KiB |
-| `serde`, plus `serde_json` to use it | 187 KiB | 78 KiB |
-| default (`rand`) | 201 KiB | 83 KiB |
+| `default-features = false` | 185 KiB | 78 KiB |
+| `serde`, plus `serde_json` to use it | 193 KiB | 81 KiB |
+| default (`rand`) | 206 KiB | 85 KiB |
 
 So a browser host carrying the runtime and a small script lands around 80 KiB over the wire, before `wasm-opt`. Reproduce the table with `scripts/measure-footprint.sh`; the figures come from rustc 1.99.0 on x86_64 Linux and drift a little with the toolchain.
 
