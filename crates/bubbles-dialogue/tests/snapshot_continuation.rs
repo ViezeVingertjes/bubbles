@@ -272,6 +272,90 @@ Clerk: Visit number {visited_count(\"Start\")}.
     );
 }
 
+/// A snapshot taken inside a `<<detour>>` loses the caller.
+///
+/// `snapshot` records only `stack.last()`, the innermost frame, and `restore`
+/// clears the stack before re-entering that one node. So a save taken during a
+/// detour from `Start` into `Sub` restores into `Sub` alone: when `Sub` ends the
+/// dialogue ends, instead of returning to the rest of `Start`.
+///
+/// This is the limit of what the snapshot can express - the call stack is not
+/// serialised - and it is the reason a save point belongs at a node boundary and
+/// not anywhere a host happens to want one. Pinned so the boundary is a tested
+/// fact rather than an assumption, and so anyone extending `RunnerSnapshot` to
+/// carry the stack has a test that tells them it worked.
+#[test]
+fn snapshot_inside_a_detour_loses_the_caller() {
+    let src = "\
+title: Start
+---
+Before detour.
+<<detour Sub>>
+After detour.
+===
+title: Sub
+---
+Inside sub.
+===
+";
+    let program = compile(src).unwrap();
+
+    // Uninterrupted: the detour returns and "After detour." plays.
+    let mut plain = Runner::new(program.clone(), HashMapStorage::new());
+    plain.start("Start").unwrap();
+    let mut index = 0;
+    let baseline = drive(&mut plain, &[0], &mut index, |_, _, _| {});
+    let baseline_lines: Vec<&str> = baseline
+        .iter()
+        .filter_map(|e| match e {
+            DialogueEvent::Line { text, .. } => Some(text.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        baseline_lines,
+        ["Before detour.", "Inside sub.", "After detour."]
+    );
+
+    // Snapshot while inside the detour: current_node is the inner node.
+    let mut runner = Runner::new(program.clone(), HashMapStorage::new());
+    runner.start("Start").unwrap();
+    let mut snapshot = None;
+    for _ in 0..50 {
+        let Some(event) = runner.next_event().unwrap() else {
+            break;
+        };
+        if matches!(&event, DialogueEvent::Line { text, .. } if text == "Inside sub.") {
+            snapshot = Some(runner.snapshot());
+            break;
+        }
+    }
+    let snapshot = snapshot.expect("never reached the detour body");
+    assert_eq!(snapshot.current_node.as_deref(), Some("Sub"));
+
+    let mut restored = Runner::new(program, HashMapStorage::new());
+    restored.restore(snapshot).unwrap();
+    let mut i = 0;
+    let tail = drive(&mut restored, &[0], &mut i, |_, _, _| {});
+    let tail_lines: Vec<&str> = tail
+        .iter()
+        .filter_map(|e| match e {
+            DialogueEvent::Line { text, .. } => Some(text.as_str()),
+            _ => None,
+        })
+        .collect();
+
+    assert_eq!(
+        tail_lines,
+        ["Inside sub."],
+        "restore re-entered Sub but dropped the Start frame, so the detour cannot return"
+    );
+    assert!(
+        !tail_lines.contains(&"After detour."),
+        "the caller's remaining lines are unreachable after restoring inside a detour"
+    );
+}
+
 /// Storage is not part of the snapshot, so a restore that forgets to carry
 /// variables across diverges. Documented host responsibility - pinned so the
 /// division of labour is visible in the test suite rather than only in prose.
