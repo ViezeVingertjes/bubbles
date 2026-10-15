@@ -13,9 +13,10 @@ mod scripts;
 use criterion::{BatchSize, Criterion, Throughput, criterion_group, criterion_main};
 use std::hint::black_box;
 
+use bubbles::saliency::BestLeastRecentlyViewed;
 use bubbles::{
-    BestLeastRecentlyViewed, DialogueEvent, HashMapStorage, Program, Runner, RunnerBuilder,
-    RunnerSnapshot, compile, compile_many,
+    DialogueEvent, HashMapStorage, Program, Runner, RunnerBuilder, RunnerSnapshot, compile,
+    compile_many,
 };
 
 /// A runner positioned at `start` and ready to be pumped.
