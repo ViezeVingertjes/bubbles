@@ -24,9 +24,7 @@ pub trait VariableStorage {
     /// Returns the current value of `name`, or `None` if the variable has not been set.
     ///
     /// This is the ergonomic read path: it always returns an owned [`Value`],
-    /// cloning if the backing store holds one by reference.  New impls are
-    /// encouraged to override [`get_ref`](Self::get_ref) as well so hot
-    /// expression-evaluation paths can avoid cloning [`Value::Text`].
+    /// cloning if the backing store holds one by reference.
     fn get(&self, name: &str) -> Option<Value>;
     /// Stores `value` under `name`, replacing any previous value.
     fn set(&mut self, name: &str, value: Value);
@@ -34,12 +32,18 @@ pub trait VariableStorage {
     /// Returns a reference to the current value of `name`, or `None` if the
     /// variable has not been set.
     ///
-    /// The runner prefers this over [`get`](Self::get) during expression
-    /// evaluation so string variables can be observed without an allocation.
-    /// The default implementation simply forwards to [`get`](Self::get) and
-    /// wraps the result in [`Cow::Owned`], so existing implementations keep
-    /// working unchanged.  Stores that already own their values (such as
-    /// [`HashMapStorage`]) should override this to return [`Cow::Borrowed`].
+    /// The runner reads variables through this during expression evaluation.
+    /// The default implementation forwards to [`get`](Self::get) and wraps the
+    /// result in [`Cow::Owned`], so existing implementations keep working
+    /// unchanged.
+    ///
+    /// Override it when borrowing is cheaper for your store than producing an
+    /// owned [`Value`] - a store that would query, deserialise, or lock on every
+    /// [`get`](Self::get) saves that work here. It does **not** make
+    /// interpolation allocation-free: the evaluator needs an owned [`Value`] and
+    /// calls [`Cow::into_owned`] on whatever this returns, so for a store that
+    /// already owns its values the two paths cost the same. `tests/allocation_budget.rs`
+    /// measures both and asserts they match.
     fn get_ref(&self, name: &str) -> Option<Cow<'_, Value>> {
         self.get(name).map(Cow::Owned)
     }
