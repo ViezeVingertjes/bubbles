@@ -63,18 +63,18 @@ pub fn owned_properties(properties: &[(&str, &str)]) -> Vec<(String, String)> {
 /// Scans `text` for `{expr}` and `[markup]` syntax, yielding tokens in order.
 ///
 /// **Markup rules:**
-/// - `[identifier]` or `[identifier key=val …]` → [`TextToken::MarkupOpen`]
-/// - `[/identifier]` → [`TextToken::MarkupClose`]
-/// - `[identifier /]` or `[identifier key=val … /]` → [`TextToken::MarkupSelfClose`]
+/// - `[identifier]` or `[identifier key=val …]` → `TextToken::MarkupOpen`
+/// - `[/identifier]` → `TextToken::MarkupClose`
+/// - `[identifier /]` or `[identifier key=val … /]` → `TextToken::MarkupSelfClose`
 /// - `[…]` whose content does not match any of the above → emitted verbatim
-///   as part of a [`TextToken::Literal`]
+///   as part of a `TextToken::Literal`
 ///
 /// An unclosed `{` or `[` (no matching `}` / `]` before end of input) is
 /// always an error regardless of the content inside.
 ///
 /// # Errors
 ///
-/// Returns [`MarkupScanError::UnclosedBrace`] or [`MarkupScanError::UnclosedBracket`]
+/// Returns `MarkupScanError::UnclosedBrace` or `MarkupScanError::UnclosedBracket`
 /// with the byte offset of the unmatched delimiter.
 pub fn scan_text_segments(text: &str) -> Result<Vec<TextToken<'_>>, MarkupScanError> {
     let mut tokens = Vec::new();

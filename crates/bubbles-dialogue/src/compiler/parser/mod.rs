@@ -131,9 +131,6 @@ impl Parser<'_> {
             .get("tags")
             .map(|s| s.split_whitespace().map(str::to_owned).collect())
             .unwrap_or_default();
-        let mut extra = headers;
-        extra.shift_remove("title");
-        extra.shift_remove("tags");
 
         self.expect_body_start()?;
         let body = self.parse_body(0)?;
@@ -142,7 +139,6 @@ impl Parser<'_> {
         Ok(Node {
             title,
             tags,
-            headers: extra,
             when,
             body: into_stmt_list(body),
         })

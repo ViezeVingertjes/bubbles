@@ -1,4 +1,4 @@
-//! Expression evaluator - walks an [`Expr`] AST and produces a [`Value`].
+//! Expression evaluator - walks an `Expr` AST and produces a [`Value`].
 
 mod binary;
 mod unary;
@@ -7,7 +7,7 @@ use crate::compiler::expr::Expr;
 use crate::error::{DialogueError, Result};
 use crate::value::{Value, VariableStorage};
 
-/// Evaluate an [`Expr`] AST node using `storage` for variable reads and `fns` for function calls.
+/// Evaluate an `Expr` AST node using `storage` for variable reads and `fns` for function calls.
 ///
 /// `fns` receives the function name and evaluated arguments and must return a [`Value`].
 ///
@@ -40,3 +40,9 @@ where
 #[cfg(test)]
 #[path = "eval_tests.rs"]
 mod tests;
+
+// The evaluator's property tests live here rather than in `tests/` because they
+// parse expressions directly, and the expression parser is crate-private.
+#[cfg(test)]
+#[path = "eval_proptest.rs"]
+mod proptests;

@@ -2,8 +2,6 @@
 
 use std::sync::Arc;
 
-use indexmap::IndexMap;
-
 /// A shared, read-only slice of [`Stmt`]s used for every body throughout the
 /// AST (node bodies, `if` branches, `once` bodies, option bodies, line groups).
 ///
@@ -19,8 +17,6 @@ pub struct Node {
     pub title: String,
     /// Tags declared in the `tags:` header.
     pub tags: Vec<String>,
-    /// All other header key-value pairs, preserved verbatim (minus `title` / `tags` / `when`).
-    pub headers: IndexMap<String, String>,
     /// Optional `when:` condition for node-group selection (parsed at compile time).
     pub when: Option<Arc<Expr>>,
     /// The statements making up the node body.
