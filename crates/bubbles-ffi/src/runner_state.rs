@@ -10,23 +10,29 @@ use crate::util::{ffi_try, runner_mut, runner_ref, str_from_parts, write_cstring
 use crate::value_json::{value_from_json_slice, value_to_json_string};
 use crate::{BUBBLES_ERR, BUBBLES_OK};
 
-/// Copies `len` UTF-8 bytes into a NUL-terminated string owned by this library. Free with
-/// [`crate::bubbles_string_free`]. Returns null on invalid UTF-8.
+/// Copies `len` UTF-8 bytes into a NUL-terminated string owned by this library.
+///
+/// Free with [`crate::bubbles_string_free`]. Returns null if the bytes are not valid UTF-8,
+/// or if they contain an interior NUL, which a NUL-terminated string cannot carry. Either
+/// way the reason is in [`crate::bubbles_last_error`].
 ///
 /// # Safety
 ///
 /// `ptr` + `len` must be valid for the call.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn bubbles_copy_utf8(ptr: *const c_char, len: usize) -> *mut c_char {
-    match unsafe { str_from_parts(ptr, len) } {
-        Ok(s) => CString::new(s)
-            .ok()
-            .map_or(std::ptr::null_mut(), CString::into_raw),
+    let s = match unsafe { str_from_parts(ptr, len) } {
+        Ok(s) => s,
         Err(e) => {
             set_err(e);
-            std::ptr::null_mut()
+            return std::ptr::null_mut();
         }
-    }
+    };
+    let Ok(cs) = CString::new(s) else {
+        set_err("string contained interior NUL");
+        return std::ptr::null_mut();
+    };
+    cs.into_raw()
 }
 
 /// Variable as JSON [`bubbles::Value`], or `"null"` if unset. Free with [`crate::bubbles_string_free`].

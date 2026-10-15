@@ -168,6 +168,15 @@ publishable, but are not published to crates.io yet.
 
 ### Fixed
 
+- `bubbles_copy_utf8` returned `NULL` without setting the thread-local error
+  when the bytes it was given contained an interior NUL. `ABI.md` tells a host
+  to read `bubbles_last_error()` after a failure, so the host read either
+  nothing or a stale message from an earlier call. Reachable from a host
+  function that builds its result out of player-entered or externally sourced
+  text: the host saw `NULL`, returned `BUBBLES_ERR` with a null result pointer,
+  and the dialogue error read "host callback left null result pointer", which
+  points at the host's control flow when the problem was its data. The Rust
+  docs also only mentioned invalid UTF-8, though the C header listed both.
 - The guide described the `NodeStarted` and `NodeComplete` FFI events as
   carrying a `"title"` field; the runtime emits `"node"`. The header also
   claimed `bubbles_runner_set_locale_json` merges into the existing locale
