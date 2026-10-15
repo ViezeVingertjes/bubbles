@@ -1,15 +1,20 @@
 //! Compilation pipeline: source text → [`Program`].
 
-pub mod ast;
-pub mod expr;
-pub mod lexer;
-pub mod markup;
+// The AST, the lexer, the expression parser and the markup scanner are
+// implementation detail: `Program` has no public constructor and no
+// `Deserialize`, and its accessors hand back only `&str`, `&[String]` and
+// `&[VariableDecl]`, so none of these types is reachable from a public
+// signature. Keeping them private means a lexer, parser or AST refactor is no
+// longer a breaking change. The fuzz harness reaches the three entry points it
+// needs through the `fuzzing` feature; see `crate::__fuzz`.
+pub(crate) mod ast;
+pub(crate) mod expr;
+pub(crate) mod lexer;
+pub(crate) mod markup;
 pub(crate) mod parser;
-pub mod program;
+pub(crate) mod program;
 pub(crate) mod validate;
 
-pub use ast::{BinOp, Expr, IfBranch, LineVariant, Node, OptionItem, Stmt, TextSegment, UnOp};
-pub use lexer::{Spanned, Token, tokenise};
 pub use program::{Program, VariableDecl};
 pub use validate::validate;
 

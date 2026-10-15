@@ -96,6 +96,13 @@
 //! | [`library`] | [`FunctionLibrary`] and built-in functions |
 //! | [`saliency`] | [`SaliencyStrategy`], [`FirstAvailable`], [`BestLeastRecentlyViewed`], `RandomAvailable` (`rand` feature) |
 //!
+//! The lexer, the expression parser, the AST and the markup scanner are
+//! deliberately absent from that table. A [`Program`] has no public
+//! constructor and no `Deserialize`, and its accessors return only `&str`,
+//! `&[String]` and `&[VariableDecl]`, so none of those types was ever
+//! reachable through a public signature. Keeping them private means rewriting
+//! the parser is not a breaking change.
+//!
 //! Lint policy is defined once in the workspace root `Cargo.toml` under
 //! `[workspace.lints]` and inherited here via `[lints] workspace = true`; we deliberately do
 //! not duplicate it in this file.
@@ -133,3 +140,18 @@ pub use saliency::RandomAvailable;
 pub use saliency::{BestLeastRecentlyViewed, Candidate, FirstAvailable, SaliencyStrategy};
 #[doc(inline)]
 pub use value::{HashMapStorage, Value, VariableStorage};
+
+/// Compiler entry points for this repository's fuzz harness. **Not public API.**
+///
+/// `fuzz/` is a separate crate, so it cannot reach `pub(crate)` items the way
+/// the unit tests do. This module, behind the non-default `fuzzing` feature,
+/// hands it the three functions its targets drive directly. Nothing here is
+/// covered by the semver contract: it can change or disappear in a patch
+/// release, and no crate other than `bubbles-fuzz` should enable the feature.
+#[cfg(feature = "fuzzing")]
+#[doc(hidden)]
+pub mod __fuzz {
+    pub use crate::compiler::expr::parse_expr_at;
+    pub use crate::compiler::lexer::tokenise;
+    pub use crate::compiler::markup::scan_text_segments;
+}
