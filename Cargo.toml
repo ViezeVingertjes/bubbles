@@ -1,9 +1,9 @@
 [workspace]
 resolver = "3"
 members = [
+    "crates/bubbles-cli",
     "crates/bubbles-dialogue",
     "crates/bubbles-ffi",
-    "crates/bubbles-tui",
 ]
 
 [workspace.package]

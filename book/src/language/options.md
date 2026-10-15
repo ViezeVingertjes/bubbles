@@ -80,7 +80,7 @@ Prefix an option with `once` when the player should only be able to pick it once
     Duelist: En garde!
 ```
 
-After the one-shot option is selected, future visits still include it in the `Options` event, but with `available: false`. This uses the same runner state as `<<once>>` blocks, so it survives snapshots and `R` reruns in the TUI.
+After the one-shot option is selected, future visits still include it in the `Options` event, but with `available: false`. This uses the same runner state as `<<once>>` blocks, so it survives snapshots and `r` reruns in the player.
 
 ## Options that don't jump
 
@@ -123,7 +123,7 @@ Three options, each guarded by gold, each doing its own thing. The final line ru
 
 > **Try it:** [`examples/snippets/options.bub`](../../examples/snippets/options.bub): an insult sword-fight duel showing one-shot options, guarded options, and an `<<elseif>>` skill chain.
 > ```sh
-> cargo run -p bubbles-tui -- examples/snippets/options.bub
+> cargo run -p bubbles-cli -- play examples/snippets/options.bub
 > ```
 
 ---

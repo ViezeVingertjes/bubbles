@@ -3,7 +3,7 @@
 //           subsequent visits are gracefully acknowledged without a flag variable
 // Features: <<once>> / <<else>> / <<endonce>> for non-repeating NPC content,
 //            multiple once blocks in sequence
-// Run: cargo run -p bubbles-tui -- examples/snippets/once.bub
+// Run: cargo run -p bubbles-cli -- play examples/snippets/once.bub
 //
 // Tip: use the 'b' key (step back) to rewind and observe the <<else>> branches.
 

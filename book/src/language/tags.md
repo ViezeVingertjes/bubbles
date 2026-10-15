@@ -154,7 +154,7 @@ Every other tag is yours. Bubbles won't grow a reserved list that clashes with `
 
 > **Try it:** [`examples/snippets/commands.bub`](../../examples/snippets/commands.bub): see line tags (`#dramatic`, `#sfx`, `#eerie`) alongside commands in the transcript pane.
 > ```sh
-> cargo run -p bubbles-tui -- examples/snippets/commands.bub
+> cargo run -p bubbles-cli -- play examples/snippets/commands.bub
 > ```
 
 ---

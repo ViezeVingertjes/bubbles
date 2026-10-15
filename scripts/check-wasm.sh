@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Ensure the bubbles-dialogue library stays usable on wasm32-unknown-unknown.
 # We use --lib only: dev-dependencies (e.g. proptest) are not wasm-clean, and
-# the bubbles-tui binary deliberately targets native terminals, not wasm.
+# the bubbles-cli binary deliberately targets native terminals, not wasm.
 #
 # Compiling is not enough. A call that diverges on this target - `SystemTime`
 # is the obvious one, since std lowers it to an `unreachable` here - compiles
@@ -18,6 +18,19 @@ rustup target add wasm32-unknown-unknown
 
 cargo clippy -p bubbles-dialogue --target wasm32-unknown-unknown --no-default-features --lib -- -D warnings
 cargo clippy -p bubbles-dialogue --target wasm32-unknown-unknown --no-default-features --features serde --lib -- -D warnings
+
+# The default feature set is deliberately absent, and cannot be added here.
+# `rand` reaches `getrandom`, which refuses to build for wasm32-unknown-unknown
+# until a backend is selected, and selecting one is the final binary's job: it
+# needs `getrandom`'s `wasm_js` feature *and* a matching `getrandom_backend` cfg,
+# neither of which a library in the middle of the graph can turn on for its
+# dependent. Checking `--all-features` from here fails on getrandom's own
+# compile_error, which says nothing about this crate.
+#
+# That is why the default feature set on wasm is covered by
+# scripts/measure-footprint.sh instead: it builds a real cdylib host that
+# supplies the backend, which is the configuration a browser host actually ships
+# and the one the guide documents.
 
 if ! command -v node >/dev/null 2>&1; then
     echo "check-wasm: node is needed to run the wasm smoke test" >&2

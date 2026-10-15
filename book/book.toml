@@ -29,5 +29,8 @@ use-boolean-and = true
 # The C ABI chapter used to be named after Unity; keep the published URL working.
 [output.html.redirect]
 "/integration/unity-and-native.html" = "native-hosts.html"
+# The TUI became `bubbles-cli` and its two pages merged into one chapter.
+"/getting-started/tui.html" = "cli.html"
+"/examples/tui-runner.html" = "../getting-started/cli.html"
 
 [preprocessor.links]

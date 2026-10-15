@@ -17,7 +17,7 @@ Mira: Best prices in the harbour district. Probably.
 Run it:
 
 ```sh
-cargo run -p bubbles-tui -- mira.bub
+cargo run -p bubbles-cli -- play mira.bub
 ```
 
 Pick an option. Notice what happens: both branches lead to a line from Mira, then the dialogue ends. Not much of a sales pitch yet, but it works.
@@ -42,7 +42,7 @@ DialogueEvent::Options(opts) => {
 
 ## Try it
 
-Change Mira's greeting to something grumpier. Press `r` in the TUI to reload. The change shows up immediately.
+Change Mira's greeting to something grumpier. Press `Ctrl+R` in the player to reload. The change shows up immediately.
 
 Add a third option. Reload again. The new choice appears in the options list.
 

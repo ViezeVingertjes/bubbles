@@ -37,8 +37,19 @@ rand      = { version = "0.10", optional = true }
 serde     = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
+# Default features pull in plotters and rayon for HTML reports we do not use;
+# `cargo_bench_support` alone is what `cargo bench` needs.
+criterion = { version = "0.8", default-features = false, features = ["cargo_bench_support"] }
 proptest = "1"
 serde_json = "1"
+
+[[bench]]
+name    = "compile"
+harness = false
+
+[[bench]]
+name    = "runtime"
+harness = false
 
 [lints]
 workspace = true

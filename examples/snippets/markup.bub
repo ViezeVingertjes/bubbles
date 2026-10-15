@@ -4,9 +4,9 @@
 // the TUI uses the resulting span metadata to apply terminal styling.
 //
 // Run:
-//   cargo run -p bubbles-tui -- examples/snippets/markup.bub
+//   cargo run -p bubbles-cli -- play examples/snippets/markup.bub
 //
-// Supported tags in bubbles-tui:
+// Supported tags in the bubbles-cli player:
 //   [b]text[/b]              bold
 //   [i]text[/i]              italic
 //   [u]text[/u]              underline

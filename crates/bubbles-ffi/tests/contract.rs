@@ -650,6 +650,41 @@ fn invalid_utf8_is_rejected_rather_than_replaced() {
     unsafe { bubbles_runner_free(runner) };
 }
 
+/// `ABI.md`: "On `BUBBLES_ERR`, `bubbles_last_error()` returns a NUL-terminated
+/// UTF-8 message." `bubbles_copy_utf8` signals failure with a NULL return rather
+/// than a status code, and it had one failure path that set no message: a valid
+/// UTF-8 string with an interior NUL, which cannot be represented in a
+/// NUL-terminated string. A host building a host-function result out of
+/// player-entered or externally sourced text reaches it, sees NULL, and then
+/// reads either nothing or a stale message from an earlier call, so the
+/// diagnostic points at its control flow when the problem is its data.
+#[test]
+fn an_interior_nul_is_reported_and_not_merely_refused() {
+    let with_nul = "before\0after";
+
+    // Leave a recognisable message in the slot first. If the interior-NUL path
+    // sets nothing, the host reads this instead and is told the wrong thing.
+    let bad = unsafe { bubbles_copy_utf8(BAD_UTF8.as_ptr().cast::<c_char>(), BAD_UTF8.len()) };
+    assert!(bad.is_null(), "invalid UTF-8 was copied");
+    let stale = error().unwrap_or_default();
+
+    let copied = unsafe { bubbles_copy_utf8(with_nul.as_ptr().cast::<c_char>(), with_nul.len()) };
+    assert!(
+        copied.is_null(),
+        "a string with an interior NUL was copied, so the result is truncated at the NUL"
+    );
+    let message = error().unwrap_or_default();
+    assert!(
+        !message.is_empty(),
+        "bubbles_copy_utf8 returned NULL for an interior NUL without leaving a message"
+    );
+    assert_ne!(
+        message, stale,
+        "the message left after the interior-NUL failure is the previous call's, \
+         so the error slot was never written: {message}"
+    );
+}
+
 /// `ABI.md` promises a zero `file_count` and a NULL `files` array are reported,
 /// and that a bad path is distinguished from a bad body. A host assembling the
 /// array from a loop gets one of these wrong before it gets anything else wrong.

@@ -2,7 +2,7 @@
 // Pattern: insult sword-fight duel (classic pirate banter)
 // Features: options, once-options, guarded options ($sword_skill),
 //            <<if>> / <<elseif>> / <<else>>, <<jump>> for one-way transitions
-// Run: cargo run -p bubbles-tui -- examples/snippets/options.bub
+// Run: cargo run -p bubbles-cli -- play examples/snippets/options.bub
 
 title: Start
 ---

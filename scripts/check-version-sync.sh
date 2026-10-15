@@ -36,18 +36,20 @@ if ! grep -Fq "Library version: $METADATA_VER" "$FFI_HEADER"; then
   exit 1
 fi
 
-# bubbles-ffi depends on bubbles-dialogue by path *and* version so that it can be
-# published. A caret requirement only stays correct while the majors agree, so a major
-# bump must update it.
-DEP_REQ=$(
-  cargo metadata --no-deps --format-version=1 \
-    | jq -r '.packages[] | select(.name=="bubbles-ffi") | .dependencies[]
-             | select(.name=="bubbles-dialogue") | .req'
-)
-if [[ "${DEP_REQ#^}" != "$METADATA_VER" ]]; then
-  echo "error: bubbles-ffi depends on bubbles-dialogue '$DEP_REQ', expected '^$METADATA_VER'." >&2
-  echo "Update the version in crates/bubbles-ffi/Cargo.toml alongside the workspace bump." >&2
-  exit 1
-fi
+# bubbles-ffi and bubbles-cli depend on bubbles-dialogue by path *and* version so that
+# they can be published. A caret requirement only stays correct while the majors agree,
+# so a major bump must update them.
+for CRATE in bubbles-ffi bubbles-cli; do
+  DEP_REQ=$(
+    cargo metadata --no-deps --format-version=1 \
+      | jq -r --arg crate "$CRATE" '.packages[] | select(.name==$crate) | .dependencies[]
+               | select(.name=="bubbles-dialogue") | .req'
+  )
+  if [[ "${DEP_REQ#^}" != "$METADATA_VER" ]]; then
+    echo "error: $CRATE depends on bubbles-dialogue '$DEP_REQ', expected '^$METADATA_VER'." >&2
+    echo "Update the version in crates/$CRATE/Cargo.toml alongside the workspace bump." >&2
+    exit 1
+  fi
+done
 
 echo "version sync OK ($METADATA_VER)"

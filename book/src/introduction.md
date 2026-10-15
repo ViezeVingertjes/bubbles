@@ -59,7 +59,7 @@ That is a complete, working dialogue. A speaker line, three options (one guarded
 Want to skip the setup and play first?
 
 ```sh
-cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
+cargo run -p bubbles-cli -- play examples/harbour/harbour.bub examples/harbour/services.bub
 ```
 
 That's the harbour example: a playable pirate dockside scene that covers most of the language in one go. Come back here when you're done.
@@ -74,7 +74,7 @@ The chapters are meant to be read in order, but each one stands on its own:
 - **[The .bub Language](./language/nodes-and-lines.md)** - every piece of the script format, one concept per page.
 - **[Integrating with Your Engine](./integration/runner.md)** - wiring Bubbles into rendering, input, and save systems, including [native hosts via the C ABI](./integration/native-hosts.md).
 - **[Advanced](./advanced/save-load.md)** - snapshots, multi-file projects, WebAssembly.
-- **[Examples](./examples/tui-runner.md)** - annotated walkthroughs of the demos shipped with the crate.
+- **[Examples](./examples/harbour.md)** - annotated walkthroughs of the demos shipped with the crate.
 - **[API Reference](./api-reference.md)** - the full rustdoc, generated fresh for every release.
 
 Ready? Let's write a dialogue.

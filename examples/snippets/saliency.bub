@@ -2,7 +2,7 @@
 // Pattern: dockside chatter + a storyteller NPC who adapts to time of day
 // Features: line groups (=>) with BestLeastRecentlyViewed saliency (ambient barks),
 //            node groups with `when:` conditions (context-sensitive NPC behaviour)
-// Run: cargo run -p bubbles-tui -- examples/snippets/saliency.bub
+// Run: cargo run -p bubbles-cli -- play examples/snippets/saliency.bub
 //
 // Line groups: the => lines pick a different bark each visit, cycling through
 // all options before repeating (BestLeastRecentlyViewed is the default strategy).

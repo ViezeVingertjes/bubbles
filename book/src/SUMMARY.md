@@ -7,7 +7,7 @@
 
 - [Your First Dialogue](./getting-started/first-dialogue.md)
 - [The Event Loop](./getting-started/event-loop.md)
-- [Using the TUI](./getting-started/tui.md)
+- [Using the CLI](./getting-started/cli.md)
 
 # Tutorial
 
@@ -50,7 +50,6 @@
 
 # Examples
 
-- [TUI Runner](./examples/tui-runner.md)
 - [The Harbour](./examples/harbour.md)
 - [Snippets](./examples/snippets.md)
 

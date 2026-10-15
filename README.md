@@ -17,6 +17,15 @@ It works well for games too, and for the same reason: if your engine needs repla
 
 A host that cannot link Rust goes through [`bubbles-ffi`](crates/bubbles-ffi/), a C ABI with [prebuilt binaries](https://github.com/ViezeVingertjes/bubbles/releases) for Windows, macOS, and Linux.
 
+Scripts can be checked without writing any Rust at all. [`bubbles-cli`](crates/bubbles-cli/) installs a `bubbles` binary whose `check` verb compiles a set of `.bub` files, prints one diagnostic per line, and exits non-zero - a CI step in one line, adding nothing to the library's own three direct dependencies when the terminal player is left out:
+
+```bash
+cargo install bubbles-cli --no-default-features
+bubbles check --quiet dialogue/*.bub
+```
+
+`bubbles-cli` is not on crates.io yet. Until the next release publishes it, that first line - and every other `cargo install bubbles-cli` in this README - is `cargo install --git https://github.com/ViezeVingertjes/bubbles bubbles-cli` instead, with the same flags.
+
 ---
 
 ## Why you would choose this
@@ -108,7 +117,14 @@ Stumpy: Ye can't sail from Barnacle Bay without a travel permit.
 The harbour demo continues in `examples/harbour/` with an `Options` node (guarded choices, `<<detour MapSeller>>`, `<<jump Depart>>`). Run it with:
 
 ```bash
-cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
+cargo run -p bubbles-cli -- play examples/harbour/harbour.bub examples/harbour/services.bub
+```
+
+Or from outside the repository, with the git install noted above standing in until the crate is published:
+
+```bash
+cargo install bubbles-cli
+bubbles play examples/harbour/harbour.bub examples/harbour/services.bub
 ```
 
 ---
