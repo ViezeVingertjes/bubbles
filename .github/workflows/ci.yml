@@ -97,6 +97,24 @@ jobs:
         with:
           command: check
 
+      # Last, deliberately. rustdoc JSON is nightly-only, so this installs a
+      # second toolchain, and installing one mid-job would silently move every
+      # step after it off the pinned stable in rust-toolchain.toml.
+      - name: Install the pinned nightly (rustdoc JSON)
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-10-15
+
+      - name: Install cargo-public-api
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-public-api@0.51.0
+
+      # Guards the checked-in public API listing. Half the v2.0.0 surface was
+      # published by accident and nothing told us; this is what tells us.
+      - name: Public API check
+        run: bash scripts/check-public-api.sh
+
   msrv:
     runs-on: ubuntu-latest
     steps:

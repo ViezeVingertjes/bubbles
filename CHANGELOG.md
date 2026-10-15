@@ -65,6 +65,83 @@ are not published to crates.io.
   `rng.choose_index(len)` instead. The built-in strategies are unchanged at the
   use site: `set_saliency(RandomAvailable)` still works as written.
 
+- **The lexer, the expression parser, the AST and the markup scanner are
+  private.** `bubbles::compiler::ast`, `::lexer`, `::expr` and `::markup` are
+  gone from the public API, along with `compiler::program` — `Program` and
+  `VariableDecl` keep their `bubbles::compiler::` paths and lose the third,
+  redundant one. Together the four modules were half of the published surface,
+  and none of it was reachable: `Program` has no public
+  constructor and no `Deserialize`, and its accessors return only `&str`,
+  `&[String]` and `&[VariableDecl]`, so a `Node`, `Stmt`, `Expr` or `Token`
+  could not be obtained by any route. What they cost was not their size — while
+  they were public, 33 token variants and 11 statement variants were part of the
+  semver contract, so every change to the lexer or the parser was a breaking
+  change.
+
+  *Upgrading:* nothing to do. No value of any of these types was constructible,
+  so no working code named one. The `.bub` language is unchanged.
+
+- **Removed `validate`.** It was a no-op for every input a caller could
+  construct: `compile` and `compile_many` validate before returning, and they
+  are the only way to obtain a `Program`, so `validate(&prog)` returned
+  `Ok(())` unconditionally.
+
+  *Upgrading:* delete the call. The validation itself is unchanged and still
+  mandatory inside `compile`.
+
+- **Removed `runtime::eval`.** The expression evaluator took an `Expr`, which is
+  no longer obtainable, and had no callers.
+
+  *Upgrading:* nothing to do.
+
+- **Removed `line_id_from_tags`, `line_mode_from_tags` and
+  `option_group_from_tags`.** Each recomputed a value the runner has already
+  derived and put on the event or the option, and the tag slice they take could
+  only be had from a struct that already carried the answer.
+
+  *Upgrading:* read the field. `line_id_from_tags(&ev.tags)` becomes
+  `ev.line_id`, `line_mode_from_tags(&ev.tags)` becomes `ev.line_mode`, and
+  `option_group_from_tags(&opt.tags)` becomes `opt.group.clone()`.
+
+- **Removed `Runner::variable_ref`.** It was a `Cow<Value>`-returning duplicate
+  of `storage().get_ref(name)`. The no-clone read matters inside expression
+  evaluation, which calls `VariableStorage` directly and never used this method.
+
+  *Upgrading:* `runner.variable_ref(name)` becomes
+  `runner.storage().get_ref(name)`, with the same return type and behaviour.
+
+- **Seven items are no longer re-exported at the crate root**, and are reached
+  through their module instead: `SaliencyStrategy`, `Candidate`,
+  `FirstAvailable`, `BestLeastRecentlyViewed` and `RandomAvailable` under
+  `bubbles::saliency`, `FunctionLibrary` under `bubbles::library`, and
+  `VariableDecl` under `bubbles::compiler`. Nothing about the items themselves
+  changes, and those are already the paths the guide teaches. Moving
+  `RandomAvailable` also leaves the crate root with no feature-gated
+  re-export, so what you can import no longer depends on which features you
+  built with.
+
+  *Upgrading:* change the `use`. `use bubbles::BestLeastRecentlyViewed;` becomes
+  `use bubbles::saliency::BestLeastRecentlyViewed;`, and so on for the other
+  six.
+
+### Deprecated
+
+- `PassthroughProvider`. A runner installs it for you, so opting out of
+  localisation means not calling `set_provider` rather than naming this type.
+  Scheduled for removal in the next major release.
+
+  *Upgrading:* if you called `set_provider(PassthroughProvider)` on a fresh
+  runner, drop the call. If you were resetting a provider back to a no-op, write
+  a three-line unit struct whose `get` returns `None` and pass that.
+
+- `HostFn`. `FunctionLibrary::register` is generic over the closure, so the
+  alias is never required to call it. Scheduled for removal in the next major
+  release.
+
+  *Upgrading:* nothing, unless you store boxed host functions yourself — then
+  spell the type out: `Box<dyn Fn(Vec<Value>) -> bubbles::Result<Value> + Send +
+  Sync + 'static>`.
+
 ### Added
 
 - **`RunnerBuilder::with_seed(u64)` — seeded, reproducible dialogue.** Given the
@@ -129,6 +206,11 @@ are not published to crates.io.
   registry copy of `bubbles-dialogue`, which between releases does not yet have
   the API this crate calls; see [RELEASING.md](RELEASING.md). It remains
   unpublished for now.
+- `crates/bubbles-dialogue/public-api.txt`, the full public API as a checked-in
+  file, with `scripts/check-public-api.sh` regenerating it in CI and failing on
+  any difference. Adding, removing or changing a public item now means editing
+  that file in the same commit, where a reader sees it. Half of the 2.0.0
+  surface was published by accident and nothing in CI would have said so.
 
 ### Changed
 
