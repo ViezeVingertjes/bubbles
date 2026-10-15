@@ -16,9 +16,9 @@ pub(crate) mod program;
 pub(crate) mod validate;
 
 pub use program::{Program, VariableDecl};
-pub use validate::validate;
 
 use crate::error::Result;
+use validate::validate;
 
 /// Compiles a single `.bub` source string into a [`Program`].
 ///

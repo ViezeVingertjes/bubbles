@@ -10,9 +10,8 @@ use common::drain;
 
 #[cfg(feature = "rand")]
 mod seeded {
-    use bubbles::{
-        DialogueEvent, HashMapStorage, RandomAvailable, Runner, RunnerBuilder, Value, compile,
-    };
+    use bubbles::saliency::RandomAvailable;
+    use bubbles::{DialogueEvent, HashMapStorage, Runner, RunnerBuilder, Value, compile};
 
     use super::{common, drain};
 

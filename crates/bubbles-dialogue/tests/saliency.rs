@@ -143,7 +143,7 @@ title: Lines
 
 #[test]
 fn hashmap_provider_translates_line_ids() {
-    use bubbles::{HashMapProvider, PassthroughProvider};
+    use bubbles::HashMapProvider;
 
     let src = "\
 title: Intro
@@ -153,9 +153,8 @@ Greetings! #line:greeting_id
 ";
     let prog = compile(src).unwrap();
 
-    // Default (passthrough) provider emits the original text.
+    // With no provider installed the original text comes through unchanged.
     let mut runner = Runner::new(prog.clone(), HashMapStorage::new());
-    runner.set_provider(PassthroughProvider);
     runner.start("Intro").unwrap();
     assert_eq!(drain_line_texts(&mut runner), ["Greetings!"]);
 

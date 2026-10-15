@@ -17,8 +17,8 @@ A quick index of what you'll look up most often:
 | Drive a dialogue | [`Runner`](./api/bubbles/struct.Runner.html), [`DialogueEvent`](./api/bubbles/enum.DialogueEvent.html) |
 | Store variables | [`VariableStorage`](./api/bubbles/trait.VariableStorage.html), [`HashMapStorage`](./api/bubbles/struct.HashMapStorage.html) |
 | Localise lines | [`LineProvider`](./api/bubbles/trait.LineProvider.html), [`HashMapProvider`](./api/bubbles/struct.HashMapProvider.html) |
-| Register host functions | [`FunctionLibrary`](./api/bubbles/struct.FunctionLibrary.html) |
-| Pick variants | [`SaliencyStrategy`](./api/bubbles/trait.SaliencyStrategy.html), [`FirstAvailable`](./api/bubbles/struct.FirstAvailable.html), [`BestLeastRecentlyViewed`](./api/bubbles/struct.BestLeastRecentlyViewed.html), [`RandomAvailable`](./api/bubbles/saliency/struct.RandomAvailable.html) (`rand` only) |
+| Register host functions | [`FunctionLibrary`](./api/bubbles/library/struct.FunctionLibrary.html) |
+| Pick variants | [`SaliencyStrategy`](./api/bubbles/saliency/trait.SaliencyStrategy.html), [`FirstAvailable`](./api/bubbles/saliency/struct.FirstAvailable.html), [`BestLeastRecentlyViewed`](./api/bubbles/saliency/struct.BestLeastRecentlyViewed.html), [`RandomAvailable`](./api/bubbles/saliency/struct.RandomAvailable.html) (`rand` only) |
 | Reproduce a session | [`RunnerBuilder::with_seed`](./api/bubbles/struct.RunnerBuilder.html#method.with_seed), [`DialogueRng`](./api/bubbles/struct.DialogueRng.html), [`RngState`](./api/bubbles/struct.RngState.html) |
 | Inline markup spans | [`MarkupSpan`](./api/bubbles/struct.MarkupSpan.html) |
 | Save / load | [`RunnerSnapshot`](./api/bubbles/struct.RunnerSnapshot.html), [`Runner::snapshot`](./api/bubbles/struct.Runner.html#method.snapshot) / [`restore`](./api/bubbles/struct.Runner.html#method.restore) (`serde` only for `Serialize`/`Deserialize` on the snapshot) |

@@ -77,7 +77,7 @@ impl VariableStorage for CountingStorage {
 #[test]
 fn eval_prefers_get_ref_over_get() {
     use crate::compiler::expr::parse_expr_at;
-    use crate::runtime::eval;
+    use crate::runtime::eval::eval;
 
     let mut storage = CountingStorage::default();
     storage.set("$name", Value::Text("Hero".into()));

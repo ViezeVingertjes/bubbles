@@ -8,8 +8,7 @@
 /// contains are evaluated against the current variable storage, so translators
 /// can reorder or reshape interpolations however their language requires.
 ///
-/// The same id is also exposed on [`crate::DialogueEvent::Line`] as `line_id`
-/// (see [`crate::line_id_from_tags`]).
+/// The same id is also exposed on [`crate::DialogueEvent::Line`] as `line_id`.
 ///
 /// If the provider returns `None`, the original source text (with its own
 /// `{expr}` segments) is used unchanged.
@@ -24,8 +23,13 @@ pub trait LineProvider: Send + Sync + 'static {
 
 /// A no-op provider that always returns `None` (source text is used unchanged).
 #[derive(Debug, Clone, Default)]
+#[deprecated(
+    since = "3.0.0",
+    note = "a runner starts with this provider, so opting out of localisation means not calling set_provider; to reset one, pass your own unit struct whose get returns None"
+)]
 pub struct PassthroughProvider;
 
+#[allow(deprecated)]
 impl LineProvider for PassthroughProvider {
     fn get(&self, _line_id: &str) -> Option<String> {
         None

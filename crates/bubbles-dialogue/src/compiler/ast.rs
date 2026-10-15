@@ -93,7 +93,7 @@ pub enum Stmt {
         name: String,
         /// Parsed default expression.
         expr: Arc<Expr>,
-        /// Expression source as written (for [`crate::VariableDecl`] / tooling).
+        /// Expression source as written (for [`crate::compiler::VariableDecl`] / tooling).
         default_src: String,
     },
     /// A shortcut-option block.

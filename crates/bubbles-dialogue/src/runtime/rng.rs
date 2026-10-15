@@ -154,7 +154,7 @@ impl DialogueRng {
     /// Returns a uniform index into a collection of `len` items, or `None` when
     /// `len` is zero.
     ///
-    /// Custom [`SaliencyStrategy`](crate::SaliencyStrategy) implementations
+    /// Custom [`SaliencyStrategy`](crate::saliency::SaliencyStrategy) implementations
     /// should pick candidates through this method, so their choices are part of
     /// the same reproducible stream as everything else.
     #[must_use]

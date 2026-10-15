@@ -1,8 +1,10 @@
 //! [`RunnerBuilder`] - ergonomic one-shot construction of a configured [`Runner`].
 
 use crate::compiler::Program;
-use crate::library::{FunctionLibrary, HostFn};
-use crate::runtime::provider::{LineProvider, PassthroughProvider};
+use crate::library::{BoxedHostFn, FunctionLibrary};
+use crate::runtime::provider::LineProvider;
+#[allow(deprecated)]
+use crate::runtime::provider::PassthroughProvider;
 use crate::runtime::rng::DialogueRng;
 use crate::saliency::{FirstAvailable, SaliencyStrategy};
 use crate::value::VariableStorage;
@@ -39,8 +41,9 @@ pub struct RunnerBuilder<S: VariableStorage> {
 
 impl<S: VariableStorage> RunnerBuilder<S> {
     /// Creates a builder with defaults matching [`Runner::new`]:
-    /// [`FirstAvailable`] saliency, [`PassthroughProvider`], and randomness
-    /// seeded from the operating system.
+    /// [`FirstAvailable`] saliency, no line provider, and randomness seeded
+    /// from the operating system.
+    #[allow(deprecated)]
     pub fn new(program: Program, storage: S) -> Self {
         let rng = DialogueRng::unseeded();
         Self {
@@ -127,7 +130,7 @@ impl<S: VariableStorage> RunnerBuilder<S> {
             + Sync
             + 'static,
     {
-        self.library.register(name, Box::new(f) as HostFn);
+        self.library.register(name, Box::new(f) as BoxedHostFn);
         self
     }
 

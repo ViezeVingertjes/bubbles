@@ -12,7 +12,13 @@ use crate::runtime::DialogueRng;
 use crate::value::Value;
 
 /// A boxed host function callable from dialogue expressions.
-pub type HostFn = Box<dyn Fn(Vec<Value>) -> Result<Value> + Send + Sync + 'static>;
+#[deprecated(
+    since = "3.0.0",
+    note = "FunctionLibrary::register is generic over the closure, so the alias is never required"
+)]
+pub type HostFn = BoxedHostFn;
+
+pub(crate) type BoxedHostFn = Box<dyn Fn(Vec<Value>) -> Result<Value> + Send + Sync + 'static>;
 
 /// Registry of named functions available to expression evaluation.
 ///
@@ -28,7 +34,7 @@ pub type HostFn = Box<dyn Fn(Vec<Value>) -> Result<Value> + Send + Sync + 'stati
 /// `:` separators, so a key containing either, or a value containing `|`,
 /// cannot be expressed at all.
 pub struct FunctionLibrary {
-    fns: HashMap<String, HostFn>,
+    fns: HashMap<String, BoxedHostFn>,
 }
 
 impl FunctionLibrary {

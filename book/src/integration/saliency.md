@@ -56,10 +56,11 @@ Use this when:
 
 ## Writing your own strategy
 
-Implement the [`SaliencyStrategy`](https://docs.rs/bubbles-dialogue/latest/bubbles/trait.SaliencyStrategy.html) trait. You get a slice of [`Candidate`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.Candidate.html)s - each with an `id` and an `available` flag - plus the runner's generator; return the index of the one you want.
+Implement the [`SaliencyStrategy`](https://docs.rs/bubbles-dialogue/latest/bubbles/saliency/trait.SaliencyStrategy.html) trait. You get a slice of [`Candidate`](https://docs.rs/bubbles-dialogue/latest/bubbles/saliency/struct.Candidate.html)s - each with an `id` and an `available` flag - plus the runner's generator; return the index of the one you want.
 
 ```rust,ignore
-use bubbles::{Candidate, DialogueRng, SaliencyStrategy};
+use bubbles::DialogueRng;
+use bubbles::saliency::{Candidate, SaliencyStrategy};
 
 /// A strategy that prefers candidates whose id ends in `_urgent`.
 pub struct UrgentFirst;
