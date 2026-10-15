@@ -24,7 +24,9 @@ pub trait VariableStorage {
 
 `name` is the variable name as written in the script, including the leading `$`. `Value` is a tagged enum: `Number(f64)`, `Text(String)`, or `Bool(bool)`.
 
-The expression evaluator reads variables through `get_ref`; `get` is kept as the ergonomic API hosts reach for when they actually want ownership (e.g. `runner.storage().get("$hp")`). If you can cheaply hand back a reference - most in-memory stores can - override `get_ref` and you get allocation-free `{$var}` interpolation for free.
+The expression evaluator reads variables through `get_ref`; `get` is kept as the ergonomic API hosts reach for when they actually want ownership (e.g. `runner.storage().get("$hp")`). Override `get_ref` if handing back a reference is cheaper for your store than building an owned `Value` - a database-backed store that would otherwise allocate a `String` per read, for instance.
+
+What overriding it does *not* currently buy you is allocation-free interpolation. The evaluator returns an owned `Value`, so it takes ownership of whatever `get_ref` hands back; for a store that already owns its values, like `HashMapStorage`, borrowing and then taking ownership costs the same as cloning up front. Measured both ways, the allocation count for a line with three interpolations is identical. The win is only real where your `get` is more expensive than a clone.
 
 ## The default: `HashMapStorage`
 
@@ -124,9 +126,11 @@ impl VariableStorage for MyStorage {
 }
 ```
 
-For a `HashMap<String, Value>` this is a one-liner. The payoff is that `{$long_text}` in a line of dialogue never copies the string - it borrows from your map for the duration of the interpolation.
+For a `HashMap<String, Value>` this is a one-liner, and it is what `HashMapStorage` does.
 
-> **When the default is fine:** If your store does a lookup that already produces owned `Value`s (e.g. a database row, a deserialized field) there is nothing to borrow - keep the default and only override if profiling shows the allocations matter.
+> **Do not expect it to speed up interpolation.** As above, the evaluator takes ownership of the value it reads, so `{$long_text}` ends up copying the string either way. Override `get_ref` to avoid work inside *your* `get` - a query, a deserialisation, a lock - not to avoid work inside the runtime.
+
+> **When the default is fine:** If your store does a lookup that already produces owned `Value`s (e.g. a database row, a deserialized field) there is nothing to borrow - keep the default.
 
 ## Seeding storage from the outside
 
