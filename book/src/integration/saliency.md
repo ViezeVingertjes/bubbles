@@ -29,6 +29,8 @@ runner.set_saliency(RandomAvailable);
 
 Picks uniformly at random from every eligible candidate. Great for flavour lines where anything goes.
 
+It draws from the runner's own generator, so a session built with [`with_seed`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.RunnerBuilder.html#method.with_seed) makes the same choices every run, and a snapshot restores mid-stream.
+
 Use this when:
 
 - Order doesn't matter and variety does.
@@ -54,24 +56,38 @@ Use this when:
 
 ## Writing your own strategy
 
-Implement the [`SaliencyStrategy`](https://docs.rs/bubbles-dialogue/latest/bubbles/trait.SaliencyStrategy.html) trait. You get a slice of [`Candidate`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.Candidate.html)s; return the index of the one you want.
+Implement the [`SaliencyStrategy`](https://docs.rs/bubbles-dialogue/latest/bubbles/trait.SaliencyStrategy.html) trait. You get a slice of [`Candidate`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.Candidate.html)s - each with an `id` and an `available` flag - plus the runner's generator; return the index of the one you want.
 
 ```rust,ignore
-use bubbles::{Candidate, SaliencyStrategy};
+use bubbles::{Candidate, DialogueRng, SaliencyStrategy};
 
-/// A strategy that picks the candidate with the most `#important` tags.
-pub struct MostImportant;
+/// A strategy that prefers candidates whose id ends in `_urgent`.
+pub struct UrgentFirst;
 
-impl SaliencyStrategy for MostImportant {
-    fn choose(&mut self, candidates: &[Candidate]) -> Option<usize> {
-        candidates.iter()
-            .enumerate()
-            .max_by_key(|(_, c)| c.tags.iter().filter(|t| t == &"important").count())
-            .map(|(i, _)| i)
+impl SaliencyStrategy for UrgentFirst {
+    fn select(&mut self, candidates: &[Candidate<'_>], _rng: &DialogueRng) -> Option<usize> {
+        let urgent = candidates
+            .iter()
+            .position(|c| c.available && c.id.ends_with("_urgent"));
+        urgent.or_else(|| candidates.iter().position(|c| c.available))
     }
 }
 
-runner.set_saliency(MostImportant);
+runner.set_saliency(UrgentFirst);
+```
+
+**If your strategy chooses randomly, draw from `rng`, not from a thread-local RNG.** That is the whole reason it is handed to you: `rng.choose_index(len)` keeps your strategy inside the seeded, snapshot-able stream, so a replay stays a replay. Deterministic strategies ignore the argument.
+
+```rust,ignore
+fn select(&mut self, candidates: &[Candidate<'_>], rng: &DialogueRng) -> Option<usize> {
+    let available: Vec<usize> = candidates
+        .iter()
+        .enumerate()
+        .filter(|(_, c)| c.available)
+        .map(|(i, _)| i)
+        .collect();
+    rng.choose_index(available.len()).map(|n| available[n])
+}
 ```
 
 That's the whole surface. Ideas worth trying:

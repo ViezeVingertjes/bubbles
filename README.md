@@ -155,12 +155,13 @@ Bubbles is a small language. The table below is a reference for what the script 
 | Line groups | `=>` alternatives chosen by the active saliency strategy - no repeated barks |
 | Node groups | Multiple nodes sharing a title with `when:` conditions - great for time-of-day, relationship state |
 | Saliency | `FirstAvailable`, `RandomAvailable`, `BestLeastRecentlyViewed`, or your own |
+| Seeded replay | `RunnerBuilder::with_seed` - same program, same inputs, same seed, same event stream, including `dice()` and `RandomAvailable` |
 | Host commands | `<<play_sound bell>>` surfaces as `DialogueEvent::Command` |
 | Built-in functions | `visited`, `visited_count`, `random`, `random_range`, `dice`, `round`, `floor`, `ceil`, `min`, `max`, `abs`, `clamp`, `string`, `int`, `plural`, `select` |
 | Custom functions | Register closures callable from any expression; registering a built-in's name replaces it |
 | Localisation | `LineProvider` for `#line:id` lookup; translated templates can contain `{expr}` and `[markup]` |
 | Multi-file | `compile_many(&[(name, src)])` with duplicate-title detection and cross-file jump validation |
-| Bookmarks / save | `Runner::snapshot` / `Runner::restore` with `RunnerSnapshot` (always available); enable `serde` to persist snapshot and `HashMapStorage` to disk |
+| Bookmarks / save | `Runner::snapshot` / `Runner::restore` with `RunnerSnapshot` (always available); enable `serde` to persist snapshot and `HashMapStorage` to disk. Saves serialise to canonical bytes, so they can be hashed, diffed, and golden-tested |
 | Line modes | `#narration` and `#debug` on lines set `DialogueEvent::Line::line_mode` for filtering or routing |
 | Variable inspection | `Runner::all_variables`, `Runner::variable`, `Runner::variable_ref`; `VariableStorage::all_variables` (override on custom stores) |
 | Option groups | `#group:<name>` on options for UI constraints (radio buttons, mutually exclusive choices) |

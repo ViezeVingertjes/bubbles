@@ -2,7 +2,7 @@
 
 Saving a mid-conversation means saving two things:
 
-1. The runner's internal state - current node, visit counts, which `<<once>>` blocks have fired.
+1. The runner's internal state - current node, visit counts, which `<<once>>` blocks have fired, where the random stream had reached.
 2. Your variable storage - all the `$variables` the dialogue has touched.
 
 `Runner::snapshot` and `Runner::restore` work on a [`RunnerSnapshot`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.RunnerSnapshot.html) without any feature flags. That covers in-memory bookmarks and anything you can clone yourself.
@@ -28,10 +28,27 @@ std::fs::write("save.json", json)?;
 `snapshot()` always returns a `RunnerSnapshot` - a small, cheap copy containing:
 
 - `current_node: Option<String>` - the node the runner was in.
-- `visits: HashMap<String, u32>` - how many times each node has completed.
-- `once_seen: HashSet<String>` - fired `<<once>>` block ids.
+- `visits: BTreeMap<String, u32>` - how many times each node has completed.
+- `once_seen: BTreeSet<String>` - fired `<<once>>` block ids.
+- `rng: RngState` - where the runner's random stream had reached.
 
 That's everything specific to the runner. With `serde`, serialize it alongside storage as part of your save file.
+
+## The bytes are canonical
+
+The snapshot and `HashMapStorage` both hold their entries in sorted order, so the same state always serialises to the same bytes - in this process, in the next one, on another machine. That is what makes the following safe:
+
+- content-hashing a save to detect changes or deduplicate,
+- diffing two saves to see what actually moved,
+- golden-file tests that compare a save against a committed expected output.
+
+Before 3.0.0 both types were hash maps, and `std`'s hashing is seeded per process, so identical state serialised differently on every run.
+
+## Randomness survives the save
+
+`rng` means a restored session carries on the same random stream rather than starting a new one. A player who saves, quits, and reloads gets the same dice roll they would have got without the interruption - and a session built with [`with_seed`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.RunnerBuilder.html#method.with_seed) stays reproducible across the save.
+
+Saves written by 2.x have no `rng` field. They still load; the stream starts fresh from the operating system, which is what those saves did anyway.
 
 ## Save your variables separately
 

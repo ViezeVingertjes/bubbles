@@ -19,6 +19,7 @@ A quick index of what you'll look up most often:
 | Localise lines | [`LineProvider`](./api/bubbles/trait.LineProvider.html), [`HashMapProvider`](./api/bubbles/struct.HashMapProvider.html) |
 | Register host functions | [`FunctionLibrary`](./api/bubbles/struct.FunctionLibrary.html) |
 | Pick variants | [`SaliencyStrategy`](./api/bubbles/trait.SaliencyStrategy.html), [`FirstAvailable`](./api/bubbles/struct.FirstAvailable.html), [`BestLeastRecentlyViewed`](./api/bubbles/struct.BestLeastRecentlyViewed.html) |
+| Reproduce a session | [`RunnerBuilder::with_seed`](./api/bubbles/struct.RunnerBuilder.html#method.with_seed), [`DialogueRng`](./api/bubbles/struct.DialogueRng.html), [`RngState`](./api/bubbles/struct.RngState.html) |
 | Inline markup spans | [`MarkupSpan`](./api/bubbles/struct.MarkupSpan.html) |
 | Save / load | [`RunnerSnapshot`](./api/bubbles/struct.RunnerSnapshot.html), [`Runner::snapshot`](./api/bubbles/struct.Runner.html#method.snapshot) / [`restore`](./api/bubbles/struct.Runner.html#method.restore) (`serde` only for `Serialize`/`Deserialize` on the snapshot) |
 | Handle errors | [`DialogueError`](./api/bubbles/enum.DialogueError.html) |

@@ -74,6 +74,8 @@ String concatenation uses `+` - both sides must be strings. See [Variables](./va
 | `random_range(lo, hi)` | uniform int in `[lo, hi]` inclusive |
 | `dice(sides, count)` | sum of `count` rolls of a `sides`-sided die |
 
+All three draw from the runner's own generator. Build the runner with [`RunnerBuilder::with_seed`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.RunnerBuilder.html#method.with_seed) and the same script replays the same rolls every time - which is what makes replays, lockstep, and server-authoritative dialogue work with dice in them. Without a seed they draw from the operating system, as you would expect.
+
 ### Narrative helpers
 
 | Function | Returns |
