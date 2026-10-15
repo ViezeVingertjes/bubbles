@@ -105,7 +105,7 @@ while let Some(event) = runner.next_event()? {
 Games run on frames. Dialogue runs on beats. A push-based callback system would either block your frame or force you to spawn threads. Pull-based means:
 
 - You poll the runner when you're ready - usually when the player presses a key.
-- The runner never allocates on its own. The event you get back owns its data; the runner moves on.
+- The runner allocates to hand you an event and for nothing else. A plain line costs one allocation, its text; the event owns that text and the runner moves on. It grows no buffers between calls and starts no work you did not ask for.
 - Saving and loading is explicit: snapshot the runner and persist your variable storage beside it.
 
 This is also why you won't find `async` anywhere. Bubbles is meant to be called from a fixed-timestep `update()` with no tears.

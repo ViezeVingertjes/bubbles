@@ -1,0 +1,63 @@
+name: Performance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  # Determinism is a cross-platform claim, so it has to be checked on more than
+  # one platform. The main workflow runs on ubuntu only; these are the tests
+  # whose result could differ by target - hash ordering, number formatting, and
+  # snapshot continuation.
+  determinism:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Determinism and snapshot continuation
+        run: cargo test -p bubbles-dialogue --all-features --test determinism --test determinism_proptest --test snapshot_continuation
+
+      # Allocation counts are machine-independent, unlike the timings in
+      # benches/, so they are safe to assert on a shared runner.
+      - name: Allocation budgets
+        run: cargo test -p bubbles-dialogue --all-features --test allocation_budget
+
+  # Benchmarks are compiled and run once each, not timed. Wall-clock thresholds
+  # on a shared runner are too noisy to gate on: the variance between two runs
+  # of the same commit here is larger than the regressions worth catching, so a
+  # threshold would either fire constantly or be set so loose it caught nothing.
+  # What this does catch is a benchmark that stopped compiling or started
+  # panicking, which is the failure mode that actually happens.
+  #
+  # Timings belong in a manual run on a known-quiet machine, recorded in
+  # crates/bubbles-dialogue/benches/README.md with the hardware next to them.
+  benchmarks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Benchmarks compile and run
+        run: cargo bench -p bubbles-dialogue --all-features --bench compile --bench runtime -- --test
+
+  # Module and binary size are deterministic for a given toolchain, so unlike
+  # timings these can be gated. The budgets live in the script.
+  footprint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Footprint budgets
+        run: bash scripts/measure-footprint.sh --check
