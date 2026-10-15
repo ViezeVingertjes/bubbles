@@ -1,7 +1,15 @@
+use crate::runtime::DialogueRng;
+
 use super::{BestLeastRecentlyViewed, Candidate, FirstAvailable, SaliencyStrategy};
 
 #[cfg(feature = "rand")]
 use super::RandomAvailable;
+
+/// A generator for the strategies that ignore it, and a fixed seed for the
+/// one that does not.
+fn rng() -> DialogueRng {
+    DialogueRng::from_seed(0x0B0B_B1E5)
+}
 
 fn cand(ids: &[&'static str]) -> Vec<Candidate<'static>> {
     ids.iter()
@@ -25,20 +33,20 @@ fn cand_mask(ids: &[&'static str], mask: &[bool]) -> Vec<Candidate<'static>> {
 fn first_available_picks_first() {
     let mut s = FirstAvailable;
     let cs = cand_mask(&["a", "b", "c"], &[false, true, true]);
-    assert_eq!(s.select(&cs), Some(1));
+    assert_eq!(s.select(&cs, &rng()), Some(1));
 }
 
 #[test]
 fn first_available_none_when_all_unavailable() {
     let mut s = FirstAvailable;
     let cs = cand_mask(&["a", "b"], &[false, false]);
-    assert_eq!(s.select(&cs), None);
+    assert_eq!(s.select(&cs, &rng()), None);
 }
 
 #[test]
 fn first_available_empty() {
     let mut s = FirstAvailable;
-    assert_eq!(s.select(&[]), None);
+    assert_eq!(s.select(&[], &rng()), None);
 }
 
 // ── RandomAvailable ──────────────────────────────────────────────────────
@@ -48,7 +56,7 @@ fn first_available_empty() {
 fn random_available_returns_valid_index() {
     let mut s = RandomAvailable;
     let cs = cand_mask(&["a", "b", "c"], &[true, false, true]);
-    let idx = s.select(&cs);
+    let idx = s.select(&cs, &rng());
     assert!(idx == Some(0) || idx == Some(2));
 }
 
@@ -56,7 +64,7 @@ fn random_available_returns_valid_index() {
 #[test]
 fn random_available_none_when_empty() {
     let mut s = RandomAvailable;
-    assert_eq!(s.select(&[]), None);
+    assert_eq!(s.select(&[], &rng()), None);
 }
 
 // ── BestLeastRecentlyViewed ───────────────────────────────────────────────
@@ -65,31 +73,31 @@ fn random_available_none_when_empty() {
 fn blrv_cycles_through_all_candidates() {
     let mut s = BestLeastRecentlyViewed::new();
     let cs = cand(&["a", "b", "c"]);
-    assert_eq!(s.select(&cs), Some(0)); // a - unseen
-    assert_eq!(s.select(&cs), Some(1)); // b - unseen
-    assert_eq!(s.select(&cs), Some(2)); // c - unseen
-    assert_eq!(s.select(&cs), Some(0)); // a - oldest seen
+    assert_eq!(s.select(&cs, &rng()), Some(0)); // a - unseen
+    assert_eq!(s.select(&cs, &rng()), Some(1)); // b - unseen
+    assert_eq!(s.select(&cs, &rng()), Some(2)); // c - unseen
+    assert_eq!(s.select(&cs, &rng()), Some(0)); // a - oldest seen
 }
 
 #[test]
 fn blrv_skips_unavailable() {
     let mut s = BestLeastRecentlyViewed::new();
     let cs = cand_mask(&["a", "b", "c"], &[false, true, true]);
-    assert_eq!(s.select(&cs), Some(1)); // b - first available
-    assert_eq!(s.select(&cs), Some(2)); // c - next unseen
+    assert_eq!(s.select(&cs, &rng()), Some(1)); // b - first available
+    assert_eq!(s.select(&cs, &rng()), Some(2)); // c - next unseen
 }
 
 #[test]
 fn blrv_none_when_all_unavailable() {
     let mut s = BestLeastRecentlyViewed::new();
     let cs = cand_mask(&["a", "b"], &[false, false]);
-    assert_eq!(s.select(&cs), None);
+    assert_eq!(s.select(&cs, &rng()), None);
 }
 
 #[test]
 fn blrv_single_candidate_always_picks_it() {
     let mut s = BestLeastRecentlyViewed::new();
     let cs = cand(&["only"]);
-    assert_eq!(s.select(&cs), Some(0));
-    assert_eq!(s.select(&cs), Some(0));
+    assert_eq!(s.select(&cs, &rng()), Some(0));
+    assert_eq!(s.select(&cs, &rng()), Some(0));
 }

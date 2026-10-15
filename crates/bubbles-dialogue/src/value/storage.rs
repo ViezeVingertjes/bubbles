@@ -1,7 +1,7 @@
 //! [`VariableStorage`] trait and the default [`HashMapStorage`] implementation.
 
 use std::borrow::Cow;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use super::Value;
 
@@ -49,12 +49,24 @@ pub trait VariableStorage {
     /// Intended for debug overlays, save editors, and tests. The default
     /// implementation returns an empty vector; override it when you can
     /// enumerate variables (as [`HashMapStorage`] does).
+    ///
+    /// Return the pairs in a stable order - sorted by name is the obvious
+    /// choice, and what [`HashMapStorage`] does - so callers that hash or diff
+    /// the result get the same answer on every run.
     fn all_variables(&self) -> Vec<(String, Value)> {
         Vec::new()
     }
 }
 
-/// Default in-memory variable store backed by a [`HashMap`].
+/// Default in-memory variable store.
+///
+/// Entries are held in a [`BTreeMap`], so iteration, [`all_variables`] and
+/// (with the `serde` feature) serialisation are ordered by variable name. Two
+/// stores holding the same variables therefore serialise to identical bytes,
+/// which is what makes a save file safe to content-hash or diff. The type name
+/// predates that change and is kept for compatibility.
+///
+/// [`all_variables`]: VariableStorage::all_variables
 ///
 /// # Example
 ///
@@ -75,7 +87,7 @@ pub trait VariableStorage {
 #[derive(Debug, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct HashMapStorage {
-    map: HashMap<String, Value>,
+    map: BTreeMap<String, Value>,
 }
 
 impl HashMapStorage {
@@ -99,6 +111,7 @@ impl VariableStorage for HashMapStorage {
         self.map.get(name).map(Cow::Borrowed)
     }
 
+    /// Returns every pair, sorted by variable name.
     fn all_variables(&self) -> Vec<(String, Value)> {
         self.map
             .iter()

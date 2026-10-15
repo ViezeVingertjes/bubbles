@@ -8,6 +8,7 @@ mod rand;
 use std::collections::HashMap;
 
 use crate::error::{DialogueError, Result};
+use crate::runtime::DialogueRng;
 use crate::value::Value;
 
 /// A boxed host function callable from dialogue expressions.
@@ -23,12 +24,27 @@ pub struct FunctionLibrary {
 
 impl FunctionLibrary {
     /// Creates a library with the built-in functions pre-registered.
+    ///
+    /// The random built-ins draw from their own generator, seeded from the
+    /// operating system. A [`Runner`](crate::Runner) supplies its own
+    /// generator instead, so its rolls follow the seed given to
+    /// [`RunnerBuilder::with_seed`](crate::RunnerBuilder::with_seed).
     #[must_use]
     pub fn new() -> Self {
+        Self::with_rng(&DialogueRng::from_entropy())
+    }
+
+    /// Creates a library whose random built-ins draw from `rng`.
+    pub(crate) fn with_rng(rng: &DialogueRng) -> Self {
         let mut lib = Self {
             fns: HashMap::new(),
         };
-        lib.register_builtins();
+        #[cfg(feature = "rand")]
+        lib.register_rand_builtins(rng);
+        #[cfg(not(feature = "rand"))]
+        let _ = rng;
+        lib.register_math_builtins();
+        lib.register_i18n_builtins();
         lib
     }
 
@@ -56,13 +72,6 @@ impl FunctionLibrary {
             },
             |f| f(args),
         )
-    }
-
-    fn register_builtins(&mut self) {
-        #[cfg(feature = "rand")]
-        self.register_rand_builtins();
-        self.register_math_builtins();
-        self.register_i18n_builtins();
     }
 }
 

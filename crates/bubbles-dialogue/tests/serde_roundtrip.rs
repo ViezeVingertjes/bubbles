@@ -2,10 +2,11 @@
 
 #[cfg(feature = "serde")]
 mod serde_tests {
-    use std::collections::{HashMap, HashSet};
+    use std::collections::{BTreeMap, BTreeSet};
 
     use bubbles::{
-        DialogueEvent, HashMapStorage, Runner, RunnerSnapshot, Value, VariableStorage, compile,
+        DialogueEvent, HashMapStorage, RngState, Runner, RunnerSnapshot, Value, VariableStorage,
+        compile,
     };
 
     // ── Value round-trips ─────────────────────────────────────────────────────
@@ -182,8 +183,9 @@ Goodbye.
         let mut runner = Runner::new(prog, HashMapStorage::new());
         let snap = RunnerSnapshot {
             current_node: Some("Missing".into()),
-            visits: HashMap::new(),
-            once_seen: HashSet::new(),
+            visits: BTreeMap::new(),
+            once_seen: BTreeSet::new(),
+            rng: RngState::default(),
         };
         assert!(runner.restore(snap).is_err());
     }

@@ -1,8 +1,8 @@
 //! Snapshot and restore without the `serde` feature.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 
-use bubbles::{DialogueEvent, HashMapStorage, Runner, RunnerSnapshot, compile};
+use bubbles::{DialogueEvent, HashMapStorage, RngState, Runner, RunnerSnapshot, compile};
 
 #[test]
 fn snapshot_restore_round_trip_without_serde() {
@@ -33,8 +33,9 @@ Line two.
         snap,
         RunnerSnapshot {
             current_node: Some("A".into()),
-            visits: HashMap::from([("A".into(), 1)]),
-            once_seen: HashSet::new(),
+            visits: BTreeMap::from([("A".into(), 1)]),
+            once_seen: BTreeSet::new(),
+            rng: runner.rng().state(),
         }
     );
 
@@ -56,8 +57,9 @@ fn restore_unknown_node_errors() {
     let mut runner = Runner::new(prog, HashMapStorage::new());
     let bad = RunnerSnapshot {
         current_node: Some("Missing".into()),
-        visits: HashMap::new(),
-        once_seen: HashSet::new(),
+        visits: BTreeMap::new(),
+        once_seen: BTreeSet::new(),
+        rng: RngState::default(),
     };
     assert!(runner.restore(bad).is_err());
 }

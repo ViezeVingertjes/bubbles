@@ -132,7 +132,7 @@ impl<S: VariableStorage> Runner<S> {
                 })
                 .collect();
 
-        let Some(idx) = self.saliency.select(&candidates) else {
+        let Some(idx) = self.saliency.select(&candidates, &self.rng) else {
             return Ok(None);
         };
         let chosen = &variants[idx];

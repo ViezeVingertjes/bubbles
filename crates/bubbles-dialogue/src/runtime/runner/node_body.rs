@@ -52,11 +52,14 @@ impl<S: VariableStorage> Runner<S> {
             })
             .collect();
 
-        let idx = self.saliency.select(&candidates).ok_or_else(|| {
-            DialogueError::ProtocolViolation(format!(
-                "node group '{title}' has no available candidate"
-            ))
-        })?;
+        let idx = self
+            .saliency
+            .select(&candidates, &self.rng)
+            .ok_or_else(|| {
+                DialogueError::ProtocolViolation(format!(
+                    "node group '{title}' has no available candidate"
+                ))
+            })?;
         let len = bodies.len();
         bodies.into_iter().nth(idx).ok_or_else(|| {
             DialogueError::ProtocolViolation(format!(

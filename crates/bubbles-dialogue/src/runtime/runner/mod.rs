@@ -6,7 +6,7 @@ pub(super) mod node_body;
 mod session;
 
 use std::borrow::Cow;
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::Arc;
 
 use crate::compiler::Program;
@@ -15,6 +15,7 @@ use crate::error::{DialogueError, Result};
 use crate::library::FunctionLibrary;
 use crate::runtime::event::DialogueEvent;
 use crate::runtime::provider::{LineProvider, PassthroughProvider};
+use crate::runtime::rng::DialogueRng;
 use crate::saliency::{FirstAvailable, SaliencyStrategy};
 use crate::value::{Value, VariableStorage};
 
@@ -68,10 +69,11 @@ pub struct Runner<S: VariableStorage> {
     pub(super) pending: VecDeque<DialogueEvent>,
     pub(super) option_bodies: OptionBodies,
     pub(super) library: FunctionLibrary,
-    pub(super) visits: HashMap<String, u32>,
-    pub(super) once_seen: HashSet<String>,
+    pub(super) visits: BTreeMap<String, u32>,
+    pub(super) once_seen: BTreeSet<String>,
     pub(super) saliency: Box<dyn SaliencyStrategy>,
     pub(super) provider: Box<dyn LineProvider>,
+    pub(super) rng: DialogueRng,
 }
 
 impl<S: VariableStorage> Runner<S> {
@@ -93,14 +95,21 @@ impl<S: VariableStorage> Runner<S> {
     }
 
     /// Creates a new runner for the given program and variable storage.
+    ///
+    /// Randomness is seeded from the operating system. Use
+    /// [`RunnerBuilder::with_seed`](crate::RunnerBuilder::with_seed) when you
+    /// need the session to be reproducible.
     #[must_use]
     pub fn new(program: Program, storage: S) -> Self {
+        let rng = DialogueRng::from_entropy();
+        let library = FunctionLibrary::with_rng(&rng);
         Self::with_parts(
             program,
             storage,
             Box::new(FirstAvailable),
             Box::new(PassthroughProvider),
-            FunctionLibrary::new(),
+            library,
+            rng,
         )
     }
 
@@ -110,6 +119,7 @@ impl<S: VariableStorage> Runner<S> {
         saliency: Box<dyn SaliencyStrategy>,
         provider: Box<dyn LineProvider>,
         library: FunctionLibrary,
+        rng: DialogueRng,
     ) -> Self {
         Self {
             program,
@@ -119,10 +129,11 @@ impl<S: VariableStorage> Runner<S> {
             pending: VecDeque::new(),
             option_bodies: Vec::new(),
             library,
-            visits: HashMap::new(),
-            once_seen: HashSet::new(),
+            visits: BTreeMap::new(),
+            once_seen: BTreeSet::new(),
             saliency,
             provider,
+            rng,
         }
     }
 
@@ -252,7 +263,8 @@ impl<S: VariableStorage> Runner<S> {
 
     /// Returns all variables known to storage (see [`VariableStorage::all_variables`]).
     ///
-    /// For [`HashMapStorage`](crate::HashMapStorage) this is every key/value pair.
+    /// For [`HashMapStorage`](crate::HashMapStorage) this is every key/value
+    /// pair, sorted by variable name.
     /// Custom stores return whatever their [`VariableStorage::all_variables`]
     /// implementation provides (often empty unless overridden).
     #[must_use]
@@ -275,6 +287,16 @@ impl<S: VariableStorage> Runner<S> {
     /// Returns a mutable reference to the function library (for registering host functions).
     pub const fn library_mut(&mut self) -> &mut FunctionLibrary {
         &mut self.library
+    }
+
+    /// Returns the generator this runner draws its randomness from.
+    ///
+    /// Clone it into host functions registered via [`Runner::library_mut`] so
+    /// their rolls are part of the same reproducible stream, and are captured
+    /// by [`Runner::snapshot`] along with everything else.
+    #[must_use]
+    pub const fn rng(&self) -> &DialogueRng {
+        &self.rng
     }
 
     /// Replaces the saliency strategy used for line and node group selection.

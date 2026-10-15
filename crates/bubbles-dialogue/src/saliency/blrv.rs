@@ -2,6 +2,8 @@
 
 use std::collections::HashMap;
 
+use crate::runtime::DialogueRng;
+
 use super::candidate::{Candidate, SaliencyStrategy};
 
 /// Picks the available candidate that was least recently selected.
@@ -16,9 +18,11 @@ use super::candidate::{Candidate, SaliencyStrategy};
 /// # Example
 ///
 /// ```rust
+/// use bubbles::DialogueRng;
 /// use bubbles::saliency::{BestLeastRecentlyViewed, Candidate, SaliencyStrategy};
 ///
 /// let mut s = BestLeastRecentlyViewed::default();
+/// let rng = DialogueRng::from_seed(1); // unused by this strategy
 /// let candidates = vec![
 ///     Candidate { id: "a", available: true },
 ///     Candidate { id: "b", available: true },
@@ -26,13 +30,13 @@ use super::candidate::{Candidate, SaliencyStrategy};
 /// ];
 ///
 /// // First call - all unseen, picks index 0.
-/// assert_eq!(s.select(&candidates), Some(0));
+/// assert_eq!(s.select(&candidates, &rng), Some(0));
 /// // Second call - "a" was just seen, picks "b" at index 1.
-/// assert_eq!(s.select(&candidates), Some(1));
+/// assert_eq!(s.select(&candidates, &rng), Some(1));
 /// // Third call - picks "c" at index 2.
-/// assert_eq!(s.select(&candidates), Some(2));
+/// assert_eq!(s.select(&candidates, &rng), Some(2));
 /// // Fourth call - all seen, wraps back to "a" (oldest).
-/// assert_eq!(s.select(&candidates), Some(0));
+/// assert_eq!(s.select(&candidates, &rng), Some(0));
 /// ```
 #[derive(Debug, Clone, Default)]
 pub struct BestLeastRecentlyViewed {
@@ -51,7 +55,7 @@ impl BestLeastRecentlyViewed {
 }
 
 impl SaliencyStrategy for BestLeastRecentlyViewed {
-    fn select(&mut self, candidates: &[Candidate<'_>]) -> Option<usize> {
+    fn select(&mut self, candidates: &[Candidate<'_>], _rng: &DialogueRng) -> Option<usize> {
         let idx = candidates
             .iter()
             .enumerate()

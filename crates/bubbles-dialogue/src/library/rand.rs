@@ -1,18 +1,23 @@
 //! Random built-in functions: `random`, `random_range`, `dice`.
 
 use crate::error::{DialogueError, Result};
+use crate::runtime::DialogueRng;
 use crate::value::Value;
 
 use super::FunctionLibrary;
 use super::math::require_two_numbers;
 
 impl FunctionLibrary {
-    pub(super) fn register_rand_builtins(&mut self) {
-        use rand::RngExt as _;
-        self.register("random", |_args| {
-            Ok(Value::Number(rand::rng().random::<f64>()))
-        });
-        self.register("random_range", |args| {
+    /// Registers the random built-ins against `rng`.
+    ///
+    /// Each closure keeps its own handle to the same stream, which is how a
+    /// seeded runner replays every roll.
+    pub(super) fn register_rand_builtins(&mut self, rng: &DialogueRng) {
+        let random = rng.clone();
+        self.register("random", move |_args| Ok(Value::Number(random.next_f64())));
+
+        let random_range = rng.clone();
+        self.register("random_range", move |args| {
             let (lo, hi) = require_two_numbers("random_range", &args)?;
             let lo = number_to_i32("random_range", lo, "lo")?;
             let hi = number_to_i32("random_range", hi, "hi")?;
@@ -22,9 +27,13 @@ impl FunctionLibrary {
                     message: format!("lo ({lo}) > hi ({hi})"),
                 });
             }
-            Ok(Value::Number(f64::from(rand::rng().random_range(lo..=hi))))
+            let rolled = random_range.range_inclusive(i64::from(lo), i64::from(hi));
+            #[allow(clippy::cast_precision_loss)]
+            Ok(Value::Number(rolled as f64))
         });
-        self.register("dice", |args| {
+
+        let dice = rng.clone();
+        self.register("dice", move |args| {
             let (sides, count) = require_two_numbers("dice", &args)?;
             let sides = number_to_u32("dice", sides, "sides")?;
             let count = number_to_u32("dice", count, "count")?;
@@ -34,10 +43,14 @@ impl FunctionLibrary {
                     message: "sides must be > 0".into(),
                 });
             }
-            let total: u32 = (0..count)
-                .map(|_| rand::rng().random_range(1..=sides))
+            // Summing in u64 keeps the worst case (`dice(u32::MAX, u32::MAX)`)
+            // from overflowing, which the previous u32 accumulator did.
+            #[allow(clippy::cast_sign_loss)]
+            let total: u64 = (0..count)
+                .map(|_| dice.range_inclusive(1, i64::from(sides)) as u64)
                 .sum();
-            Ok(Value::Number(f64::from(total)))
+            #[allow(clippy::cast_precision_loss)]
+            Ok(Value::Number(total as f64))
         });
     }
 }

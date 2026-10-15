@@ -1,6 +1,8 @@
 //! [`RunnerSnapshot`] - session state for bookmarks and save / load support.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
+
+use super::rng::RngState;
 
 /// A point-in-time snapshot of the dialogue session's mutable state.
 ///
@@ -10,7 +12,14 @@ use std::collections::{HashMap, HashSet};
 /// The snapshot records:
 /// - which node was active (`current_node`),
 /// - how many times each node has been visited (`visits`),
-/// - which `<<once>>` blocks have already fired (`once_seen`).
+/// - which `<<once>>` blocks have already fired (`once_seen`),
+/// - where the runner's random stream had reached (`rng`).
+///
+/// # Canonical bytes
+///
+/// The collections are ordered, so two snapshots holding the same state
+/// serialise to the same bytes in every process. That is what makes save files
+/// safe to content-hash, diff, deduplicate, or compare in a golden-file test.
 ///
 /// **Variable storage is not included** - it is the host's responsibility to
 /// persist [`HashMapStorage`](crate::HashMapStorage) (or their own
@@ -62,10 +71,18 @@ pub struct RunnerSnapshot {
     /// require the full AST to be round-tripped.
     pub current_node: Option<String>,
 
-    /// How many times each node has been visited.
-    pub visits: HashMap<String, u32>,
+    /// How many times each node has been visited, ordered by node title.
+    pub visits: BTreeMap<String, u32>,
 
     /// IDs of `<<once>>` blocks (and once-line-variants) that have already
-    /// fired and must not fire again.
-    pub once_seen: HashSet<String>,
+    /// fired and must not fire again, in sorted order.
+    pub once_seen: BTreeSet<String>,
+
+    /// Where the runner's generator had reached, so a restored session
+    /// continues the same random stream instead of starting a new one.
+    ///
+    /// Snapshots written before 3.0.0 have no such field; they deserialise
+    /// with a fresh OS-seeded stream, which is what those saves did anyway.
+    #[cfg_attr(feature = "serde", serde(default = "RngState::from_entropy"))]
+    pub rng: RngState,
 }

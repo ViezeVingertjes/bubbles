@@ -1,5 +1,7 @@
 //! [`Candidate`] and the [`SaliencyStrategy`] trait.
 
+use crate::runtime::DialogueRng;
+
 /// A candidate presented to the saliency strategy for selection.
 #[derive(Debug, Clone)]
 pub struct Candidate<'a> {
@@ -15,5 +17,10 @@ pub struct Candidate<'a> {
 /// Strategies may be stateful (e.g. tracking which variants have been recently shown).
 pub trait SaliencyStrategy: Send + Sync + 'static {
     /// Returns the index into `candidates` of the chosen variant, or `None` to skip the group.
-    fn select(&mut self, candidates: &[Candidate<'_>]) -> Option<usize>;
+    ///
+    /// `rng` is the runner's own generator. A strategy that makes random
+    /// choices must draw from it rather than from a thread-local RNG,
+    /// otherwise the session stops being reproducible from its seed.
+    /// Deterministic strategies ignore the argument.
+    fn select(&mut self, candidates: &[Candidate<'_>], rng: &DialogueRng) -> Option<usize>;
 }

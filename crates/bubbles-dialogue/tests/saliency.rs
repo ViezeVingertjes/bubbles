@@ -108,11 +108,12 @@ title: Bark
 
 #[test]
 fn custom_strategy_always_picks_last() {
+    use bubbles::DialogueRng;
     use bubbles::saliency::{Candidate, SaliencyStrategy};
 
     struct AlwaysLast;
     impl SaliencyStrategy for AlwaysLast {
-        fn select(&mut self, candidates: &[Candidate<'_>]) -> Option<usize> {
+        fn select(&mut self, candidates: &[Candidate<'_>], _rng: &DialogueRng) -> Option<usize> {
             candidates
                 .iter()
                 .enumerate()

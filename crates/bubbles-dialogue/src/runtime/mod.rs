@@ -4,6 +4,7 @@ mod builder;
 mod eval;
 mod event;
 mod provider;
+mod rng;
 mod runner;
 mod snapshot;
 
@@ -14,5 +15,6 @@ pub use event::{
     option_group_from_tags,
 };
 pub use provider::{HashMapProvider, LineProvider, PassthroughProvider};
+pub use rng::{DialogueRng, RngState};
 pub use runner::{Runner, RunnerPhase};
 pub use snapshot::RunnerSnapshot;

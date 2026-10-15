@@ -1,5 +1,7 @@
 //! [`FirstAvailable`] - pick the first eligible candidate.
 
+use crate::runtime::DialogueRng;
+
 use super::candidate::{Candidate, SaliencyStrategy};
 
 /// Picks the first available candidate.
@@ -9,6 +11,7 @@ use super::candidate::{Candidate, SaliencyStrategy};
 /// # Example
 ///
 /// ```rust
+/// use bubbles::DialogueRng;
 /// use bubbles::saliency::{Candidate, FirstAvailable, SaliencyStrategy};
 ///
 /// let mut s = FirstAvailable;
@@ -17,13 +20,13 @@ use super::candidate::{Candidate, SaliencyStrategy};
 ///     Candidate { id: "b", available: true },
 ///     Candidate { id: "c", available: true },
 /// ];
-/// assert_eq!(s.select(&candidates), Some(1));
+/// assert_eq!(s.select(&candidates, &DialogueRng::from_seed(1)), Some(1));
 /// ```
 #[derive(Debug, Clone, Default)]
 pub struct FirstAvailable;
 
 impl SaliencyStrategy for FirstAvailable {
-    fn select(&mut self, candidates: &[Candidate<'_>]) -> Option<usize> {
+    fn select(&mut self, candidates: &[Candidate<'_>], _rng: &DialogueRng) -> Option<usize> {
         candidates.iter().position(|c| c.available)
     }
 }

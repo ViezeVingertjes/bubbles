@@ -4,9 +4,10 @@ use crate::error::Result;
 impl<S: crate::value::VariableStorage> Runner<S> {
     /// Captures the current session state into a [`RunnerSnapshot`](crate::RunnerSnapshot).
     ///
-    /// The snapshot records the active node title, visit counts, and the set of
-    /// exhausted `<<once>>` blocks. Variable storage is **not** included; persist
-    /// it via [`Runner::storage`] alongside the snapshot when saving.
+    /// The snapshot records the active node title, visit counts, the set of
+    /// exhausted `<<once>>` blocks, and the position of the random stream.
+    /// Variable storage is **not** included; persist it via [`Runner::storage`]
+    /// alongside the snapshot when saving.
     ///
     /// Restoring with [`Runner::restore`] will restart execution from the beginning
     /// of the snapshotted node.
@@ -19,12 +20,13 @@ impl<S: crate::value::VariableStorage> Runner<S> {
             current_node: self.stack.last().map(|f| f.node.as_ref().to_owned()),
             visits: self.visits.clone(),
             once_seen: self.once_seen.clone(),
+            rng: self.rng.state(),
         }
     }
 
-    /// Applies a previously captured `RunnerSnapshot`, restoring visit counts
-    /// and the `<<once>>` exhaustion set, then re-enters the snapshotted node
-    /// from its beginning.
+    /// Applies a previously captured `RunnerSnapshot`, restoring visit counts,
+    /// the `<<once>>` exhaustion set, and the random stream, then re-enters the
+    /// snapshotted node from its beginning.
     ///
     /// # Errors
     ///
@@ -33,6 +35,7 @@ impl<S: crate::value::VariableStorage> Runner<S> {
     pub fn restore(&mut self, snapshot: crate::runtime::RunnerSnapshot) -> Result<()> {
         self.visits = snapshot.visits;
         self.once_seen = snapshot.once_seen;
+        self.rng.set_state(snapshot.rng);
         self.stack.clear();
         self.clear_event_queues();
         self.state = RunnerPhase::Idle;
