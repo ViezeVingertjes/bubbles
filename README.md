@@ -24,14 +24,14 @@ It works well for games too, and for the same reason: if your engine needs repla
 **It is deterministic by construction.** Nothing in the runtime reads the clock, the environment, or a global RNG on its own initiative. The only nondeterminism is what you opt into, and you can take all of it back:
 
 - `rand` is a feature. Build with `default-features = false` and the RNG is not compiled in at all.
-- `random`, `random_range`, and `dice` are ordinary entries in a function registry. Registering your own under the same name replaces the built-in, so you can supply a seeded generator you control.
+- With it on, `RunnerBuilder::with_seed(u64)` makes randomness reproducible. `random`, `random_range`, `dice`, and `RandomAvailable` all draw from one generator the runner owns, the stream position travels in the snapshot, and a strategy you write yourself is handed that generator rather than reaching for a global. The three built-ins are also ordinary entries in a function registry, so you can replace them outright if you want the rolls to come from somewhere else.
 - Line-group and node-group selection goes through an injected `SaliencyStrategy`. The default, `FirstAvailable`, is deterministic; `RandomAvailable` is the opt-in random one.
 
-Given the same script, the same starting variables, and the same option choices, you get the same sequence of events.
+Given the same script, the same starting variables, the same seed, and the same option choices, you get the same sequence of events. Saves are canonical as well: `RunnerSnapshot` and `HashMapStorage` serialise to identical bytes for identical state, so you can hash, diff, or golden-test them.
 
 **It is small and auditable.** Three required dependencies: `indexmap`, `logos`, `thiserror`. The library denies `unsafe_code`; the one crate that opts out is the optional `bubbles-ffi` C wrapper, which cannot be written in safe Rust. No bytecode, no binary format, no asset pipeline. `compile()` returns a struct, so there is nothing to version, load, or ship alongside your binary. CI keeps the library building for `wasm32-unknown-unknown` (with `default-features = false`, see below) and enforces a 300-non-blank-line cap per source file, which is mostly a way of keeping the code readable by someone who did not write it.
 
-**Where the edges are.** `snapshot()` / `restore()` records the active node, visit counts, and which `<<once>>` blocks have fired, which is enough for save-and-resume at node granularity. It deliberately does not serialise the in-progress statement list, so `restore()` re-enters the snapshotted node from its beginning, and neither the `<<detour>>` return stack nor saliency history carries across. It is a bookmark, not a time-travel debugger. Enumeration order from `all_variables` is also unspecified for the default `HashMapStorage`. See [Save and Load](https://viezevingertjes.github.io/bubbles/advanced/save-load.html) for what round-trips and what does not.
+**Where the edges are.** `snapshot()` / `restore()` records the active node, visit counts, and which `<<once>>` blocks have fired, which is enough for save-and-resume at node granularity. It deliberately does not serialise the in-progress statement list, so `restore()` re-enters the snapshotted node from its beginning, and neither the `<<detour>>` return stack nor saliency history carries across. It is a bookmark, not a time-travel debugger - though the random stream does survive it, so rolls continue rather than restart. See [Save and Load](https://viezevingertjes.github.io/bubbles/advanced/save-load.html) for what round-trips and what does not.
 
 ---
 
@@ -178,7 +178,7 @@ Bubbles is a small language. The table below is a reference for what the script 
 
 Two things worth knowing about `rand`:
 
-- In the default build, `random()`, `random_range()`, `dice()`, and `RandomAvailable` draw from the operating-system-seeded thread RNG, and there is no seeding API. If you need *reproducible* randomness rather than none, register your own seeded functions instead of relying on the built-ins.
+- In the default build, `random()`, `random_range()`, `dice()`, and `RandomAvailable` draw from the runner's own generator, seeded from the operating system unless you call `RunnerBuilder::with_seed`. Seed it and the session replays identically; the seed also covers the saliency strategy, which replacing the functions would not.
 - **For `wasm32-unknown-unknown` you need `default-features = false`.** The default build pulls in `getrandom`, which does not support that target unless you opt into a JavaScript backend. This is why the CI WebAssembly job builds the no-default-features configurations, and it means the browser-friendly build and the deterministic build are the same build.
 
 ```toml

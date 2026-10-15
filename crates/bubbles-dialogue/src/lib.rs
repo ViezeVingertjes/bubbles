@@ -30,22 +30,27 @@
 //!   RNG is compiled in at all. That is also the configuration required to
 //!   target `wasm32-unknown-unknown`, since the default build depends on
 //!   `getrandom`, so on the web the deterministic build is the only build.
-//! - `random`, `random_range` and `dice` are entries in a
-//!   [`FunctionLibrary`]. [`FunctionLibrary::register`] replaces any function
-//!   of the same name, so you can install a seeded generator you control.
+//! - With `rand` on, [`RunnerBuilder::with_seed`] makes randomness
+//!   reproducible: `random`, `random_range`, `dice` and `RandomAvailable` all
+//!   draw from one [`DialogueRng`] the runner owns, and its position is
+//!   recorded in [`Runner::snapshot`]. The three built-ins are also entries in
+//!   a [`FunctionLibrary`], and [`FunctionLibrary::register`] replaces any
+//!   function of the same name, so you can install your own generator instead.
 //! - Line-group and node-group selection goes through an injected
 //!   [`SaliencyStrategy`]. The default [`FirstAvailable`] is deterministic;
 //!   [`BestLeastRecentlyViewed`] is deterministic given the same call
 //!   sequence; `RandomAvailable` is the opt-in random one.
 //!
-//! Given the same program, the same starting variables, and the same option
-//! selections, you get the same sequence of [`DialogueEvent`]s.
+//! Given the same program, the same starting variables, the same seed, and the
+//! same option selections, you get the same sequence of [`DialogueEvent`]s.
+//! [`RunnerSnapshot`] and [`HashMapStorage`] serialise to identical bytes for
+//! identical state, so saves can be hashed, diffed, or golden-tested.
 //!
 //! **Known edges.** [`Runner::snapshot`] is a node-granularity bookmark, not a
 //! full continuation: [`Runner::restore`] re-enters the recorded node from its
 //! beginning, and neither the `<<detour>>` return stack nor saliency history is
-//! carried across. Enumeration order from [`Runner::all_variables`] is
-//! unspecified for the default [`HashMapStorage`].
+//! carried across. The random stream does survive, so rolls continue rather
+//! than restart.
 //!
 //! # Quick start
 //!

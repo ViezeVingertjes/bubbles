@@ -42,9 +42,11 @@ Bubbles has no opinion about rendering, input, audio, or timing, and provides no
 
 ## Determinism: nondeterminism is opt-in and retractable
 
-Determinism here means something specific and checkable: **given the same program, the same starting variable state, and the same sequence of option selections, you get the same sequence of events.**
+Determinism here means something specific and checkable: **given the same program, the same starting variable state, the same seed, and the same sequence of option selections, you get the same sequence of events.**
 
 This holds because the runtime has no independent access to anything that varies. It does not read the system clock, consult the environment, depend on thread scheduling, or reach for a global RNG. Node lookup is backed by an `IndexMap`, so iteration follows insertion order rather than hash order. The library denies `unsafe_code`, so there is no uninitialised memory to behave unpredictably. The one crate that opts out is the optional `bubbles-ffi` C wrapper, which cannot be written in safe Rust; nothing in it is reachable from a pure Rust host.
+
+Saved state is canonical too: `RunnerSnapshot` and `HashMapStorage` hold their entries in sorted order, so the same state always serialises to the same bytes, and `all_variables()` comes back sorted by name. A save can be content-hashed, diffed against another save, or compared to a committed golden file.
 
 That leaves exactly three places where nondeterminism can enter, all of them under your control.
 
@@ -57,7 +59,21 @@ bubbles-dialogue = { version = "2.0.0", default-features = false }
 
 This is also the configuration you need to target `wasm32-unknown-unknown`, so for browser-hosted software the deterministic build is simply the build.
 
-**2. The function library.** This is the more useful option if you want *reproducible* randomness rather than *no* randomness. `random`, `random_range`, and `dice` are ordinary entries in a `FunctionLibrary`, and registering a function under an existing name replaces it. So you can supply a generator you seed and control:
+**2. The seed.** This is the option you want if you need *reproducible* randomness rather than *no* randomness. Give the runner a seed and the built-ins and `RandomAvailable` all draw from one generator you control:
+
+```rust,ignore
+use bubbles::{HashMapStorage, RunnerBuilder, compile};
+
+let mut runner = RunnerBuilder::new(compile(script)?, HashMapStorage::new())
+    .with_seed(20_260_815)
+    .build();
+```
+
+The same seed produces the same rolls and the same random line choices, in every process and on every platform. `Runner::snapshot()` records where the stream had reached, so a save resumes it rather than starting a new one, and `Runner::rng()` hands out a handle your own host functions can draw from to stay inside the same stream. Without a seed the generator is seeded from the operating system, which is the old behaviour and still the default.
+
+The generator is `SplitMix64` implemented inside this crate rather than borrowed from `rand`, because the stream is part of the save format: `rand`'s `SmallRng` is documented as not reproducible across platforms or versions, which is not a foundation a replay guarantee can stand on.
+
+**The function library remains a seam** if you want the rolls themselves to come from somewhere else - a recorded table, a server, your engine's own generator. `random`, `random_range`, and `dice` are ordinary entries in a `FunctionLibrary`, and registering a function under an existing name replaces it:
 
 ```rust,ignore
 use std::sync::Arc;
@@ -79,19 +95,15 @@ let mut runner = RunnerBuilder::new(program, HashMapStorage::new())
     .build();
 ```
 
-In a real build you would use a seeded PRNG rather than a fixed table, storing the seed alongside your save data. The point is that the seam exists: the runtime calls `random_range` through the registry, so whatever you put there is what the script gets.
+The point is that the seam exists: the runtime calls `random_range` through the registry, so whatever you put there is what the script gets. For ordinary reproducibility, reach for `with_seed` first - it covers the saliency strategy too, which a replacement function cannot.
 
-**3. The saliency strategy.** Line groups and node groups pick among candidates through an injected `SaliencyStrategy`, so the choice is never hidden. `FirstAvailable` (the default) always takes the first eligible candidate. `BestLeastRecentlyViewed` picks the least recently shown, breaking ties toward the earliest candidate, and is deterministic given the same sequence of calls. `RandomAvailable` is the only random one, and you have to ask for it by name. See [Saliency Strategies](./integration/saliency.md).
+**3. The saliency strategy.** Line groups and node groups pick among candidates through an injected `SaliencyStrategy`, so the choice is never hidden. `FirstAvailable` (the default) always takes the first eligible candidate. `BestLeastRecentlyViewed` picks the least recently shown, breaking ties toward the earliest candidate, and is deterministic given the same sequence of calls. `RandomAvailable` is the only random one, you have to ask for it by name, and it draws from the runner's seeded generator like everything else. A strategy you write yourself is handed that generator as an argument, so there is no quiet way to opt out of the seed. See [Saliency Strategies](./integration/saliency.md).
 
 ### Where determinism stops
 
-Four limits are worth knowing before you build a replay system on this.
+Two limits are worth knowing before you build a replay system on this.
 
-**Snapshots are node-granular bookmarks, not continuations.** `Runner::snapshot()` records the active node title, visit counts, and the set of `<<once>>` blocks that have fired. It deliberately does not serialise the in-progress statement list, because that would mean round-tripping the whole AST. So `restore()` re-enters the recorded node *from its beginning*, not from the line you were on. Two further pieces of state do not survive the round trip at all: the `<<detour>>` return stack, and any history held inside a stateful saliency strategy such as `BestLeastRecentlyViewed`. Variable storage is separate and must be persisted yourself. This is enough to implement "resume this lesson" or a conversation bookmark; it is not a time-travel debugger. [Save and Load](./advanced/save-load.md) has the specifics.
-
-**Variable enumeration order is unspecified.** The default `HashMapStorage` is backed by a `std::collections::HashMap`, so `all_variables()` yields no guaranteed order and the order may differ between runs of the same binary. Do not hash or diff that iteration to compare states. Sort the keys first, or implement `VariableStorage` over an ordered map if you need a stable enumeration.
-
-**The default build's randomness cannot be seeded.** With the `rand` feature on, the built-ins draw from the operating-system-seeded thread RNG and the library exposes no way to seed it. There is no "deterministic mode" switch. If you need reproducible randomness, replace the functions as shown above; if you need none, turn the feature off.
+**Snapshots are node-granular bookmarks, not continuations.** `Runner::snapshot()` records the active node title, visit counts, and the set of `<<once>>` blocks that have fired. `Runner::snapshot()` also records where the random stream had reached, so rolls continue rather than restart. It deliberately does not serialise the in-progress statement list, because that would mean round-tripping the whole AST. So `restore()` re-enters the recorded node *from its beginning*, not from the line you were on. Two further pieces of state do not survive the round trip at all: the `<<detour>>` return stack, and any history held inside a stateful saliency strategy such as `BestLeastRecentlyViewed`. Variable storage is separate and must be persisted yourself. This is enough to implement "resume this lesson" or a conversation bookmark; it is not a time-travel debugger. [Save and Load](./advanced/save-load.md) has the specifics.
 
 **Determinism is a property of the event stream, not of floating-point results across platforms.** Variables are `f64`, and expression evaluation uses ordinary Rust float arithmetic. Identical inputs on the same binary and target give identical results; the library makes no claim about bit-identical float behaviour across different architectures.
 
