@@ -2,7 +2,7 @@
 //! pass and must never panic on valid UTF-8; returning `Err` is acceptable.
 #![no_main]
 
-use bubbles::compiler::markup::scan_text_segments;
+use bubbles::__fuzz::scan_text_segments;
 use libfuzzer_sys::fuzz_target;
 
 fuzz_target!(|data: &[u8]| {

@@ -24,6 +24,10 @@ default = ["rand"]
 full    = ["rand", "serde"]
 rand    = ["dep:rand"]
 serde   = ["dep:serde", "indexmap/serde"]
+# Exposes three compiler entry points to this repository's fuzz harness, which
+# is a separate crate and so cannot reach them otherwise. Everything it adds is
+# `#[doc(hidden)]` and outside the semver contract; see the `__fuzz` module.
+fuzzing = []
 
 [dependencies]
 indexmap  = "2"

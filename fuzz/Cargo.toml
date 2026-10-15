@@ -18,7 +18,9 @@ serde_json    = "1"
 
 [dependencies.bubbles-dialogue]
 path     = "../crates/bubbles-dialogue"
-features = ["full"]
+# `fuzzing` exposes the lexer, expression parser and markup scanner, which are
+# crate-private in the library and reachable from here only through it.
+features = ["full", "fuzzing"]
 
 [dependencies.bubbles-ffi]
 path = "../crates/bubbles-ffi"

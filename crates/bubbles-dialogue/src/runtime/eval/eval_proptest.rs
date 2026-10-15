@@ -1,9 +1,11 @@
 //! Property tests for the expression evaluator - arithmetic and boolean laws.
 
-use bubbles::compiler::expr::parse_expr_at;
-use bubbles::runtime::eval as eval_fn;
-use bubbles::{DialogueError, HashMapStorage, Value, VariableStorage};
 use proptest::prelude::*;
+
+use super::eval as eval_fn;
+use crate::compiler::expr::parse_expr_at;
+use crate::error::DialogueError;
+use crate::value::{HashMapStorage, Value, VariableStorage};
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
