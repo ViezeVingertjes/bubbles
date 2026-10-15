@@ -12,9 +12,15 @@
 //! are allocation *counts*, not timings, so they are machine-independent and
 //! safe to assert on in CI - unlike the figures in `benches/`.
 //!
-//! All measurement happens in a single `#[test]` because the counter is global.
-//! The test harness runs tests in one binary concurrently, so a second test in
-//! this file would have its allocations folded into the first one's count.
+//! The counters are **per thread**, not global. A global counter attributes
+//! every allocation made anywhere in the process during the measured window to
+//! the closure being measured, including the test harness's own bookkeeping on
+//! its main thread. That is not a theoretical hazard: with a global counter the
+//! `snapshot` budget, which has no headroom, failed on one platform of three
+//! with exactly one allocation more than the other two measured, while the same
+//! measurement was reproducibly exact locally. Counting only this thread's
+//! allocations makes the figures a property of the code under test rather than
+//! of what else the process happened to be doing.
 
 // A counting global allocator cannot be written in safe Rust, and the crate
 // denies unsafe everywhere else. This is a dev-only test binary and the unsafe
@@ -23,26 +29,43 @@
 
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::borrow::Cow;
+use std::cell::Cell;
 use std::collections::HashMap;
 use std::fmt::Write as _;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use bubbles::{HashMapStorage, Runner, Value, VariableStorage, compile, compile_many};
 
-static ALLOCATIONS: AtomicUsize = AtomicUsize::new(0);
-static BYTES: AtomicUsize = AtomicUsize::new(0);
-static COUNTING: AtomicBool = AtomicBool::new(false);
+thread_local! {
+    /// Allocations this thread has made since `measure` reset the counter.
+    ///
+    /// `const` initialisation matters: a lazily initialised thread-local would
+    /// allocate on first access, from inside the allocator.
+    static ALLOCATIONS: Cell<usize> = const { Cell::new(0) };
+    /// Bytes this thread has requested since `measure` reset the counter.
+    static BYTES: Cell<usize> = const { Cell::new(0) };
+    /// Whether this thread is inside a `measure` call.
+    static COUNTING: Cell<bool> = const { Cell::new(false) };
+}
 
-/// Forwards everything to the system allocator, counting allocations while
-/// [`COUNTING`] is set.
+/// Adds one allocation of `size` bytes to this thread's counters, if it is
+/// counting. `try_with` rather than `with` so that an allocation during
+/// thread-local teardown cannot panic inside the allocator.
+fn record(size: usize) {
+    if COUNTING.try_with(Cell::get).unwrap_or(false) {
+        let _ = ALLOCATIONS.try_with(|c| c.set(c.get() + 1));
+        let _ = BYTES.try_with(|c| c.set(c.get() + size));
+    }
+}
+
+/// Forwards everything to the system allocator, counting the calling thread's
+/// allocations while [`COUNTING`] is set for that thread.
 struct Counting;
 
 unsafe impl GlobalAlloc for Counting {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        if COUNTING.load(Ordering::Relaxed) {
-            ALLOCATIONS.fetch_add(1, Ordering::Relaxed);
-            BYTES.fetch_add(layout.size(), Ordering::Relaxed);
-        }
+        record(layout.size());
         unsafe { System.alloc(layout) }
     }
 
@@ -53,10 +76,7 @@ unsafe impl GlobalAlloc for Counting {
     unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
         // A realloc that grows a String is a real allocation for budgeting
         // purposes: it is the cost the caller pays for an under-sized buffer.
-        if COUNTING.load(Ordering::Relaxed) {
-            ALLOCATIONS.fetch_add(1, Ordering::Relaxed);
-            BYTES.fetch_add(new_size.saturating_sub(layout.size()), Ordering::Relaxed);
-        }
+        record(new_size.saturating_sub(layout.size()));
         unsafe { System.realloc(ptr, layout, new_size) }
     }
 }
@@ -64,18 +84,15 @@ unsafe impl GlobalAlloc for Counting {
 #[global_allocator]
 static ALLOCATOR: Counting = Counting;
 
-/// Runs `f` with allocation counting on, returning `(allocations, bytes, value)`.
+/// Runs `f` with allocation counting on for this thread, returning
+/// `(allocations, bytes, value)`.
 fn measure<T>(f: impl FnOnce() -> T) -> (usize, usize, T) {
-    ALLOCATIONS.store(0, Ordering::Relaxed);
-    BYTES.store(0, Ordering::Relaxed);
-    COUNTING.store(true, Ordering::Relaxed);
+    ALLOCATIONS.set(0);
+    BYTES.set(0);
+    COUNTING.set(true);
     let value = f();
-    COUNTING.store(false, Ordering::Relaxed);
-    (
-        ALLOCATIONS.load(Ordering::Relaxed),
-        BYTES.load(Ordering::Relaxed),
-        value,
-    )
+    COUNTING.set(false);
+    (ALLOCATIONS.get(), BYTES.get(), value)
 }
 
 /// Storage that does not override `get_ref`, so reads go through the default
@@ -131,8 +148,11 @@ const PLAIN_LINE_BUDGET: usize = 1;
 /// step without hiding a new clone per segment.
 const INTERPOLATED_LINE_BUDGET: usize = 8;
 
-/// Budget for `snapshot()` on a session with a handful of visits. Measured at 2
-/// (the visits map and the once-seen set).
+/// Budget for `snapshot()` on a session that has visited three nodes. Measured
+/// at 4: one node for the cloned visits map and one `String` per key. The
+/// once-seen set is empty and the random stream's position is a plain `u64`, so
+/// neither costs anything. No headroom, which is why the counter has to be
+/// per-thread to be worth asserting.
 const SNAPSHOT_BUDGET: usize = 4;
 
 /// The `examples/harbour/` sources, embedded so no measured region does file IO.
@@ -256,5 +276,54 @@ fn hot_paths_stay_within_allocation_budget() {
         "cloning a Program took {clone_allocations} allocations against {compile_allocations} \
          to compile it; the guide's claim that programs are the expensive thing and clones are \
          cheap needs at least a 4x gap to hold"
+    );
+}
+
+/// The gap: the budgets above are only meaningful if a measured figure is a
+/// property of the measured code. A process-global counter is not - it also
+/// counts whatever else the process allocates in the same window, which is how
+/// a zero-headroom budget came to fail on one platform of three while being
+/// reproducibly exact on another. Nothing could observe that from inside a
+/// single-threaded measurement, so this measures a known cost while a second
+/// thread allocates as fast as it can.
+#[test]
+fn allocation_counting_sees_only_the_measuring_thread() {
+    const EXPECTED: usize = 1_000;
+
+    let stop = Arc::new(AtomicBool::new(false));
+    let started = Arc::new(AtomicBool::new(false));
+    let noise = std::thread::spawn({
+        let (stop, started) = (Arc::clone(&stop), Arc::clone(&started));
+        move || {
+            while !stop.load(Ordering::Relaxed) {
+                drop(std::hint::black_box(String::from("on another thread")));
+                started.store(true, Ordering::Relaxed);
+            }
+        }
+    });
+    while !started.load(Ordering::Relaxed) {
+        std::hint::spin_loop();
+    }
+
+    // One `String::from` of a non-empty literal is exactly one allocation: the
+    // capacity is known up front, so there is no growth step to blur the count.
+    let (allocations, _, strings) = measure(|| {
+        let mut made = 0;
+        for _ in 0..EXPECTED {
+            drop(std::hint::black_box(String::from("one allocation")));
+            made += 1;
+        }
+        made
+    });
+
+    stop.store(true, Ordering::Relaxed);
+    noise.join().unwrap();
+
+    assert_eq!(strings, EXPECTED, "the measured closure must have run");
+    assert_eq!(
+        allocations, EXPECTED,
+        "measured {allocations} allocations for {EXPECTED} strings while another thread \
+         allocated throughout; the counter is counting the whole process again, which makes \
+         every budget in this file a measurement of how busy the machine was"
     );
 }
