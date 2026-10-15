@@ -39,30 +39,30 @@ Compiling:
 
 | Benchmark | Median | Throughput |
 |---|---|---|
-| `compile/small` (1 node, 1 line) | 701 ns | 108 MiB/s |
-| `compile/medium` (40 nodes, 10 lines each, conditionals) | 217 µs | 72 MiB/s |
-| `compile/large` (100 nodes, 20 lines each) | 632 µs | 127 MiB/s |
-| `compile_many/harbour_2_files` | 34.7 µs | 115 MiB/s |
-| `compile_many/16_small_files` | 222 µs | 94 MiB/s |
-| `program/clone_harbour` | 1.09 µs | |
+| `compile/small` (1 node, 1 line) | 738 ns | 102 MiB/s |
+| `compile/medium` (40 nodes, 10 lines each, conditionals) | 223 µs | 70 MiB/s |
+| `compile/large` (100 nodes, 20 lines each) | 642 µs | 125 MiB/s |
+| `compile_many/harbour_2_files` | 24.8 µs | 161 MiB/s |
+| `compile_many/16_small_files` | 201 µs | 104 MiB/s |
+| `program/clone_harbour` | 630 ns | |
 
 Running:
 
 | Benchmark | Median | Throughput |
 |---|---|---|
-| `next_event/plain_lines` | 43.5 µs | 9.7 M events/s |
-| `next_event/conditionals_and_sets` | 57.5 µs | 8.4 M events/s |
-| `next_event/interpolation` | 139 µs | 1.46 M events/s |
-| `next_event/markup` | 59.7 µs | 3.40 M events/s |
-| `next_event/options_select_first` | 29.5 µs | 5.16 M events/s |
-| `next_event/harbour_to_completion` | 2.77 µs | 6.13 M events/s |
-| `saliency/first_available` | 29.9 µs | 5.09 M events/s |
-| `saliency/best_least_recently_viewed` | 31.0 µs | 4.90 M events/s |
-| `runner/new_harbour` | 707 ns | |
-| `runner/start_harbour` | 1.16 µs | |
-| `snapshot/snapshot_40_visits` | 1.16 µs | |
-| `snapshot/restore_40_visits` | 7.11 µs | |
-| `snapshot/round_trip_40_visits` | 10.5 µs | |
+| `next_event/plain_lines` | 39.9 µs | 10.6 M events/s |
+| `next_event/conditionals_and_sets` | 55.4 µs | 8.7 M events/s |
+| `next_event/interpolation` | 124 µs | 1.63 M events/s |
+| `next_event/markup` | 60.4 µs | 3.36 M events/s |
+| `next_event/options_select_first` | 32.8 µs | 4.64 M events/s |
+| `next_event/harbour_to_completion` | 2.53 µs | 6.73 M events/s |
+| `saliency/first_available` | 32.8 µs | 4.63 M events/s |
+| `saliency/best_least_recently_viewed` | 33.2 µs | 4.57 M events/s |
+| `runner/new_harbour` | 738 ns | |
+| `runner/start_harbour` | 1.04 µs | |
+| `snapshot/snapshot_40_visits` | 1.18 µs | |
+| `snapshot/restore_40_visits` | 7.15 µs | |
+| `snapshot/round_trip_40_visits` | 8.04 µs | |
 
 What the numbers say:
 
@@ -71,10 +71,11 @@ What the numbers say:
   runner is not where a host's frame goes.
 - Interpolation is the slowest path by a factor of six against plain lines.
   That is where to look first if anything ever needs to be faster.
-- `BestLeastRecentlyViewed` costs about 4% over `FirstAvailable` on the same
-  script. Choosing the stateful strategy is not a performance decision.
-- A `Program` clone is 1.09 µs against 34.7 µs to compile the same two files, so
-  compiling once and cloning per conversation is worth roughly 30x. The ratio is
+- `BestLeastRecentlyViewed` measured about 1% over `FirstAvailable` on the same
+  script, which is inside this machine's run-to-run spread. Choosing the
+  stateful strategy is not a performance decision.
+- A `Program` clone is 630 ns against 24.8 µs to compile the same two files, so
+  compiling once and cloning per conversation is worth roughly 40x. The ratio is
   the point rather than either figure; `tests/allocation_budget.rs` asserts it in
   allocation terms, which holds on any machine.
 
@@ -94,8 +95,12 @@ that stopped compiling or started panicking.
 
 What is gated are the two things that do not depend on how busy the machine is:
 
-- `tests/allocation_budget.rs` — allocation counts on the hot paths, which are
-  machine-independent.
+- `tests/allocation_budget.rs` — allocation counts on the hot paths. These are
+  machine-independent only because the counter is per thread: a process-global
+  one also counts whatever else the process allocates in the same window, which
+  failed a zero-headroom budget on one platform of three while the same
+  measurement was reproducibly exact on another. The file asserts that property
+  directly rather than assuming it.
 - `scripts/measure-footprint.sh --check` — wasm and binary size, which are
   deterministic for a given toolchain. Each artifact has a floor as well as a
   ceiling, because a module that shrinks sharply has usually lost code it
