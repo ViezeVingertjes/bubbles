@@ -5,7 +5,6 @@ pub(super) mod execute;
 pub(super) mod node_body;
 mod session;
 
-use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::Arc;
 
@@ -14,7 +13,9 @@ use crate::compiler::ast::StmtList;
 use crate::error::{DialogueError, Result};
 use crate::library::FunctionLibrary;
 use crate::runtime::event::DialogueEvent;
-use crate::runtime::provider::{LineProvider, PassthroughProvider};
+use crate::runtime::provider::LineProvider;
+#[allow(deprecated)]
+use crate::runtime::provider::PassthroughProvider;
 use crate::runtime::rng::DialogueRng;
 use crate::saliency::{FirstAvailable, SaliencyStrategy};
 use crate::value::{Value, VariableStorage};
@@ -100,6 +101,9 @@ impl<S: VariableStorage> Runner<S> {
     /// [`RunnerBuilder::with_seed`](crate::RunnerBuilder::with_seed) when you
     /// need the session to be reproducible.
     #[must_use]
+    // The no-op provider is deprecated as a name a host would write, not as the
+    // default a runner starts with.
+    #[allow(deprecated)]
     pub fn new(program: Program, storage: S) -> Self {
         let rng = DialogueRng::unseeded();
         let library = FunctionLibrary::with_rng(&rng);
@@ -276,12 +280,6 @@ impl<S: VariableStorage> Runner<S> {
     #[must_use]
     pub fn variable(&self, name: &str) -> Option<Value> {
         self.storage.get(name)
-    }
-
-    /// Borrows the value for `name` when the storage can lend it without cloning.
-    #[must_use]
-    pub fn variable_ref(&self, name: &str) -> Option<Cow<'_, Value>> {
-        self.storage.get_ref(name)
     }
 
     /// Returns a mutable reference to the function library (for registering host functions).

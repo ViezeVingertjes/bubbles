@@ -40,12 +40,15 @@
 //!   reproducible: `random`, `random_range`, `dice` and `RandomAvailable` all
 //!   draw from one [`DialogueRng`] the runner owns, and its position is
 //!   recorded in [`Runner::snapshot`]. The three built-ins are also entries in
-//!   a [`FunctionLibrary`], and [`FunctionLibrary::register`] replaces any
-//!   function of the same name, so you can install your own generator instead.
+//!   a [`FunctionLibrary`](library::FunctionLibrary), and
+//!   [`register`](library::FunctionLibrary::register) replaces any function of
+//!   the same name, so you can install your own generator instead.
 //! - Line-group and node-group selection goes through an injected
-//!   [`SaliencyStrategy`]. The default [`FirstAvailable`] is deterministic;
-//!   [`BestLeastRecentlyViewed`] is deterministic given the same call
-//!   sequence; `RandomAvailable` is the opt-in random one.
+//!   [`SaliencyStrategy`](saliency::SaliencyStrategy). The default
+//!   [`FirstAvailable`](saliency::FirstAvailable) is deterministic;
+//!   [`BestLeastRecentlyViewed`](saliency::BestLeastRecentlyViewed) is
+//!   deterministic given the same call sequence; `RandomAvailable` is the
+//!   opt-in random one.
 //!
 //! Given the same program, the same starting variables, the same seed, and the
 //! same option selections, you get the same sequence of [`DialogueEvent`]s.
@@ -91,10 +94,10 @@
 //! | Module | Contents |
 //! |--------|----------|
 //! | [`value`] | [`Value`], [`VariableStorage`], [`HashMapStorage`] |
-//! | [`compiler`] | [`compile`], [`compile_many`], [`validate`], [`Program`], [`VariableDecl`] |
-//! | [`runtime`] | [`Runner`], [`RunnerPhase`], [`DialogueEvent`], [`LineMode`], [`LineProvider`], [`line_id_from_tags`], [`line_mode_from_tags`], [`RunnerSnapshot`], [`DialogueRng`], [`RngState`] |
-//! | [`library`] | [`FunctionLibrary`] and built-in functions |
-//! | [`saliency`] | [`SaliencyStrategy`], [`FirstAvailable`], [`BestLeastRecentlyViewed`], `RandomAvailable` (`rand` feature) |
+//! | [`compiler`] | [`compile`], [`compile_many`], [`Program`], [`VariableDecl`](compiler::VariableDecl) |
+//! | [`runtime`] | [`Runner`], [`RunnerPhase`], [`DialogueEvent`], [`LineMode`], [`LineProvider`], [`RunnerSnapshot`], [`DialogueRng`], [`RngState`] |
+//! | [`library`] | [`FunctionLibrary`](library::FunctionLibrary) and built-in functions |
+//! | [`saliency`] | [`SaliencyStrategy`](saliency::SaliencyStrategy), [`FirstAvailable`](saliency::FirstAvailable), [`BestLeastRecentlyViewed`](saliency::BestLeastRecentlyViewed), `RandomAvailable` (`rand` feature) |
 //!
 //! The lexer, the expression parser, the AST and the markup scanner are
 //! deliberately absent from that table. A [`Program`] has no public
@@ -120,24 +123,21 @@ pub mod value;
 // Inlining makes the root the canonical path, which is also the path callers are told to
 // import (`use bubbles::Runner`). Keep it on anything added here.
 #[doc(inline)]
-pub use compiler::{Program, VariableDecl, compile, compile_many, validate};
+pub use compiler::{Program, compile, compile_many};
 #[doc(inline)]
 pub use error::{DialogueError, Result};
 #[doc(inline)]
-pub use library::FunctionLibrary;
-#[doc(inline)]
 pub use runtime::RunnerSnapshot;
+// Deprecated, and re-exported for one more major cycle so the warning reaches
+// users at the path they already import it from.
+#[allow(deprecated)]
+#[doc(inline)]
+pub use runtime::PassthroughProvider;
 #[doc(inline)]
 pub use runtime::{
     DialogueEvent, DialogueOption, DialogueRng, HashMapProvider, LineMode, LineProvider,
-    MarkupSpan, PassthroughProvider, RngState, Runner, RunnerBuilder, RunnerPhase,
-    line_id_from_tags, line_mode_from_tags, option_group_from_tags,
+    MarkupSpan, RngState, Runner, RunnerBuilder, RunnerPhase,
 };
-#[cfg(feature = "rand")]
-#[doc(inline)]
-pub use saliency::RandomAvailable;
-#[doc(inline)]
-pub use saliency::{BestLeastRecentlyViewed, Candidate, FirstAvailable, SaliencyStrategy};
 #[doc(inline)]
 pub use value::{HashMapStorage, Value, VariableStorage};
 

@@ -1,6 +1,6 @@
 //! Integration tests for the compilation pipeline.
 
-use bubbles::{DialogueError, compile, compile_many, validate};
+use bubbles::{DialogueError, compile, compile_many};
 
 #[test]
 fn empty_node_parses() {
@@ -123,16 +123,6 @@ title: B
 ";
     let prog = compile(src).unwrap();
     assert_eq!(prog.variable_declarations().len(), 1);
-}
-
-#[test]
-fn validate_standalone_rejects_unknown_jump_target() {
-    // validate() is a power-user hook for Programs built outside of compile().
-    // Build one manually via compile_many (without validation) is not possible
-    // anymore, so we test via the public validate() fn directly on a known-good
-    // program and confirm it still runs without error.
-    let prog = compile("title: A\n---\n<<jump B>>\n===\ntitle: B\n---\n===\n").unwrap();
-    assert!(validate(&prog).is_ok());
 }
 
 #[test]

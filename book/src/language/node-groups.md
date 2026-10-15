@@ -65,7 +65,7 @@ Read top to bottom, it reads like a priority list: "if all the big stuff is true
 Swap `FirstAvailable` for `BestLeastRecentlyViewed` and node groups become a proper "pick something fresh" mechanism. If two or more nodes are eligible, BLRV prefers the one you've seen least recently - great for re-usable vignettes, daily-life scenes, or barks that should feel alive without a full state machine.
 
 ```rust,ignore
-runner.set_saliency(bubbles::BestLeastRecentlyViewed::new());
+runner.set_saliency(bubbles::saliency::BestLeastRecentlyViewed::new());
 ```
 
 ## When to use node groups

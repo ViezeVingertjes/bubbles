@@ -99,7 +99,7 @@ Both are easy to over-trust, so here are the limits.
 
 **`plural` implements one two-form rule.** It returns the singular form when `|n|` is 1 and the plural form for everything else, 0 included. That is correct for English and for languages that happen to share its shape, and wrong for the rest: Polish, Russian, Czech and Arabic have three to six plural categories, and French uses the singular for 0. It is a shaping helper for your source language, not internationalisation.
 
-If you need a rule for a language with other plural categories, write it and register it under the same name - [`FunctionLibrary::register`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.FunctionLibrary.html#method.register) replaces the built-in, exactly as it does when you swap a seeded generator in for `random`. See [Custom Functions](../integration/functions.md).
+If you need a rule for a language with other plural categories, write it and register it under the same name - [`FunctionLibrary::register`](https://docs.rs/bubbles-dialogue/latest/bubbles/library/struct.FunctionLibrary.html#method.register) replaces the built-in, exactly as it does when you swap a seeded generator in for `random`. See [Custom Functions](../integration/functions.md).
 
 **`select` has no escape mechanism.** The mapping is split on `|`, then each entry at its first `:`. Nothing escapes either separator, so a key containing `|` or `:` can never be matched, and a value containing `|` cannot be expressed at all. A value *may* contain colons - `"time:12:00|other:??"` returns `12:00` - because only the first colon in an entry separates. The mapping string is re-parsed on every call.
 

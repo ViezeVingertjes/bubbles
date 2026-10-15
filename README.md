@@ -181,7 +181,7 @@ Bubbles is a small language. The table below is a reference for what the script 
 | Multi-file | `compile_many(&[(name, src)])` with duplicate-title detection and cross-file jump validation |
 | Bookmarks / save | `Runner::snapshot` / `Runner::restore` with `RunnerSnapshot` (always available); enable `serde` to persist snapshot and `HashMapStorage` to disk. Saves serialise to canonical bytes, so they can be hashed, diffed, and golden-tested |
 | Line modes | `#narration` and `#debug` on lines set `DialogueEvent::Line::line_mode` for filtering or routing |
-| Variable inspection | `Runner::all_variables`, `Runner::variable`, `Runner::variable_ref`; `VariableStorage::all_variables` (override on custom stores) |
+| Variable inspection | `Runner::all_variables`, `Runner::variable`; `VariableStorage::all_variables` (override on custom stores) |
 | Option groups | `#group:<name>` on options for UI constraints (radio buttons, mutually exclusive choices) |
 
 ---

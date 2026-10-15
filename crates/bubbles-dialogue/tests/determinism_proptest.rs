@@ -19,10 +19,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 
-use bubbles::{
-    BestLeastRecentlyViewed, DialogueEvent, HashMapStorage, Program, Runner, Value,
-    VariableStorage, compile,
-};
+use bubbles::saliency::BestLeastRecentlyViewed;
+use bubbles::{DialogueEvent, HashMapStorage, Program, Runner, Value, VariableStorage, compile};
 use proptest::prelude::*;
 
 /// A script exercising the constructs whose ordering could plausibly vary:

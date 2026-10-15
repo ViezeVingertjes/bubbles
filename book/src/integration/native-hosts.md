@@ -323,7 +323,7 @@ The dialogue runtime runs on `wasm32-unknown-unknown` today and CI keeps it that
 
 ## Still Rust-only
 
-The C API fixes storage as `HashMapStorage`, line lookup as `HashMapProvider` (from JSON), and saliency as one of the three strategies above. A fully custom [`VariableStorage`](../api/bubbles/trait.VariableStorage.html), [`LineProvider`](https://docs.rs/bubbles-dialogue/latest/bubbles/trait.LineProvider.html), or [`SaliencyStrategy`](../api/bubbles/trait.SaliencyStrategy.html) still needs a Rust shim that configures [`RunnerBuilder`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.RunnerBuilder.html) and exposes its own FFI.
+The C API fixes storage as `HashMapStorage`, line lookup as `HashMapProvider` (from JSON), and saliency as one of the three strategies above. A fully custom [`VariableStorage`](../api/bubbles/trait.VariableStorage.html), [`LineProvider`](https://docs.rs/bubbles-dialogue/latest/bubbles/trait.LineProvider.html), or [`SaliencyStrategy`](../api/bubbles/saliency/trait.SaliencyStrategy.html) still needs a Rust shim that configures [`RunnerBuilder`](https://docs.rs/bubbles-dialogue/latest/bubbles/struct.RunnerBuilder.html) and exposes its own FFI.
 
 ## Worked examples in the repository
 

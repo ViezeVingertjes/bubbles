@@ -80,15 +80,9 @@ Two "Greet" nodes in the same file is fine - they form a group. Two without `whe
 
 ## Validation
 
-`validate(program)` runs the same reference-checking pass `compile` does, but on an existing `Program`. Handy for tools and editors that want to verify a file without throwing away the result.
+`compile` and `compile_many` validate before they return, so a `Program` you hold has already passed the reference-checking pass. There is nothing to call separately.
 
-```rust,ignore
-use bubbles::validate;
-
-validate(&program)?;
-```
-
-Catches things like:
+That pass catches:
 
 - `<<jump>>`/`<<detour>>` to an unknown node.
 - Duplicate group titles that aren't `when:`-differentiated.

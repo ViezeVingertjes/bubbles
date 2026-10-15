@@ -14,11 +14,11 @@ fn runner_variable_matches_storage_get() {
 }
 
 #[test]
-fn runner_variable_ref_borrows_from_hash_map_storage() {
+fn storage_get_ref_borrows_from_hash_map_storage() {
     let prog = compile("title: A\n---\nHi.\n===\n").unwrap();
     let mut runner = Runner::new(prog, HashMapStorage::new());
     runner.storage_mut().set("$name", Value::Text("Pat".into()));
-    let cow = runner.variable_ref("$name").expect("set");
+    let cow = runner.storage().get_ref("$name").expect("set");
     assert!(matches!(cow, Cow::Borrowed(_)));
     assert_eq!(&*cow, &Value::Text("Pat".into()));
 }

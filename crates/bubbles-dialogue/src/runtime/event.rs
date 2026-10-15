@@ -20,6 +20,10 @@ pub enum LineMode {
 }
 
 /// Derives [`LineMode`] from trailing `#tag` strings (without the `#` prefix).
+///
+/// The runner calls this and stores the result in
+/// [`DialogueEvent::Line::line_mode`], which is the only place a caller can get
+/// the `tags` slice from in the first place, so hosts read the field instead.
 #[must_use]
 pub fn line_mode_from_tags(tags: &[String]) -> LineMode {
     if tags.iter().any(|t| t == "debug") {
@@ -40,9 +44,10 @@ fn tag_value(tags: &[String], prefix: &str) -> Option<String> {
 
 /// Returns the group from a `#group:<name>` tag in `tags`, if any (first match wins).
 ///
-/// Used for UI constraints (radio-button semantics, mutually exclusive option sets).
-/// The group tag itself remains in [`DialogueOption::tags`]; your UI can use both
-/// the `group` field for constraint logic and `tags` for styling/metadata.
+/// The runner calls this and stores the result in [`DialogueOption::group`],
+/// which hosts read for UI constraints (radio-button semantics, mutually
+/// exclusive option sets). The group tag itself also remains in
+/// [`DialogueOption::tags`], for styling and metadata.
 #[must_use]
 pub fn option_group_from_tags(tags: &[String]) -> Option<String> {
     tag_value(tags, "group:")
@@ -76,8 +81,10 @@ pub struct MarkupSpan {
 
 /// Returns the id from a `#line:<id>` tag in `tags`, if any (first match wins).
 ///
-/// This matches the id passed to [`crate::LineProvider`]. Use it to key voice-over or analytics
-/// without re-parsing [`DialogueEvent::Line::tags`] or [`DialogueOption::tags`].
+/// This matches the id passed to [`crate::LineProvider`]. The runner calls it
+/// and stores the result in [`DialogueEvent::Line::line_id`] and
+/// [`DialogueOption::line_id`], which is what a host keys voice-over or
+/// analytics on.
 #[must_use]
 pub fn line_id_from_tags(tags: &[String]) -> Option<String> {
     tag_value(tags, "line:")

@@ -104,7 +104,7 @@ For debug HUDs, cheats, or tests you can also read through the runner without to
 ```rust,ignore
 let _all = runner.all_variables(); // Vec<(String, Value)>; empty unless storage overrides `all_variables`
 let _one = runner.variable("$gold");
-let _borrowed = runner.variable_ref("$name"); // Cow<Value>, avoids cloning strings when using HashMapStorage
+let _borrowed = runner.storage().get_ref("$name"); // Cow<Value>, avoids cloning strings when using HashMapStorage
 ```
 
 `all_variables` is implemented for [`HashMapStorage`](./storage.md) and lists every key, sorted by name. Custom [`VariableStorage`](./storage.md) types get a default empty list unless you override [`VariableStorage::all_variables`](https://docs.rs/bubbles-dialogue/latest/bubbles/trait.VariableStorage.html#method.all_variables).

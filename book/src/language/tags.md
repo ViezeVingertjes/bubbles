@@ -130,16 +130,17 @@ The `group` tag itself also remains in [`DialogueOption::tags`](https://docs.rs/
 
 ## Getting structured metadata from tags
 
-Two helper functions extract special tags:
+You do not have to parse the reserved tags yourself. The runner does it and puts the result on the event or the option, next to the raw tags:
 
 ```rust,ignore
-use bubbles::{line_id_from_tags, option_group_from_tags};
-
-let id = line_id_from_tags(&tags);          // Option<String>
-let group = option_group_from_tags(&tags);  // Option<String>
+DialogueEvent::Line { line_id, line_mode, tags, .. } => {
+    let _id = line_id;      // Option<String>, from `#line:<id>`
+    let _mode = line_mode;  // LineMode, from `#debug` / `#narration`
+    let _raw = tags;        // every tag, including the reserved ones
+}
 ```
 
-Both return the first match and reject empty values.
+`DialogueOption` carries `line_id` and `group` on the same terms. Each reserved tag yields the first match and empty values are rejected.
 
 ## Reserved tags
 

@@ -4,10 +4,8 @@ use std::ffi::{CString, c_char, c_int, c_void};
 use std::ptr;
 
 use bubbles::error::DialogueError;
-use bubbles::{
-    BestLeastRecentlyViewed, FirstAvailable, HashMapProvider, HashMapStorage, Program,
-    RandomAvailable, RunnerBuilder, Value,
-};
+use bubbles::saliency::{BestLeastRecentlyViewed, FirstAvailable, RandomAvailable};
+use bubbles::{HashMapProvider, HashMapStorage, Program, RunnerBuilder, Value};
 
 use crate::error::{clear_err, set_err};
 use crate::util::{FfiRunner, ffi_try, runner_mut, str_from_parts, write_handle_out};
