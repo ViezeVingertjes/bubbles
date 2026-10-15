@@ -9,11 +9,16 @@ permissions:
   contents: read
 
 jobs:
-  # Determinism is a cross-platform claim, so it has to be checked on more than
-  # one platform. The main workflow runs on ubuntu only; these are the tests
-  # whose result could differ by target - hash ordering, number formatting, and
-  # snapshot continuation.
-  determinism:
+  # Both claims checked here are cross-platform claims, so they have to be
+  # checked on more than one platform. The main workflow runs on ubuntu only;
+  # these are the tests whose result could differ by target - hash ordering,
+  # number formatting, snapshot continuation, and allocation counts.
+  #
+  # The job is named for the matrix rather than for determinism, because the
+  # two steps fail for unrelated reasons and the check name is what a reader
+  # sees first: a red `determinism (macos-latest)` said the central claim had
+  # broken when the actual failure was an allocation budget.
+  cross-platform:
     strategy:
       fail-fast: false
       matrix:
@@ -26,8 +31,12 @@ jobs:
       - name: Determinism and snapshot continuation
         run: cargo test -p bubbles-dialogue --all-features --test determinism --test determinism_proptest --test snapshot_continuation
 
-      # Allocation counts are machine-independent, unlike the timings in
-      # benches/, so they are safe to assert on a shared runner.
+      # Allocation counts are far more stable than the timings in benches/ -
+      # stable enough to gate on a shared runner, as upper bounds. They are not
+      # exact across targets, which is what this matrix established: a first
+      # call costs one allocation on macOS that Linux and Windows do not
+      # charge, for initialising std's mutex. That is why the budgets in the
+      # test are measured on a warmed path.
       - name: Allocation budgets
         run: cargo test -p bubbles-dialogue --all-features --test allocation_budget
 

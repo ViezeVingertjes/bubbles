@@ -1,6 +1,21 @@
 name: CI
 
-on: [push, pull_request]
+# `merge_group` is what lets these jobs gate a merge queue. The queue builds a candidate
+# branch from `main` plus the entries queued ahead of this one and waits for the required
+# checks to report against that candidate, so a workflow that does not listen for the
+# event never reports and the entry sits until it times out. Both required checks on
+# `main` (`ci` and `msrv`) live in this file, so this trigger has to stay in step with
+# them: adding a required check in another workflow means giving that workflow the same
+# event.
+#
+# Queue candidates are pushed to `gh-readonly-queue/**`, which fires `push` as well and
+# would run the whole matrix a second time against the same tree for no extra signal.
+on:
+  push:
+    branches-ignore:
+      - "gh-readonly-queue/**"
+  pull_request:
+  merge_group:
 
 permissions:
   contents: read
