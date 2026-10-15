@@ -39,6 +39,14 @@ jobs:
       - name: Test (serde without rand, bubbles-dialogue)
         run: cargo test -p bubbles-dialogue --no-default-features --features serde
 
+      # `bubbles check` is the verb meant to live in other people's CI, and the reason it
+      # is worth adding there is that `--no-default-features` drops the terminal UI. Build
+      # and test that configuration so the checker cannot start depending on the player.
+      - name: Clippy and test (no default features, bubbles-cli)
+        run: |
+          cargo clippy -p bubbles-cli --no-default-features --all-targets -- -D warnings
+          cargo test -p bubbles-cli --no-default-features
+
       - name: WebAssembly (library)
         run: bash scripts/check-wasm.sh
 
@@ -61,6 +69,24 @@ jobs:
       # and the dependency is actually resolvable.
       - name: Publish dry-run (bubbles-ffi)
         run: cargo publish --dry-run -p bubbles-ffi --no-verify
+
+      # Same reasoning for the CLI: it is published, so catch missing metadata or a path
+      # dependency without a version here rather than at release time.
+      - name: Publish dry-run (bubbles-cli)
+        run: cargo publish --dry-run -p bubbles-cli
+
+      # The headline verb has to work on the examples the guide tells people to run, and
+      # it has to fail when it should: `harbour.bub` alone jumps into `services.bub`, so
+      # checking it on its own must exit non-zero.
+      - name: Smoke-test `bubbles check`
+        run: |
+          cargo build -q -p bubbles-cli --no-default-features
+          BUBBLES=target/debug/bubbles
+          "$BUBBLES" check examples/harbour/harbour.bub examples/harbour/services.bub
+          if "$BUBBLES" check --quiet examples/harbour/harbour.bub; then
+            echo "::error::check exited 0 on an unresolved cross-file jump"
+            exit 1
+          fi
 
       - name: Build bubbles-ffi cdylib (release)
         run: cargo build -p bubbles-ffi --release

@@ -155,9 +155,10 @@ void bubbles_string_free(char *p);
 /**
  * Copies `len` UTF-8 bytes into a library-owned NUL-terminated string.
  *
- * Returns NULL on invalid UTF-8 or an interior NUL. This is the required allocator for
- * BubblesHostFn results; for those, the library takes ownership and frees it. If you
- * call it for any other reason, free the result with bubbles_string_free.
+ * Returns NULL on invalid UTF-8 or an interior NUL, with the reason in
+ * bubbles_last_error(). This is the required allocator for BubblesHostFn results; for
+ * those, the library takes ownership and frees it. If you call it for any other reason,
+ * free the result with bubbles_string_free.
  */
 char *bubbles_copy_utf8(const char *ptr, size_t len);
 

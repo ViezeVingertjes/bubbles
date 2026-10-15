@@ -3,10 +3,11 @@
 # cheapest CI failures are caught locally before a push. Version sync runs
 # first (cheap).
 #
-# Runs:    version sync, cargo fmt, clippy (all features, and bubbles-dialogue
-#          with no default features), rustdoc, file sizes.
-# Skipped: cargo test, scripts/check-wasm.sh, cargo-deny, the .NET P/Invoke
-#          smoke test, the MSRV build, and the DCO sign-off check.
+# Runs:    version sync, cargo fmt, clippy (all features, plus bubbles-dialogue
+#          and bubbles-cli with no default features), rustdoc, file sizes.
+# Skipped: cargo test, scripts/check-wasm.sh, the publish dry-runs, the
+#          `bubbles check` smoke test, cargo-deny, the .NET P/Invoke smoke
+#          test, the MSRV build, and the DCO sign-off check.
 #
 # A clean run here is therefore not a promise of green CI. Keep the two lists
 # above in step with ci.yml and the gate tables in CONTRIBUTING.md.
@@ -47,6 +48,12 @@ echo -e "${BOLD}pre-commit:${RESET} running clippy (bubbles-dialogue, no default
 if ! cargo clippy -p bubbles-dialogue --no-default-features --all-targets -- -D warnings 2>&1; then
   echo ""
   fail "clippy (no default features) reported errors. Fix them and re-stage your changes."
+fi
+
+echo -e "${BOLD}pre-commit:${RESET} running clippy (bubbles-cli, no default features)..."
+if ! cargo clippy -p bubbles-cli --no-default-features --all-targets -- -D warnings 2>&1; then
+  echo ""
+  fail "clippy (bubbles-cli, no default features) reported errors. Fix them and re-stage your changes."
 fi
 
 echo -e "${BOLD}pre-commit:${RESET} running rustdoc (workspace)..."

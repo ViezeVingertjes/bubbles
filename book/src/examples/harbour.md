@@ -3,7 +3,7 @@
 `examples/harbour/` is the main example: a two-file pirate dockside scene that puts most of Bubbles' language features together in one playable run. Go through it first, then come back and read this walkthrough.
 
 ```sh
-cargo run -p bubbles-tui -- examples/harbour/harbour.bub examples/harbour/services.bub
+cargo run -p bubbles-cli -- play examples/harbour/harbour.bub examples/harbour/services.bub
 ```
 
 You arrive at Barnacle Bay and need a travel permit from the cantankerous harbormaster Stumpy McGee. A shady map seller lurks nearby. Try to get out with a permit - or without one.
@@ -26,7 +26,7 @@ tags: scene docks outdoor
 ---
 ```
 
-Node tags travel with the `NodeStarted` event. Your game uses them to pre-load music, trigger ambient systems, or build an editor scene list. Try adding `foggy` to the tags list, reload, and watch it appear in the TUI transcript when the node starts.
+Node tags travel with the `NodeStarted` event. Your game uses them to pre-load music, trigger ambient systems, or build an editor scene list. Try adding `foggy` to the tags list, reload, and watch it appear in the player's transcript when the node starts.
 
 In Rust:
 
@@ -100,7 +100,7 @@ First time you reach the Options node: Stumpy tells the full sea creature story.
     <<jump Options>>
 ```
 
-Guards on options: `<<if $gold >= 10>>` after the option text. When the condition is false, the option shows with `available: false`. The TUI renders locked options with a distinct style. In your game:
+Guards on options: `<<if $gold >= 10>>` after the option text. When the condition is false, the option shows with `available: false`. The player renders locked options with a distinct style. In your game:
 
 ```rust,ignore
 DialogueEvent::Options(opts) => {

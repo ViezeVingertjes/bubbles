@@ -157,7 +157,7 @@ Six lines of dialogue drive camera shake, two sound effects, and a music change 
 
 > **Try it:** [`examples/snippets/commands.bub`](../../examples/snippets/commands.bub): a treasure chest discovery that fires fanfare, particles, and a curse, with line tags for audio cues.
 > ```sh
-> cargo run -p bubbles-tui -- examples/snippets/commands.bub
+> cargo run -p bubbles-cli -- play examples/snippets/commands.bub
 > ```
 
 ---

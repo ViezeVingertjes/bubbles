@@ -115,7 +115,7 @@ That lists every `<<declare>>` across the whole program, with its source text.
 
 > **Try it:** [`examples/snippets/variables.bub`](../../examples/snippets/variables.bub): a grog shop where the price rises with each purchase, showing `<<declare>>`, `<<set>>`, arithmetic, and interpolation in action.
 > ```sh
-> cargo run -p bubbles-tui -- examples/snippets/variables.bub
+> cargo run -p bubbles-cli -- play examples/snippets/variables.bub
 > ```
 
 ---

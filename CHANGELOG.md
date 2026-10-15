@@ -6,8 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Versions refer to the published [`bubbles-dialogue`](https://crates.io/crates/bubbles-dialogue)
-crate. The `bubbles-ffi` and `bubbles-tui` crates share the workspace version but
-are not published to crates.io.
+crate. The `bubbles-ffi` and `bubbles-cli` crates share the workspace version and are
+publishable, but are not published to crates.io yet.
 
 > **Note on history.** This file was reconstructed in October 2026 from git
 > history, release tags, and crates.io publication records. Releases 0.1.0
@@ -129,9 +129,33 @@ are not published to crates.io.
   registry copy of `bubbles-dialogue`, which between releases does not yet have
   the API this crate calls; see [RELEASING.md](RELEASING.md). It remains
   unpublished for now.
+- **`bubbles check <file.bub>...`**, a script checker with no Rust in sight. It
+  compiles the given files as one programme, prints one diagnostic per line on
+  stdout, and exits non-zero on failure. `--quiet` drops the success summary.
+- A default-on `tui` feature on `bubbles-cli`. With
+  `cargo install bubbles-cli --no-default-features` the terminal player is left
+  out and the checker adds nothing to the library's own three direct
+  dependencies - `indexmap`, `logos`, and `thiserror` - which is small enough to
+  add to someone else's CI.
+- `?` opens a key list in the player. The footer fits six hints and the tool
+  binds thirteen verbs, so the rest had been unreachable without reading the
+  source.
 
 ### Changed
 
+- **`bubbles-tui` is now `bubbles-cli`, and its binary is `bubbles`.** The crate
+  is publishable, with a description and keywords aimed at checking and
+  embedding rather than at narrative authoring. `cargo run -p bubbles-tui -- X`
+  becomes `cargo run -p bubbles-cli -- play X`; a bare path list with no verb
+  still means `play`.
+- **Reload moved off `r` and onto `Ctrl+R` (or `F5`), and `r` now means rerun.**
+  Reload discards every variable with no confirmation and no undo, and it used
+  to sit on the lowercase half of the only case-sensitive binding in a tool
+  where `q/Q`, `j/J`, `k/K`, `b/B` and `x/X` are all interchangeable. The footer
+  now spells it out as `Ctrl+R: reload (wipes variables)`.
+- The guide's two TUI pages merged into one
+  [CLI chapter](https://viezevingertjes.github.io/bubbles/getting-started/cli.html)
+  that documents `check` first and `play` second. The old URLs redirect.
 - The `plural` and `select` built-ins are no longer documented as
   internationalisation. `plural` is described as the two-form rule it actually
   implements - the singular form when `|n|` is 1, the plural form otherwise -
@@ -144,6 +168,15 @@ are not published to crates.io.
 
 ### Fixed
 
+- `bubbles_copy_utf8` returned `NULL` without setting the thread-local error
+  when the bytes it was given contained an interior NUL. `ABI.md` tells a host
+  to read `bubbles_last_error()` after a failure, so the host read either
+  nothing or a stale message from an earlier call. Reachable from a host
+  function that builds its result out of player-entered or externally sourced
+  text: the host saw `NULL`, returned `BUBBLES_ERR` with a null result pointer,
+  and the dialogue error read "host callback left null result pointer", which
+  points at the host's control flow when the problem was its data. The Rust
+  docs also only mentioned invalid UTF-8, though the C header listed both.
 - The guide described the `NodeStarted` and `NodeComplete` FFI events as
   carrying a `"title"` field; the runtime emits `"node"`. The header also
   claimed `bubbles_runner_set_locale_json` merges into the existing locale

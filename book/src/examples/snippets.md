@@ -1,9 +1,9 @@
 # Snippets
 
-Six focused recipes, each answering a specific "can Bubbles do X?" question. Every snippet is a self-contained 30-50 line `.bub` file built around a pirate scenario, and each one runs independently through the TUI.
+Six focused recipes, each answering a specific "can Bubbles do X?" question. Every snippet is a self-contained 30-50 line `.bub` file built around a pirate scenario, and each one runs independently through `bubbles play`.
 
 ```sh
-cargo run -p bubbles-tui -- examples/snippets/<name>.bub
+cargo run -p bubbles-cli -- play examples/snippets/<name>.bub
 ```
 
 Press `r` to reload after editing (re-reads from disk, full reset), `R` to rerun from the start keeping variable values and `<<once>>` history, `b` to step back through individual events.
@@ -15,7 +15,7 @@ Press `r` to reload after editing (re-reads from disk, full reset), `R` to rerun
 **You want branching choices with conditions, including choices that lock out after the player picks them once.**
 
 ```sh
-cargo run -p bubbles-tui -- examples/snippets/options.bub
+cargo run -p bubbles-cli -- play examples/snippets/options.bub
 ```
 
 A duelist challenges you to an insult sword-fight. Whether you can land the devastating insult depends on `$sword_skill`, and the rules explanation can only be picked once. Try it with the default value, then change the `<<declare $sword_skill = ...>>` line and press `r` to reload - different skill levels unlock different options and route to different outcome nodes.
@@ -51,7 +51,7 @@ See [Options](../language/options.md) and [Conditionals](../language/conditional
 **You want persistent state that changes during a conversation, with the current values shown in the dialogue text.**
 
 ```sh
-cargo run -p bubbles-tui -- examples/snippets/variables.bub
+cargo run -p bubbles-cli -- play examples/snippets/variables.bub
 ```
 
 Griselda's Grog Shack charges more for each mug you buy. The price climbs and your doubloon count drops, both reflected live in the dialogue. The buy option locks itself when you run dry.
@@ -86,10 +86,10 @@ See [Variables](../language/variables.md), [Expressions](../language/expressions
 **You want dialogue to trigger sounds, voice-overs, animations, and other engine events. You also want per-line metadata (portrait cues, audio buses, subtitle styles) to travel with each line.**
 
 ```sh
-cargo run -p bubbles-tui -- examples/snippets/commands.bub
+cargo run -p bubbles-cli -- play examples/snippets/commands.bub
 ```
 
-Prying open a cursed chest fires `<<creak_sound>>`, `<<play_fanfare>>`, `<<spawn_particles>>`, and `<<apply_curse>>`. Key lines carry tags like `#dramatic` and `#sfx`. The TUI shows commands in the transcript pane so you can see exactly what your event loop would receive.
+Prying open a cursed chest fires `<<creak_sound>>`, `<<play_fanfare>>`, `<<spawn_particles>>`, and `<<apply_curse>>`. Key lines carry tags like `#dramatic` and `#sfx`. The player shows commands in the transcript pane so you can see exactly what your event loop would receive.
 
 Key lines from the script:
 
@@ -137,7 +137,7 @@ See [Commands](../language/commands.md) and [Tags and Metadata](../language/tags
 **You want lines that only play on the first visit, with different content on every return - without managing a flag variable.**
 
 ```sh
-cargo run -p bubbles-tui -- examples/snippets/once.bub
+cargo run -p bubbles-cli -- play examples/snippets/once.bub
 ```
 
 Old Barnacle Pete has several legendary tales. Each `<<once>>` block plays in full on the first visit; every return gets a brief acknowledgement. No `$kraken_told` variable in sight.
@@ -170,7 +170,7 @@ See [Once Blocks](../language/once.md).
 **You want ambient dialogue that never repeats immediately, and an NPC whose behaviour changes based on the time of day (or any game state).**
 
 ```sh
-cargo run -p bubbles-tui -- examples/snippets/saliency.bub
+cargo run -p bubbles-cli -- play examples/snippets/saliency.bub
 ```
 
 The dockside has two layers:
@@ -214,7 +214,7 @@ See [Line Groups](../language/line-groups.md) and [Node Groups and Saliency](../
 **You want to annotate a range of text inside a line without changing the display text: bold, italic, coloured, animated, or anything else your renderer can do.**
 
 ```sh
-cargo run -p bubbles-tui -- examples/snippets/markup.bub
+cargo run -p bubbles-cli -- play examples/snippets/markup.bub
 ```
 
 Tags are stripped from the text before the event arrives. Alongside the clean text you get a `spans` list that names each annotation and gives its byte range. The terminal UI renders the five built-in tag names it knows: `[b]`, `[i]`, `[u]`, `[dim]`, and `[color value=NAME]`.
@@ -255,7 +255,7 @@ DialogueEvent::Line { text, spans, .. } => {
 }
 ```
 
-The TUI preview shows the markup applied live: bold options, coloured lines, underlined phrases.
+The player shows the markup applied live: bold options, coloured lines, underlined phrases.
 
 **Remix ideas:**
 - Add `[wave]` or `[shake]` tags and handle them in a custom renderer
